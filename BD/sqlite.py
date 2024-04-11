@@ -92,6 +92,7 @@ class BD:
         
         self.insertarInstanciasBEN()
         self.insertarInstanciasSCP()
+
         
         self.desconectar()
     

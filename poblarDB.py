@@ -3,8 +3,8 @@ import json
 
 bd = BD()
 
-ben = True
-scp = False
+ben = False
+scp = True
 # mhs = ['EOO','FOX','GOA','GWO','HBA','PSA','PSO','RSA','SCA','SHO','TDA','WOA']
 mhs = ['EOO']
 
