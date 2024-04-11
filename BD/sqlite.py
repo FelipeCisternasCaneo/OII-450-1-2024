@@ -1,6 +1,6 @@
 import sqlite3
 import os
-# from Problem.SCP.problem import obtenerOptimo
+from Problem.SCP.problem import obtenerOptimo
 # from Problem.KP.problem import obtenerOptimoKP
 # from Problem.MKP.problem import mkp
 from util import util
@@ -91,12 +91,7 @@ class BD:
         self.commit()
         
         self.insertarInstanciasBEN()
-        self.insertarInstanciasFS()
         self.insertarInstanciasSCP()
-        self.insertarInstanciasEMPATIA()
-        self.insertarInstanciasMKP()
-        self.insertarInstanciasKP()
-        self.insertarEMPATIAVoluntarias()
         
         self.desconectar()
     
@@ -122,7 +117,7 @@ class BD:
         self.commit()
         self.desconectar()
         
-    """def insertarInstanciasSCP(self):
+    def insertarInstanciasSCP(self):
         
         self.conectar()
         
@@ -137,91 +132,8 @@ class BD:
             self.getCursor().execute(f'''  INSERT INTO instancias (tipo_problema, nombre, optimo, param) VALUES(?, ?, ?, ?) ''', (tipoProblema, nombre, optimo, param))
             
         self.commit()
-        self.desconectar()"""
-        
-    def insertarEMPATIAVoluntarias(self):
-        
-        self.conectar()
-        nombres = ['EMPATIA-V01','EMPATIA-V02','EMPATIA-V03','EMPATIA-V04','EMPATIA-V05','EMPATIA-V06','EMPATIA-V07','EMPATIA-V08','EMPATIA-V09','EMPATIA-V10','EMPATIA-V11','EMPATIA-V12','EMPATIA-V13','EMPATIA-V14','EMPATIA-V15','EMPATIA-V16','EMPATIA-V17','EMPATIA-V18','EMPATIA-V19','EMPATIA-V20','EMPATIA-V21','EMPATIA-V22','EMPATIA-V23','EMPATIA-V24','EMPATIA-V25','EMPATIA-V26','EMPATIA-V27','EMPATIA-V28','EMPATIA-V29','EMPATIA-V30','EMPATIA-V31','EMPATIA-V32','EMPATIA-V33','EMPATIA-V34','EMPATIA-V35','EMPATIA-V36','EMPATIA-V37','EMPATIA-V38','EMPATIA-V39','EMPATIA-V40','EMPATIA-V41','EMPATIA-V42']
-        tipoProblema = 'FS'
-        optimo = 0
-        param = ''
-        
-        for nombre in nombres:
-        
-            self.getCursor().execute(f'''  INSERT INTO instancias (tipo_problema, nombre, optimo, param) VALUES(?, ?, ?, ?) ''', (tipoProblema, nombre, optimo, param))
-            
-        self.commit()
         self.desconectar()
         
-    """def insertarInstanciasMKP(self):
-        
-        self.conectar()
-        
-        data = os.listdir('./Problem/MKP/Instances/')        
-        for d in data:
-            
-            tipoProblema = 'MKP'
-            
-            nombre = d.split(".")[0]
-            if d.split("_")[0] == "mknap1":
-                instance = mkp(d.split(".")[0],1)
-            if d.split("_")[0] == "mknap2":
-                instance = mkp(d.split(".")[0],2)
-            
-            optimo = instance.getOptimo()
-            param = ''
-            
-            self.getCursor().execute(f'''  INSERT INTO instancias (tipo_problema, nombre, optimo, param) VALUES(?, ?, ?, ?) ''', (tipoProblema, nombre, optimo, param))
-            
-        self.commit()
-        self.desconectar()"""
-        
-    """def insertarInstanciasKP(self):
-        
-        self.conectar()
-        
-        data = os.listdir('./Problem/KP/Instances/')        
-        for d in data:
-            tipoProblema = 'KP'
-            nombre = d
-            optimo = obtenerOptimoKP(nombre)
-            param = ''
-            
-            self.getCursor().execute(f'''  INSERT INTO instancias (tipo_problema, nombre, optimo, param) VALUES(?, ?, ?, ?) ''', (tipoProblema, nombre, optimo, param))
-            
-        self.commit()
-        self.desconectar()"""
-    
-    def insertarInstanciasEMPATIA(self):
-        
-        self.conectar()
-        nombres = ['EMPATIA','EMPATIA-2','EMPATIA-3','EMPATIA-4','EMPATIA-5','EMPATIA-6','EMPATIA-7','EMPATIA-8','EMPATIA-9','EMPATIA-10','EMPATIA-11','EMPATIA-12','nefrologia','only_clinic','dat_3_3_1']
-        tipoProblema = 'FS'
-        optimo = 0
-        param = ''
-        
-        for nombre in nombres:
-        
-            self.getCursor().execute(f'''  INSERT INTO instancias (tipo_problema, nombre, optimo, param) VALUES(?, ?, ?, ?) ''', (tipoProblema, nombre, optimo, param))
-            
-        self.commit()
-        self.desconectar()
-        
-    def insertarInstanciasFS(self):
-        
-        self.conectar()
-        
-        nombres = ['ionosphere','sonar','Cervical Cancer','Immunotherapy','Divorce','wdbc','breast-cancer-wisconsin','LSVT','CTG']
-        for nombre in nombres:
-            
-            tipoProblema = 'FS'
-            optimo = 0
-            param = ''
-            self.getCursor().execute(f'''  INSERT INTO instancias (tipo_problema, nombre, optimo, param) VALUES(?, ?, ?, ?) ''', (tipoProblema, nombre, optimo, param))
-            
-        self.commit()
-        self.desconectar()
     
     def insertarInstanciasBEN(self):
         

@@ -2,8 +2,8 @@ import random
 import numpy as np
 
 def iterarEOO(maxIter, it, population, bestSolution):
-    population = np.array(population)
-    bestSolution = np.array(bestSolution)
+    population = np.array(population, dtype=np.float64)
+    bestSolution = np.array(bestSolution, dtype=np.float64)
 
     it = maxIter - it + 1
     n = population.__len__()

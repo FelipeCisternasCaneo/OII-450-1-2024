@@ -4,7 +4,10 @@ import json
 bd = BD()
 
 ben = True
-mhs = ['GA','WOA']
+scp = False
+# mhs = ['EOO','FOX','GOA','GWO','HBA','PSA','PSO','RSA','SCA','SHO','TDA','WOA']
+mhs = ['EOO']
+
 cantidad = 0
 
 DS_actions = [
@@ -31,11 +34,11 @@ paramsML = json.dumps({
 if ben:
     # poblar ejecuciones Benchmark
     instancias = bd.obtenerInstancias(f'''
-                                      "F7","F8","F9","F10"
+                                      "F1"
                                       ''')
     iteraciones = 500
-    experimentos = 31
-    poblacion = 30
+    experimentos = 3
+    poblacion = 50
     for instancia in instancias:
         for mh in mhs:
             data = {}
@@ -50,6 +53,33 @@ if ben:
 
             cantidad +=experimentos
             bd.insertarExperimentos(data, experimentos, instancia[0])
+
+if scp:
+    # poblar ejecuciones SCP
+    instancias = bd.obtenerInstancias(f'''
+                                      "scp41"
+                                      ''')
+    iteraciones = 50
+    experimentos = 1
+    poblacion = 5
+    for instancia in instancias:
+
+        for mh in mhs:
+            binarizaciones = ['S4-ELIT']
+            for binarizacion in binarizaciones:
+                
+                data = {}
+                data['experimento'] = f'{mh} {binarizacion}'
+                data['MH']          = mh
+                data['paramMH']     = f'iter:{str(iteraciones)},pop:{str(poblacion)},DS:{binarizacion},repair:complex,cros:0.9;mut:0.20'
+                data['ML']          = ''
+                data['paramML']     = ''
+                data['ML_FS']       = ''
+                data['paramML_FS']  = ''
+                data['estado']      = 'pendiente'
+
+                cantidad +=experimentos
+                bd.insertarExperimentos(data, experimentos, instancia[0])
 
 print("------------------------------------------------------------------")
 print(f'Se ingresaron {cantidad} experimentos a la base de datos')

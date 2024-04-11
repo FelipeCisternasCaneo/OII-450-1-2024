@@ -1,4 +1,5 @@
 from Solver.solverB import solverB
+from Solver.solverSCP import solverSCP
 from BD.sqlite import BD
 import json
 # problems = ['ionosphere.data']
@@ -49,6 +50,19 @@ while len(data) > 0:
         dim =  int(parametrosInstancia.split(",")[2].split(":")[1])
         solverB(id, mh, maxIter, pop, instancia, lb, ub, dim)
         
+
+    if problema == 'SCP':
+        bd.actualizarExperimento(id, 'ejecutando')
+        print("-------------------------------------------------------------------------------------------------------")
+        print(f"Ejecutando el experimento: {experimento} - id: {str(id)}")
+        print("-------------------------------------------------------------------------------------------------------")
+        repair = parametrosMH.split(",")[3].split(":")[1]
+        ds.append(parametrosMH.split(",")[2].split(":")[1].split("-")[0])
+        ds.append(parametrosMH.split(",")[2].split(":")[1].split("-")[1])
+        
+        parMH = parametrosMH.split(",")[4]
+        
+        solverSCP(id, mh, maxIter, pop, instancia, ds, repair, parMH)
     data = bd.obtenerExperimento()
     
     print(data)

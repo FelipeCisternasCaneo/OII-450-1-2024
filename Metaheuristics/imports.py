@@ -1,6 +1,5 @@
 from Metaheuristics.Codes.GA import iterarGA
 from Metaheuristics.Codes.GWO import iterarGWO
-from Metaheuristics.Codes.MFO import iterarMFO
 from Metaheuristics.Codes.PSA import iterarPSA
 from Metaheuristics.Codes.SCA import iterarSCA
 from Metaheuristics.Codes.WOA import iterarWOA
