@@ -2,6 +2,9 @@ import numpy as np
 import random
 import math
 
+# Sea-Horse Optimizer (SHO)
+# doi.org/10.1007/s10489-022-03994-3
+
 def levyFunction():
     lambd = 1.5
     s = 0.01

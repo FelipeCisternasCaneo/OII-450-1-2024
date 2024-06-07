@@ -2,6 +2,10 @@
 import math
 import random
 import numpy as np
+
+# whale optimization algorithm (WOA)
+# doi.org/10.1016/j.advengsoft.2016.01.008
+
 def iterarWOA(maxIter, t, dimension, population, bestSolution):
     a = 2 - ((2*t)/maxIter)
     b = 1

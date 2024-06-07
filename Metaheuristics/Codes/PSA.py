@@ -1,6 +1,10 @@
 #PSA
 import random
 import numpy as np
+
+# Pendulum Search Algorithm
+# doi.org/10.3390/a15060214
+
 def iterarPSA(maxIter, t, dimension, population, bestSolution):
     for i in range(population.__len__()):
         for j in range(dimension):

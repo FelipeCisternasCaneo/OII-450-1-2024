@@ -2,6 +2,8 @@ import random
 import numpy as np
 from util.util import selectionSort
 
+# Genetic Algorithm
+
 # selection of parent
 def selectParent(population, fitness):
     position = selectionSort(fitness)

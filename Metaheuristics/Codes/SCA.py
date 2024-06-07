@@ -3,6 +3,9 @@ import random
 import math
 import numpy as np
 
+# Sine Cosine Algorithm
+# doi.org/10.1016/j.knosys.2015.12.022
+
 
 def iterarSCA(maxIter, t, dimension, population, bestSolution):
     # a is a constant number, paper recommend use 2

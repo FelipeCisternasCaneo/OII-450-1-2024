@@ -1,6 +1,8 @@
 import random
 import numpy as np
 
+# Particle Swarm Optimization
+
 def iterarPSO(maxIter, it, dim, population, bestSolution,bestPop):
     '''
     maxIter: Máximo de iteraciones 

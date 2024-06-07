@@ -2,6 +2,10 @@
 import numpy as np
 import random
 from util import util
+
+# Grey Wolf Optimizer
+# doi.org/10.1016/j.advengsoft.2013.12.007
+
 def iterarGWO(maxIter, t, dimension, population, fitness, typeProblem):
     a = 2 - t * ((2) / maxIter) # a decreases linearly fron 2 to 0
     sortedPositions = util.selectionSort(fitness)

@@ -2,6 +2,9 @@ import numpy as np
 import random
 import math
 
+# Gannet optimization algorithm
+# doi.org/10.1016/j.matcom.2022.06.007
+
 def V(x):
     if x <= math.pi: return (-(1 / math.pi) * x + 1) # (0,π)
     elif x > math.pi: return ((1 / math.pi) * x - 1) # (π,2π)

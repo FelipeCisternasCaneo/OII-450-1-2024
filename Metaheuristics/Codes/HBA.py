@@ -2,6 +2,9 @@ import random
 import numpy as np
 import math
 
+# Honey Badger Algorithm (HBA)
+# doi.org/10.1016/j.matcom.2021.08.013
+
 def iterarHBA(maxIter, it, dim, population, bestSolution, fitness, function,typeProblem): 
   C = 2
   beta = 6

@@ -1,6 +1,9 @@
 import random
 import numpy as np
 
+# Reptile Search Algorithm (RSA)
+# doi.org/10.1007/s11831-023-09990-1
+
 def iterarRSA(maxIter, it, dim, population, bestSolution,LB,UB):
     '''
     maxIter: Máximo de iteraciones 
