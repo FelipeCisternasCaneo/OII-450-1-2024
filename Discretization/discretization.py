@@ -4,70 +4,59 @@ import numpy as np
 from scipy import special as scyesp
 import time
 
-def aplicarBinarizacion(ind, transferFunction, binarizationFunction, bestSolutionBin, indBin, iter, pop, maxIter, pos_ind, chaotic_map):
+def aplicarBinarizacion(ind, transferFunction, binarizationFunction, bestSolutionBin, indBin):
     individuoBin = []
     for j in range(ind.__len__()):
         individuoBin.append(0)
     for j in range(ind.__len__()):
         step1 = transferir(transferFunction, ind[j])
-        individuoBin[j] = binarizar(binarizationFunction, step1, bestSolutionBin[j], indBin[j], iter, pop, maxIter, pos_ind, j, len(ind), chaotic_map)
+        individuoBin[j] = binarizar(binarizationFunction, step1, bestSolutionBin[j], indBin[j])
     return np.array(individuoBin)
 
 def transferir(transferFunction, dimension):
     if transferFunction == "S1":
         return S1(dimension)
-    if transferFunction == "S2":
+    elif transferFunction == "S2":
         return S2(dimension)
-    if transferFunction == "S3":
+    elif transferFunction == "S3":
         return S3(dimension)
-    if transferFunction == "S4":
+    elif transferFunction == "S4":
         return S4(dimension)
-    if transferFunction == "V1":
+    elif transferFunction == "V1":
         return V1(dimension)
-    if transferFunction == "V2":
+    elif transferFunction == "V2":
         return V2(dimension)
-    if transferFunction == "V3":
+    elif transferFunction == "V3":
         return V3(dimension)
-    if transferFunction == "V4":
+    elif transferFunction == "V4":
         return V4(dimension)
-    if transferFunction == "X1":
+    elif transferFunction == "X1":
         return X1(dimension)
-    if transferFunction == "X2":
+    elif transferFunction == "X2":
         return X2(dimension)
-    if transferFunction == "X3":
+    elif transferFunction == "X3":
         return X3(dimension)
-    if transferFunction == "X4":
+    elif transferFunction == "X4":
         return X4(dimension)
-    if transferFunction == "Z1":
+    elif transferFunction == "Z1":
         return Z1(dimension)
-    if transferFunction == "Z2":
+    elif transferFunction == "Z2":
         return Z2(dimension)
-    if transferFunction == "Z3":
+    elif transferFunction == "Z3":
         return Z3(dimension)
-    if transferFunction == "Z4":
+    elif transferFunction == "Z4":
         return Z4(dimension)
 
 
-def binarizar(binarizationFunction, step1, bestSolutionBin, indBin, iter, pop, maxIter, pos_ind, j, dim, chaotic_map):
+def binarizar(binarizationFunction, step1, bestSolutionBin, indBin):
     if binarizationFunction == "STD":
         return Standard(step1)
-    if binarizationFunction == "STD_LOG" or binarizationFunction == "STD_PIECE" or binarizationFunction == "STD_SINE" or binarizationFunction == "STD_SINGER" or binarizationFunction == "STD_SINU" or binarizationFunction == "STD_TENT" or binarizationFunction == "STD_CIRCLE":
-        return Standard_Map(step1, iter, pop, pos_ind, j, dim, chaotic_map)
-    
-    if binarizationFunction == "COM":
+    elif binarizationFunction == "COM":
         return Complement(step1, indBin)
-    if binarizationFunction == "COM_LOG" or binarizationFunction == "COM_PIECE" or binarizationFunction == "COM_SINE" or binarizationFunction == "COM_SINGER" or binarizationFunction == "COM_SINU" or binarizationFunction == "COM_TENT" or binarizationFunction == "COM_CIRCLE":
-        return Complement_Map(step1, indBin, iter, pop, pos_ind, j, dim, chaotic_map)
-    
-    if binarizationFunction == "PS":
+    elif binarizationFunction == "PS":
         return ProblabilityStrategy(step1, indBin)
-    if binarizationFunction == "PS_LOG" or binarizationFunction == "PS_PIECE" or binarizationFunction == "PS_SINE" or binarizationFunction == "PS_SINGER" or binarizationFunction == "PS_SINU" or binarizationFunction == "PS_TENT" or binarizationFunction == "PS_CIRCLE":
-        return ProblabilityStrategy_Map(step1, indBin, iter, pop, pos_ind, j, dim, chaotic_map)
-    
-    if binarizationFunction == "ELIT":
+    elif binarizationFunction == "ELIT":
         return Elitist(step1, bestSolutionBin)
-    if binarizationFunction == "ELIT_LOG" or binarizationFunction == "ELIT_PIECE" or binarizationFunction == "ELIT_SINE" or binarizationFunction == "ELIT_SINGER" or binarizationFunction == "ELIT_SINU" or binarizationFunction == "ELIT_TENT" or binarizationFunction == "ELIT_CIRCLE":
-        return Elitist_Map(step1, bestSolutionBin, iter, pop, pos_ind, j, dim, chaotic_map)
 
 
 def S1(dimension):
@@ -110,30 +99,8 @@ def Standard(step1):
         binario = 1
     return binario
 
-def Standard_Map(step1, iter, pop, pos_ind, j, dim, chaotic_map):
-    pivote = (iter * pop * dim) + (pos_ind * dim)
-    pos = pivote + j 
-    rand = chaotic_map[pos]
-    binario = 0
-    if rand <= step1:
-        binario = 1
-    return binario
-
 def Complement(step1, bin):
     rand = random.uniform(0.0, 1.0)
-    binario = 0
-    if rand <= step1:
-        if bin == 1:
-            binario = 0
-        if bin == 0:
-            
-            binario =  1
-    return binario
-
-def Complement_Map(step1, bin, iter, pop, pos_ind, j, dim, chaotic_map):
-    pivote = (iter * pop * dim) + (pos_ind * dim)
-    pos = pivote + j 
-    rand = chaotic_map[pos]
     binario = 0
     if rand <= step1:
         if bin == 1:
@@ -152,33 +119,9 @@ def ProblabilityStrategy(step1, bin):
         binario = 1
     return binario
 
-def ProblabilityStrategy_Map(step1, bin, iter, pop, pos_ind, j, dim, chaotic_map):
-    pivote = (iter * pop * dim) + (pos_ind * dim)
-    pos = pivote + j 
-    alpha = chaotic_map[pos]
-    
-    binario = 0
-    if alpha < step1 and step1 <= ( ( 1/2 ) * ( 1 + alpha ) ):
-        binario = bin
-    if step1 > ( ( 1/2 ) * ( 1 + alpha ) ):
-        binario = 1
-    return binario
-
 def Elitist(step1, bestBin):
     rand = random.uniform(0.0, 1.0)
     binario = 0
     if rand < step1:
         binario = bestBin
     return binario
-
-def Elitist_Map(step1, bestBin, iter, pop, pos_ind, j, dim, chaotic_map):
-    pivote = (iter * pop * dim) + (pos_ind * dim)
-    pos = pivote + j 
-    rand = chaotic_map[pos]
-    binario = 0
-    if rand < step1:
-        binario = bestBin
-    return binario
-
-
-

@@ -15,8 +15,6 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
     dirResult = './Resultados/'
     instance = SCP(instances)
     
-    chaotic_map = None
-    
     # tomo el tiempo inicial de la ejecucion
     initialTime = time.time()
     
@@ -29,6 +27,16 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
     results.write(
         f'iter,fitness,time,XPL,XPT,DIV\n'
     )
+    
+    vel = None
+    pBestScore = None
+    pBest = None
+    
+    if mh == 'PSO':
+        vel = np.zeros((pop, instance.getColumns()))
+        pBestScore = np.zeros(pop)
+        pBestScore.fill(float("inf"))
+        pBest = np.zeros((pop, instance.getColumns()))
     
     # Genero una población inicial binaria, esto ya que nuestro problema es binario
     population = np.random.randint(low=0, high=2, size = (pop, instance.getColumns()))
@@ -50,6 +58,10 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
             
 
         fitness[i] = instance.fitness(population[i])
+        if mh == 'PSO':
+            if pBestScore[i] > fitness[i]:
+                pBestScore[i] = fitness[i]
+                pBest[i, :] = population[i, :].copy()
         
     solutionsRanking = np.argsort(fitness) # rankings de los mejores fitnes
     bestRowAux = solutionsRanking[0]
@@ -89,7 +101,7 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
 
     # Función objetivo para GOA, HBA, TDO y SHO
     def fo(x):
-        x = b.aplicarBinarizacion(x.tolist(), DS[0], DS[1], best, matrixBin[i].tolist(), iter, pop, maxIter, i, chaotic_map)
+        x = b.aplicarBinarizacion(x.tolist(), DS[0], DS[1], best, matrixBin[i].tolist())
         x = instance.repair(x, repairType) # Reparación de soluciones
         return x,instance.fitness(x) # Return de la solución reparada y valor de función objetivo
     
@@ -114,7 +126,7 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
             muta = float(param.split(";")[1].split(":")[1])
             population = iterarGA(population.tolist(), fitness, cross, muta)
         if mh == 'PSO':
-            population = iterarPSO(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist(),bestPop.tolist())
+            population, vel = iterarPSO(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist(), pBest.tolist(), vel, 1)
         if mh == 'FOX':
             population = iterarFOX(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist())
         if mh == 'EOO':
@@ -134,7 +146,7 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
         for i in range(population.__len__()):
 
             if mh != "GA":
-                population[i] = b.aplicarBinarizacion(population[i].tolist(), DS[0], DS[1], best, matrixBin[i].tolist(), iter, pop, maxIter, i, chaotic_map)
+                population[i] = b.aplicarBinarizacion(population[i].tolist(), DS[0], DS[1], best, matrixBin[i].tolist())
 
             flag, aux = instance.factibilityTest(population[i])
             # print(aux)
@@ -145,8 +157,8 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
             fitness[i] = instance.fitness(population[i])
 
             if mh == 'PSO':
-                if fitness[i] < instance.fitness(bestPop[i]):
-                    bestPop[i] = np.copy(population[i])
+                if fitness[i] < pBestScore[i]:
+                    pBest[i] = np.copy(population[i])
 
 
         solutionsRanking = np.argsort(fitness) # rankings de los mejores fitness

@@ -1,8 +1,6 @@
 import sqlite3
 import os
 from Problem.SCP.problem import obtenerOptimo
-# from Problem.KP.problem import obtenerOptimoKP
-# from Problem.MKP.problem import mkp
 from util import util
 
 class BD:
@@ -118,6 +116,90 @@ class BD:
         self.commit()
         self.desconectar()
         
+    
+    def insertarInstanciasBEN(self):
+        
+        self.conectar()
+        
+        data = ['F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12','F13','F14','F15','F16','F17','F18','F19','F20','F21','F22','F23']        
+        for instancia in data:
+            
+            tipoProblema = 'BEN'
+            if instancia == 'F1':
+                param     = f'lb:-100,ub:100'
+                optimo = 0
+            if instancia == 'F2':
+                param     = f'lb:-10,ub:10'
+                optimo = 0
+            if instancia == 'F3':
+                param     = f'lb:-100,ub:100'
+                optimo = 0
+            if instancia == 'F4':
+                param     = f'lb:-100,ub:100'
+                optimo = 0
+            if instancia == 'F5':
+                param     = f'lb:-30,ub:30'
+                optimo = 0
+            if instancia == 'F6':
+                param     = f'lb:-100,ub:100'
+                optimo = 0
+            if instancia == 'F7':
+                param     = f'lb:-1.28,ub:1.28'
+                optimo = 0
+            if instancia == 'F8':
+                param     = f'lb:-500,ub:500'
+                optimo = -418.9829
+            if instancia == 'F9':
+                param     = f'lb:-5.12,ub:5.12'
+                optimo = 0
+            if instancia == 'F10':
+                param     = f'lb:-32,ub:32'
+                optimo = 0
+            if instancia == 'F11':
+                param     = f'lb:-600,ub:600'
+                optimo = 0
+            if instancia == "F12":
+                param     = f'lb:-50,ub:50'
+                optimo = 0
+            if instancia == "F13":
+                param     = f'lb:-50,ub:50'
+                optimo = 0
+            if instancia == "F14":
+                param     = f'lb:-65.536,ub:65.536'
+                optimo = 1
+            if instancia == "F15":
+                param     = f'lb:-5,ub:5'
+                optimo = 0.00030
+            if instancia == "F16":
+                param     = f'lb:-5,ub:5'
+                optimo = -1.0316
+            if instancia == "F17":
+                param     = f'lb:-5,ub:5'
+                optimo = 0.398
+            if instancia == "F18":
+                param     = f'lb:-2,ub:2'
+                optimo = 3
+            if instancia == "F19":
+                param     = f'lb:0,ub:1'
+                optimo = -3.86
+            if instancia == "F20":
+                param     = f'lb:0,ub:1'
+                optimo = -3.32
+            if instancia == "F21":
+                param     = f'lb:0,ub:10'
+                optimo = -10.1532
+            if instancia == "F22":
+                param     = f'lb:0,ub:10'
+                optimo = -10.4028
+            if instancia == "F23":
+                param     = f'lb:0,ub:10'
+                optimo = -10.5363
+                
+            self.getCursor().execute(f'''  INSERT INTO instancias (tipo_problema, nombre, optimo, param) VALUES(?, ?, ?, ?) ''', (tipoProblema, instancia, optimo, param))
+            
+        self.commit()
+        self.desconectar()
+        
     def insertarInstanciasSCP(self):
         
         self.conectar()
@@ -134,67 +216,23 @@ class BD:
             
         self.commit()
         self.desconectar()
-        
-    
-    def insertarInstanciasBEN(self):
-        
-        self.conectar()
-        
-        data = ['F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11']        
-        for instancia in data:
-            
-            tipoProblema = 'BEN'
-            if instancia == 'F1':
-                param     = f'lb:-100,ub:100,dim:30'
-                optimo = 0
-            if instancia == 'F2':
-                param     = f'lb:-10,ub:10,dim:30'
-                optimo = 0
-            if instancia == 'F3':
-                param     = f'lb:-100,ub:100,dim:30'
-                optimo = 0
-            if instancia == 'F4':
-                param     = f'lb:-100,ub:100,dim:30'
-                optimo = 0
-            if instancia == 'F5':
-                param     = f'lb:-30,ub:30,dim:30'
-                optimo = 0
-            if instancia == 'F6':
-                param     = f'lb:-100,ub:100,dim:30'
-                optimo = 0
-            if instancia == 'F7':
-                param     = f'lb:-1.28,ub:1.28,dim:30'
-                optimo = 0
-            if instancia == 'F8':
-                param     = f'lb:-500,ub:500,dim:30'
-                optimo = -2094.9145
-            if instancia == 'F9':
-                param     = f'lb:-5.12,ub:5.12,dim:30'
-                optimo = 0
-            if instancia == 'F10':
-                param     = f'lb:-32,ub:32,dim:30'
-                optimo = 0
-            if instancia == 'F11':
-                param     = f'lb:-600,ub:600,dim:30'
-                optimo = 0
-                
-            self.getCursor().execute(f'''  INSERT INTO instancias (tipo_problema, nombre, optimo, param) VALUES(?, ?, ?, ?) ''', (tipoProblema, instancia, optimo, param))
-            
-        self.commit()
-        self.desconectar()
     
     def obtenerExperimento(self):
-        
-        self.conectar()
-        
-        cursor = self.getCursor()
-        
-        cursor.execute(''' SELECT * FROM experimentos WHERE estado = 'pendiente' LIMIT 1 ''')
+        conn = sqlite3.connect(self.getDataBase())
+        conn.execute('BEGIN EXCLUSIVE')
+        cursor = conn.cursor()
+        cursor.execute(''' SELECT * FROM experimentos WHERE estado = 'pendiente' LIMIT 1''')
         data = cursor.fetchall()
-        
-        self.desconectar()
-        
-        return data
+        if data:
+            experimento_id = data[0][0]
+            cursor.execute(f''' UPDATE experimentos SET estado = 'ejecutando' WHERE id_experimento =  {experimento_id} ''')
+            conn.commit()
+            conn.close()
+            return data
+        else:
+            conn.commit()
+            conn.close()
+            return None
     
     def obtenerExperimentos(self):
         

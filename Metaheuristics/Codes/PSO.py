@@ -3,7 +3,12 @@ import numpy as np
 
 # Particle Swarm Optimization
 
-def iterarPSO(maxIter, it, dim, population, bestSolution,bestPop):
+
+def obtenerRandom(chaotic_map):
+    return random.choice(chaotic_map)
+    
+
+def iterarPSO(maxIter, it, dim, population, gBest, pBest, vel, ub):
     '''
     maxIter: Máximo de iteraciones 
     it: iteración actual
@@ -13,13 +18,18 @@ def iterarPSO(maxIter, it, dim, population, bestSolution,bestPop):
     bestPop: Mejores partículas obtenidas hasta ahora
     '''
 
-    Vmax = 5000
+    Vmax = ub * 0.1
     wMax = 0.9
-    wMin = 0.2
+    wMin = 0.1
     c1 = 2
     c2 = 2
+    
+    # Vmax = 6
+    # wMax = 0.9
+    # wMin = 0.2
+    # c1 = 2
+    # c2 = 2
 
-    vel = np.zeros((population.__len__(), dim))
     # Update the W of PSO
     w = wMax - it * ((wMax - wMin) / maxIter)
     
@@ -32,8 +42,8 @@ def iterarPSO(maxIter, it, dim, population, bestSolution,bestPop):
             #actualización de la velocidad de las partículas
             vel[i, j] = (
                 w * vel[i, j]
-                + c1 * r1 * (bestPop[i][j] - population[i][j])
-                + c2 * r2 * (bestSolution[j] - population[i][j])
+                + c1 * r1 * (pBest[i][j] - population[i][j])
+                + c2 * r2 * (gBest[j] - population[i][j])
             )
 
             #Se mantiene la velocidad en sus márgenes mínimos y máximos
@@ -42,9 +52,7 @@ def iterarPSO(maxIter, it, dim, population, bestSolution,bestPop):
 
             if vel[i, j] < -Vmax:
                 vel[i, j] = -Vmax
-            
+
             #se actualiza la población utilizando las velocidades calculadas
             population[i][j] = population[i][j] + vel[i][j]
-
-
-    return np.array(population)
+    return np.array(population), np.array(vel)
