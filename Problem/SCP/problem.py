@@ -237,8 +237,6 @@ class SCP:
             solution[idx] = 1                                   # Asigno 1 a esa columna
             feasible, aux = self.factibilityTest(solution)      # Verifico si la solucion actualizada es factible
             reparaciones += 1
-
-        
         return solution
 
     def fitness(self, solution):

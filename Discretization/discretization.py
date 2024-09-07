@@ -8,7 +8,6 @@ def aplicarBinarizacion(ind, transferFunction, binarizationFunction, bestSolutio
     individuoBin = []
     for j in range(ind.__len__()):
         individuoBin.append(0)
-
     for j in range(ind.__len__()):
         step1 = transferir(transferFunction, ind[j])
         individuoBin[j] = binarizar(binarizationFunction, step1, bestSolutionBin[j], indBin[j], iter, pop, maxIter, pos_ind, j, len(ind), chaotic_map)

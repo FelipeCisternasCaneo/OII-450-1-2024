@@ -544,3 +544,46 @@ class BD:
         
         self.desconectar()
         return data
+    
+    
+    def obtenerTiposProblemas(self):
+        self.conectar()
+        cursor = self.getCursor()
+        cursor.execute(f''' 
+            SELECT DISTINCT i.tipo_problema from experimentos e 
+            inner join instancias i ON e.fk_id_instancia = i.id_instancia
+                        ''')
+        data = cursor.fetchall()
+        return data
+    
+    def obtenerNombreExperimentos(self, tipo_problema):
+        self.conectar()
+        cursor = self.getCursor()
+        cursor.execute(f''' 
+            SELECT DISTINCT experimento  
+            from experimentos e
+            inner join instancias i ON e.fk_id_instancia = i.id_instancia
+            where i.tipo_problema = '{tipo_problema}'
+                        ''')
+        data = cursor.fetchall()
+        
+        
+        self.desconectar()
+        return data
+    
+    
+    def obtenerInstanciasByProblema(self, problema):
+        self.conectar()
+        cursor = self.getCursor()
+        cursor.execute(f''' 
+            SELECT DISTINCT i.nombre  from experimentos e 
+            inner join instancias i ON e.fk_id_instancia = i.id_instancia
+            where i.tipo_problema = '{problema}'
+                        ''')
+        data = cursor.fetchall()
+        
+        
+        self.desconectar()
+        return data
+    
+    

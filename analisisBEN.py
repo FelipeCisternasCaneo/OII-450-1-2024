@@ -5,8 +5,13 @@ import os
 import seaborn as sns
 from util import util
 from BD.sqlite import BD
+bd = BD()
 
 dirResultado = './Resultados/'
+
+
+
+
 archivoResumenFitness = open(f'{dirResultado}resumen_fitness_BEN.csv', 'w')
 archivoResumenTimes = open(f'{dirResultado}resumen_times_BEN.csv', 'w')
 archivoResumenPercentage = open(f'{dirResultado}resumen_percentage_BEN.csv', 'w')
@@ -16,7 +21,7 @@ archivoResumenTimes.write("instance, min time (s), avg. time (s), std time (s), 
 archivoResumenPercentage.write("instance, avg. XPL%, avg. XPT%, avg. XPL%, avg. XPT%, avg. XPL%, avg. XPT%, avg. XPL%, avg. XPT%\n")
 
 
-graficos = False
+graficos = True
 class InstancesMhs:
     def __init__(self):
         self.div = []
@@ -28,9 +33,9 @@ class InstancesMhs:
         self.bestTime = []
 
 # Listas de metaheuristicas a implementar
-mhsList = ['PSO']
+mhsList = ['WOA','GWO']
 # Lista de colores de grafico por metaheuristica
-color = ['r']
+color = ['r','g']
 
 # Diccionario de metaheuristicas
 mhs = {name: InstancesMhs() for name in mhsList}
@@ -88,14 +93,14 @@ for instancia in instancias:
             
         if graficos:
 
-            # fig , ax = plt.subplots()
-            # ax.plot(iteraciones,fitness)
-            # ax.set_title(f'Convergence {mh} \n {problem} run {corrida}')
-            # ax.set_ylabel("Fitness")
-            # ax.set_xlabel("Iteration")
-            # plt.savefig(f'{dirResultado}/Graficos/Coverange_{mh}_{problem}_{corrida}.pdf')
-            # plt.close('all')
-            # print(f'Grafico de covergencia realizado {mh} {problem} ')
+            fig , ax = plt.subplots()
+            ax.plot(iteraciones,fitness)
+            ax.set_title(f'Convergence {mh} \n {problem} run {corrida}')
+            ax.set_ylabel("Fitness")
+            ax.set_xlabel("Iteration")
+            plt.savefig(f'{dirResultado}/Graficos/Coverange_{mh}_{problem}_{corrida}.pdf')
+            plt.close('all')
+            print(f'Grafico de covergencia realizado {mh} {problem} ')
             
             figPER, axPER = plt.subplots()
             axPER.plot(iteraciones, xpl, color="r", label=r"$\overline{XPL}$"+": "+str(np.round(np.mean(xpl), decimals=2))+"%")
@@ -202,11 +207,62 @@ for instancia in instancias:
     plt.close('all')
     print(f'Grafico de violines con fitness para la instancia {instancia[1]} realizado con exito')
     
-    os.remove(dirResultado+"/fitness_"+instancia[1]+'.csv')
+    # os.remove(dirResultado+"/fitness_"+instancia[1]+'.csv')
     
     print("------------------------------------------------------------------------------------------------------------")
 
 archivoResumenFitness.close()
 archivoResumenTimes.close()
 archivoResumenPercentage.close()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# problemas = bd.obtenerTiposProblemas()
+
+
+# print(problemas)
+
+# for problema in problemas:
+#     instancias = bd.obtenerInstanciasByProblema(problema[0])
+    
+#     print(instancias)
+    
+#     archivoResumenFitness = open(f'{dirResultado}resumen_fitness_{problema[0]}.csv', 'w')
+#     archivoResumenTiempos = open(f'{dirResultado}resumen_tiempos_{problema[0]}.csv', 'w')
+#     archivoResumenFitness.write(f'experimento, instancia, optimo')
+#     archivoResumenTiempos.write(f'experimento, instancia')
+#     experimentos = bd.obtenerNombreExperimentos(problema[0])
+#     for experimento in experimentos:
+#         archivoResumenFitness.write(f',Best, AVG, std-dev, RPD')
+#         archivoResumenTiempos.write(f',min, AVG, std-dev')
+#     archivoResumenFitness.write('\n')
+#     archivoResumenTiempos.write('\n')
+        
+        
+#     for instancia in instancias:    
+#         experimentos = bd.obtenerNombreExperimentos(instancia[0])
+#         optimo = bd.obtenerOptimoInstancia(instancia[0])[0][0]    
+#         archivoResumenFitness.write(f',{instancia[0]},{optimo},')
+#         archivoResumenTiempos.write(f',{instancia[0]},')
+#     archivoResumenFitness.write('\n')
+#     archivoResumenTiempos.write('\n')
         

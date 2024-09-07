@@ -3,10 +3,10 @@ import json
 
 bd = BD()
 
-ben = False
-scp = True
+ben = True
+scp = False
 # mhs = ['EOO','FOX','GOA','GWO','HBA','PSA','PSO','RSA','SCA','SHO','TDA','WOA']
-mhs = ['EOO']
+mhs = ['GWO','WOA']
 
 cantidad = 0
 
@@ -36,8 +36,8 @@ if ben:
     instancias = bd.obtenerInstancias(f'''
                                       "F1"
                                       ''')
-    iteraciones = 500
-    experimentos = 3
+    iteraciones = 200
+    experimentos = 2
     poblacion = 50
     for instancia in instancias:
         for mh in mhs:
@@ -59,9 +59,9 @@ if scp:
     instancias = bd.obtenerInstancias(f'''
                                       "scp41"
                                       ''')
-    iteraciones = 50
-    experimentos = 1
-    poblacion = 5
+    iteraciones = 100
+    experimentos = 3
+    poblacion = 10
     for instancia in instancias:
 
         for mh in mhs:
@@ -71,7 +71,7 @@ if scp:
                 data = {}
                 data['experimento'] = f'{mh} {binarizacion}'
                 data['MH']          = mh
-                data['paramMH']     = f'iter:{str(iteraciones)},pop:{str(poblacion)},DS:{binarizacion},repair:complex,cros:0.9;mut:0.20'
+                data['paramMH']     = f'iter:{str(iteraciones)},pop:{str(poblacion)},DS:{binarizacion},repair:complex,cros:0.4;mut:0.50'
                 data['ML']          = ''
                 data['paramML']     = ''
                 data['ML_FS']       = ''
