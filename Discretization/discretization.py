@@ -8,10 +8,9 @@ def aplicarBinarizacion(ind, transferFunction, binarizationFunction, bestSolutio
     individuoBin = []
     for j in range(ind.__len__()):
         individuoBin.append(0)
-    for j in range(ind.__len__()):
-        step1 = transferir(transferFunction, ind[j])
-        individuoBin[j] = binarizar(binarizationFunction, step1, bestSolutionBin[j], indBin[j])
-    return np.array(individuoBin)
+    step1 = transferir(transferFunction, ind)
+    individuoBin = binarizar(binarizationFunction, step1, bestSolutionBin, indBin)
+    return individuoBin
 
 def transferir(transferFunction, dimension):
     if transferFunction == "S1":
@@ -92,36 +91,69 @@ def Z3(dimension):
 def Z4(dimension):
     return np.power( ( 1 - np.power( 20 , dimension ) ) , 0.5 )
 
+# def Standard(step1):
+#     rand = random.uniform(0.0, 1.0)
+#     binario = 0
+#     if rand <= step1:
+#         binario = 1
+#     return binario
+
+# def Complement(step1, bin):
+#     rand = random.uniform(0.0, 1.0)
+#     binario = 0
+#     if rand <= step1:
+#         if bin == 1:
+#             binario = 0
+#         if bin == 0:
+            
+#             binario =  1
+#     return binario
+
+# def Elitist(step1, bestBin):
+#     rand = random.uniform(0.0, 1.0)
+#     binario = 0
+#     if rand < step1:
+#         binario = bestBin
+#     return binario
+
+# def ProblabilityStrategy(step1, bin):
+#     alpha = 1/3
+#     if alpha < step1 and step1 <= ( ( 1/2 ) * ( 1 + alpha ) ):
+#         return bin
+#     elif step1 >= ( ( 1/2 ) * ( 1 + alpha ) ):
+#         return 1
+#     else:
+#         return 0
+
 def Standard(step1):
-    rand = random.uniform(0.0, 1.0)
-    binario = 0
-    if rand <= step1:
-        binario = 1
-    return binario
+    # Generar un vector de números aleatorios entre [0, 1] del mismo tamaño que step1_vector
+    random_numbers = np.random.rand(len(step1))
+    # Comparar cada elemento de step1_vector con los números aleatorios generados
+    return np.where(step1 >= random_numbers, 1, 0)
 
 def Complement(step1, bin):
-    rand = random.uniform(0.0, 1.0)
-    binario = 0
-    if rand <= step1:
-        if bin == 1:
-            binario = 0
-        if bin == 0:
-            
-            binario =  1
-    return binario
+    # Generar un vector de números aleatorios entre [0, 1] del mismo tamaño que step1_vector
+    random_numbers = np.random.rand(len(step1))
+    # Invertir el valor binario: 1 -> 0 y 0 -> 1
+    inverted_binary = 1 - np.array(bin)
+    # Comparar step1_vector con los números aleatorios
+    # Si step1 >= random, devolver el opuesto del valor binario, si no, devolver 0
+    return np.where(step1 >= random_numbers, inverted_binary, 0) 
+
+def Elitist(step1, bestBin):
+    # Generar un vector de números aleatorios entre [0, 1] del mismo tamaño que step1_vector
+    random_numbers = np.random.rand(len(step1))
+    bestBin = np.array(bestBin)
+    # Comparar step1_vector con los números aleatorios
+    # Si step1 >= random, devolver la mejor solucion, si no, devolver 0
+    return np.where(step1 >= random_numbers, bestBin, 0) 
 
 def ProblabilityStrategy(step1, bin):
     alpha = 1/3
-    binario = 0
-    if alpha < step1 and step1 <= ( ( 1/2 ) * ( 1 + alpha ) ):
-        binario = bin
-    if step1 > ( ( 1/2 ) * ( 1 + alpha ) ):
-        binario = 1
-    return binario
-
-def Elitist(step1, bestBin):
-    rand = random.uniform(0.0, 1.0)
-    binario = 0
-    if rand < step1:
-        binario = bestBin
-    return binario
+    limit2 = (1/2) * (1 + alpha)
+    bin = np.array(bin)
+    # Condiciones vectorizadas:
+    # 1. Si alpha < step1 <= limit2, devolver solucion actual
+    # 2. Si step1 >= limit2, devolver 1
+    # 3. Si step1 <= alpha, devolver 0
+    return np.where(step1 >= limit2, 1,np.where((step1 > alpha) & (step1 <= limit2), bin, 0))

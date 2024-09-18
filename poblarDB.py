@@ -3,10 +3,10 @@ import json
 
 bd = BD()
 
-ben = True
+ben = False
 scp = True
 # mhs = ['EOO','FOX','GOA','GWO','HBA','PSA','PSO','RSA','SCA','SHO','TDA','WOA']
-mhs = ['PSO']
+mhs = ['WOA']
 
 cantidad = 0
 
@@ -23,7 +23,7 @@ DS_actions = [
 
 if ben:
     # funciones = ['F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12','F13','F14','F16','F17','F18','F19','F20','F15','F21','F22','F23']
-    funciones = ['F1']
+    funciones = ['F9']
     for funcion in funciones:
         # poblar ejecuciones Benchmark
         instancias = bd.obtenerInstancias(f'''"{funcion}"''')
@@ -64,15 +64,15 @@ if ben:
 if scp:
     # poblar ejecuciones SCP
     instancias = bd.obtenerInstancias(f'''
-                                      "scp41"
+                                      "scpnrg1"
                                       ''')
-    iteraciones = 10
+    iteraciones = 100
     experimentos = 1
     poblacion = 10
     for instancia in instancias:
 
         for mh in mhs:
-            binarizaciones = ['S4-ELIT']
+            binarizaciones = ['V3-STD']
             for binarizacion in binarizaciones:
                 
                 data = {}

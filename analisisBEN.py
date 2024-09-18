@@ -33,7 +33,7 @@ class InstancesMhs:
         self.bestTime = []
 
 # Listas de metaheuristicas a implementar
-mhsList = ['WOA','GWO']
+mhsList = ['WOA']
 # Lista de colores de grafico por metaheuristica
 color = ['r','g']
 
@@ -43,7 +43,7 @@ mhs = {name: InstancesMhs() for name in mhsList}
 bd = BD()
 
 instancias = bd.obtenerInstancias(f'''
-                                  "F1"
+                                  "F9"
                                   ''')
 
 for instancia in instancias:

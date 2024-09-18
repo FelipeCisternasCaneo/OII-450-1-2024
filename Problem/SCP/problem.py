@@ -1,5 +1,54 @@
 import random
 import numpy as np
+# from numba import jit, prange
+
+block_size = 100
+
+def matrix_dot(A, B):
+    # Inicializar el resultado con ceros (es un vector de tamaño n)
+    C = np.zeros(A.shape[0])
+    
+    # Multiplicación por bloques
+    for i in range(0, A.shape[0], block_size):
+        # Seleccionar un bloque de filas de A
+        A_block = A[i:i+block_size, :]
+        
+        # Multiplicar el bloque de filas de A por el vector B
+        C[i:i+block_size] = np.dot(A_block, B)
+    
+    return C
+
+def matrix_dot_2(A, B):
+    # Inicializar el resultado con ceros (es un vector de tamaño m)
+    C = np.zeros(B.shape[1])
+    
+    # Multiplicación por bloques
+    for i in range(0, B.shape[1], block_size):
+        # Seleccionar un bloque de columnas de B
+        B_block = B[:, i:i+block_size]
+        
+        # Multiplicar el vector A por el bloque de columnas de B (multiplicación elemento a elemento)
+        C[i:i+block_size] = np.dot(A, B_block)
+    
+    return C
+
+def matrix_dot_3(A, B):
+    # Inicializamos el resultado como un escalar (producto punto)
+    result = 0.0
+    
+    # Multiplicación por bloques
+    for i in range(0, A.shape[0], block_size):
+        # Seleccionar un bloque de A y B
+        A_block = A[i:i+block_size]
+        B_block = B[i:i+block_size]
+        
+        # Calcular el producto punto del bloque y sumarlo al resultado total
+        result += np.dot(A_block, B_block)
+    
+    return result
+
+# Establecer el número de hilos a usar en OpenBLAS
+# os.environ["OPENBLAS_NUM_THREADS"] = "4096"
 
 class SCP:
     def __init__(self, instance):
@@ -181,8 +230,8 @@ class SCP:
 
     def factibilityTest(self, solution):
         check = True
-        validation = np.dot(self.getCoverange(), solution)
-
+        # validation = np.dot(self.getCoverange(), solution)
+        validation = matrix_dot(self.getCoverange(), solution)
         if 0 in validation:
             check = False
             # print(f'solucion infactible: {solution}')
@@ -219,28 +268,25 @@ class SCP:
 
     def repairComplex(self, solution):
         set = self.getCoverange()
-        
         feasible, aux = self.factibilityTest(solution)
         costs = self.getCost()
         reparaciones = 0
         while not feasible:
             r_no_cubiertas = np.zeros((self.getRows()))
-            
             r_no_cubiertas[np.argwhere(aux == 0)] = 1           # Vector indica las restricciones no cubiertas
-            # print(r_no_cubiertas)
-            cnc = np.dot(r_no_cubiertas, set)                   # Cantidad de restricciones no cubiertas que cubre cada columna (de tamaño n)
-            # print(cnc)
-            trade_off = np.divide(costs,cnc)                    # Trade off entre zonas no cubiertas y costo de seleccionar cada columna
-            # print(trade_off)
+            # cnc = np.dot(r_no_cubiertas, set)                   # Cantidad de restricciones no cubiertas que cubre cada columna (de tamaño n)
+            cnc = matrix_dot_2(r_no_cubiertas, set)
+            indices = np.nonzero(cnc)[0]
+            trade_off = np.divide(costs[indices],cnc[indices])  # Trade off entre zonas no cubiertas y costo de seleccionar cada columna
             idx = np.argmin(trade_off)                          # Selecciono la columna con el trade off mas bajo
-            # print(idx)
-            solution[idx] = 1                                   # Asigno 1 a esa columna
+            solution[indices[idx]] = 1                          # Asigno 1 a esa columna
             feasible, aux = self.factibilityTest(solution)      # Verifico si la solucion actualizada es factible
             reparaciones += 1
         return solution
 
     def fitness(self, solution):
-        return np.dot(solution, self.getCost())
+        return matrix_dot_3(solution, self.getCost())
+        # return np.dot(solution, self.getCost())
             
             
 def obtenerOptimo(archivoInstancia):

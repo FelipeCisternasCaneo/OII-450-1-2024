@@ -20,8 +20,8 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
     
     initializationTime1 = time.time()
 
-    print("------------------------------------------------------------------------------------------------------")
-    print("instancia SCP a resolver: "+instances)
+    # print("------------------------------------------------------------------------------------------------------")
+    # print("instancia SCP a resolver: "+instances)
     
     results = open(dirResult+mh+"_"+instances.split(".")[0]+"_"+str(id)+".csv", "w")
     results.write(
@@ -75,13 +75,13 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
     
     # mostramos nuestro fitness iniciales
     print("------------------------------------------------------------------------------------------------------")
-    print("fitness incial: "+str(fitness))
+    # print("fitness incial: "+str(fitness))
     print("best fitness inicial: "+str(bestFitness))
-    print("------------------------------------------------------------------------------------------------------")
-    if mh == "GA":
-        print("COMIENZA A TRABAJAR LA METAHEURISTICA "+mh+ " / Reparacion: "+repairType)
-    else: 
-        print("COMIENZA A TRABAJAR LA METAHEURISTICA "+mh+ " / Binarizacion: "+ str(DS) + " / Reparacion: "+repairType)
+    # print("------------------------------------------------------------------------------------------------------")
+    # if mh == "GA":
+    #     print("COMIENZA A TRABAJAR LA METAHEURISTICA "+mh+ " / Reparacion: "+repairType)
+    # else: 
+    #     print("COMIENZA A TRABAJAR LA METAHEURISTICA "+mh+ " / Binarizacion: "+ str(DS) + " / Reparacion: "+repairType)
     print("------------------------------------------------------------------------------------------------------")
     print("iteracion: "+
             str(0)+
@@ -146,7 +146,7 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
         for i in range(population.__len__()):
 
             if mh != "GA":
-                population[i] = b.aplicarBinarizacion(population[i].tolist(), DS[0], DS[1], best, matrixBin[i].tolist())
+                population[i] = b.aplicarBinarizacion(population[i].tolist(), DS[0], DS[1], best, matrixBin[i])
 
             flag, aux = instance.factibilityTest(population[i])
             # print(aux)
@@ -179,17 +179,18 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
         timerFinal = time.time()
         # calculo mi tiempo para la iteracion t
         timeEjecuted = timerFinal - timerStart
-        
-        print("iteracion: "+
-            str(iter+1)+
-            ", best: "+str(bestFitness)+
-            ", mejor iter: "+str(fitness[solutionsRanking[0]])+
-            ", peor iter: "+str(fitness[solutionsRanking[pop-1]])+
-            ", optimo: "+str(instance.getOptimum())+
-            ", time (s): "+str(round(timeEjecuted,3))+
-            ", XPT: "+str(XPT)+
-            ", XPL: "+str(XPL)+
-            ", DIV: "+str(div_t))
+        if (iter+1) % (maxIter//4) == 0:
+        # if (iter+1) % 10 == 0:
+            print("iteracion: "+
+                str(iter+1)+
+                ", best: "+str(bestFitness)+
+                ", mejor iter: "+str(fitness[solutionsRanking[0]])+
+                ", peor iter: "+str(fitness[solutionsRanking[pop-1]])+
+                ", optimo: "+str(instance.getOptimum())+
+                ", time (s): "+str(round(timeEjecuted,3))+
+                ", XPT: "+str(XPT)+
+                ", XPL: "+str(XPL)+
+                ", DIV: "+str(div_t))
         
         results.write(
             f'{iter+1},{str(bestFitness)},{str(round(timeEjecuted,3))},{str(XPL)},{str(XPT)},{str(div_t)}\n'
