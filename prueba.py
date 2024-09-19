@@ -10,8 +10,8 @@ for instance in instancias:
     block_sizes = []
     i = 1
     df = pd.DataFrame(columns=['id','best block size', 'best time', 'worst block size', 'worst time', 'total time'])
-    while i <= (instancia.getColumns()/5):
-        block_sizes.append(i*5)
+    while i <= (instancia.getColumns()/10):
+        block_sizes.append(i*10)
         i+=1
     for i in range(31):
         best_time = float('inf')
@@ -23,10 +23,10 @@ for instance in instancias:
         for block_size in block_sizes:
             start_time = time.time()
             solution = np.zeros(instancia.getColumns())
-            flag, aux = instancia.factibilityTest(solution)
+            flag, aux = instancia.factibilityTest(solution, block_size)
             if not flag: #solucion infactible
-                solution = instancia.repair(solution, 'complex')
-            fitness = instancia.fitness(solution)
+                solution = instancia.repair(solution, 'complex', block_size)
+            fitness = instancia.fitness(solution, block_size)
             elapsed_time = time.time() - start_time
             if elapsed_time < best_time:
                 best_time = elapsed_time

@@ -1,10 +1,8 @@
 import random
 import numpy as np
-# from numba import jit, prange
 
-block_size = 100
-
-def matrix_dot(A, B):
+# block_size = 100
+def matrix_dot(A, B, block_size):
     # Inicializar el resultado con ceros (es un vector de tamaño n)
     C = np.zeros(A.shape[0])
     
@@ -18,7 +16,7 @@ def matrix_dot(A, B):
     
     return C
 
-def matrix_dot_2(A, B):
+def matrix_dot_2(A, B, block_size):
     # Inicializar el resultado con ceros (es un vector de tamaño m)
     C = np.zeros(B.shape[1])
     
@@ -32,7 +30,7 @@ def matrix_dot_2(A, B):
     
     return C
 
-def matrix_dot_3(A, B):
+def matrix_dot_3(A, B, block_size):
     # Inicializamos el resultado como un escalar (producto punto)
     result = 0.0
     
@@ -228,10 +226,10 @@ class SCP:
 
         return None
 
-    def factibilityTest(self, solution):
+    def factibilityTest(self, solution, block_size):
         check = True
         # validation = np.dot(self.getCoverange(), solution)
-        validation = matrix_dot(self.getCoverange(), solution)
+        validation = matrix_dot(self.getCoverange(), solution, block_size)
         if 0 in validation:
             check = False
             # print(f'solucion infactible: {solution}')
@@ -239,11 +237,11 @@ class SCP:
 
         return check, validation
 
-    def repair(self, solution, repairType):
+    def repair(self, solution, repairType, block_size):
         if repairType == 'simple':
             solution = self.repairSimple(solution)
         if repairType == 'complex':
-            solution = self.repairComplex(solution)
+            solution = self.repairComplex(solution, block_size)
         
         return solution
 
@@ -266,26 +264,26 @@ class SCP:
         return solution
 
 
-    def repairComplex(self, solution):
+    def repairComplex(self, solution, block_size):
         set = self.getCoverange()
-        feasible, aux = self.factibilityTest(solution)
+        feasible, aux = self.factibilityTest(solution, block_size)
         costs = self.getCost()
         reparaciones = 0
         while not feasible:
             r_no_cubiertas = np.zeros((self.getRows()))
             r_no_cubiertas[np.argwhere(aux == 0)] = 1           # Vector indica las restricciones no cubiertas
             # cnc = np.dot(r_no_cubiertas, set)                   # Cantidad de restricciones no cubiertas que cubre cada columna (de tamaño n)
-            cnc = matrix_dot_2(r_no_cubiertas, set)
+            cnc = matrix_dot_2(r_no_cubiertas, set, block_size)             # Cantidad de restricciones no cubiertas que cubre cada columna (de tamaño n)
             indices = np.nonzero(cnc)[0]
             trade_off = np.divide(costs[indices],cnc[indices])  # Trade off entre zonas no cubiertas y costo de seleccionar cada columna
             idx = np.argmin(trade_off)                          # Selecciono la columna con el trade off mas bajo
             solution[indices[idx]] = 1                          # Asigno 1 a esa columna
-            feasible, aux = self.factibilityTest(solution)      # Verifico si la solucion actualizada es factible
+            feasible, aux = self.factibilityTest(solution, block_size)      # Verifico si la solucion actualizada es factible
             reparaciones += 1
         return solution
 
-    def fitness(self, solution):
-        return matrix_dot_3(solution, self.getCost())
+    def fitness(self, solution, block_size):
+        return matrix_dot_3(solution, self.getCost(), block_size)
         # return np.dot(solution, self.getCost())
             
             
