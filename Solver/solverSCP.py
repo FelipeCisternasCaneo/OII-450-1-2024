@@ -1,7 +1,6 @@
 import numpy as np
 import os
 import time
-
 from Problem.SCP.problem import SCP
 from Metaheuristics.imports import iterarGWO,iterarSCA,iterarWOA,iterarPSA,iterarGA
 from Metaheuristics.imports import iterarPSO,iterarFOX,iterarEOO,iterarRSA,iterarGOA,iterarHBA,iterarTDO,iterarSHO
@@ -19,9 +18,6 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
     initialTime = time.time()
     
     initializationTime1 = time.time()
-
-    # print("------------------------------------------------------------------------------------------------------")
-    # print("instancia SCP a resolver: "+instances)
     
     results = open(dirResult+mh+"_"+instances.split(".")[0]+"_"+str(id)+".csv", "w")
     results.write(
@@ -75,19 +71,11 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
     
     # mostramos nuestro fitness iniciales
     print("------------------------------------------------------------------------------------------------------")
-    # print("fitness incial: "+str(fitness))
-    print("best fitness inicial: "+str(bestFitness))
-    # print("------------------------------------------------------------------------------------------------------")
-    # if mh == "GA":
-    #     print("COMIENZA A TRABAJAR LA METAHEURISTICA "+mh+ " / Reparacion: "+repairType)
-    # else: 
-    #     print("COMIENZA A TRABAJAR LA METAHEURISTICA "+mh+ " / Binarizacion: "+ str(DS) + " / Reparacion: "+repairType)
+    print(f"{instances} - {DS} - {instance.getBlockSizes()} - best fitness inicial: {str(bestFitness)}")
     print("------------------------------------------------------------------------------------------------------")
     print("iteracion: "+
             str(0)+
             ", best: "+str(bestFitness)+
-            ", mejor iter: "+str(fitness[solutionsRanking[0]])+
-            ", peor iter: "+str(fitness[solutionsRanking[pop-1]])+
             ", optimo: "+str(instance.getOptimum())+
             ", time (s): "+str(round(initializationTime2-initializationTime1,3))+
             ", XPT: "+str(XPT)+
@@ -184,8 +172,6 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
             print("iteracion: "+
                 str(iter+1)+
                 ", best: "+str(bestFitness)+
-                ", mejor iter: "+str(fitness[solutionsRanking[0]])+
-                ", peor iter: "+str(fitness[solutionsRanking[pop-1]])+
                 ", optimo: "+str(instance.getOptimum())+
                 ", time (s): "+str(round(timeEjecuted,3))+
                 ", XPT: "+str(XPT)+
@@ -214,6 +200,3 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
     bd.actualizarExperimento(id, 'terminado')
     
     os.remove(dirResult+mh+"_"+instances.split(".")[0]+"_"+str(id)+".csv")
-    
-    
-    

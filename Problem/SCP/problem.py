@@ -1,52 +1,31 @@
 import random
 import numpy as np
+from scipy.sparse import csr_matrix, coo_matrix
 
-# block_size = 100
-def matrix_dot(A, B, block_size):
+
+def matrix_dot_1(A, B, block_size):
     # Inicializar el resultado con ceros (es un vector de tamaño n)
     C = np.zeros(A.shape[0])
-    
     # Multiplicación por bloques
     for i in range(0, A.shape[0], block_size):
         # Seleccionar un bloque de filas de A
         A_block = A[i:i+block_size, :]
-        
         # Multiplicar el bloque de filas de A por el vector B
         C[i:i+block_size] = np.dot(A_block, B)
-    
     return C
 
 def matrix_dot_2(A, B, block_size):
-    # Inicializar el resultado con ceros (es un vector de tamaño m)
-    C = np.zeros(B.shape[1])
-    
-    # Multiplicación por bloques
-    for i in range(0, B.shape[1], block_size):
-        # Seleccionar un bloque de columnas de B
-        B_block = B[:, i:i+block_size]
-        
-        # Multiplicar el vector A por el bloque de columnas de B (multiplicación elemento a elemento)
-        C[i:i+block_size] = np.dot(A, B_block)
-    
-    return C
-
-def matrix_dot_3(A, B, block_size):
     # Inicializamos el resultado como un escalar (producto punto)
     result = 0.0
-    
     # Multiplicación por bloques
     for i in range(0, A.shape[0], block_size):
         # Seleccionar un bloque de A y B
         A_block = A[i:i+block_size]
         B_block = B[i:i+block_size]
-        
         # Calcular el producto punto del bloque y sumarlo al resultado total
         result += np.dot(A_block, B_block)
     
     return result
-
-# Establecer el número de hilos a usar en OpenBLAS
-# os.environ["OPENBLAS_NUM_THREADS"] = "4096"
 
 class SCP:
     def __init__(self, instance):
@@ -55,8 +34,24 @@ class SCP:
         self.__coverage = []
         self.__cost = []
         self.__optimum = 0
+        self.__block_size = 0
+        if len(instance) == 5:
+            if instance[3] == '4' or instance[3] == '5' or instance[3] == '6':
+                self.__block_size = 40
+            elif instance[3] == 'a' or instance[3] == 'b':
+                self.__block_size = 30
+            elif instance[3] == 'c' or instance[3] == 'd':
+                self.__block_size = 20
+        else:
+            if instance[5] == 'e' or instance[5] == 'f':
+                self.__block_size = 10
+            elif instance[5] == 'g' or instance[5] == 'h':
+                self.__block_size = 120
         self.readInstance(instance)
 
+    def getBlockSizes(self):
+        return self.__block_size
+    
     def getRows(self):
         return self.__rows
 
@@ -226,22 +221,19 @@ class SCP:
 
         return None
 
-    def factibilityTest(self, solution, block_size):
-        check = True
-        # validation = np.dot(self.getCoverange(), solution)
-        validation = matrix_dot(self.getCoverange(), solution, block_size)
+    def factibilityTest(self, solution):
+        check = True        
+        validation = matrix_dot_1(self.getCoverange(), solution, self.__block_size)
         if 0 in validation:
             check = False
-            # print(f'solucion infactible: {solution}')
-            # print(f'motivo: {validation}')
-
         return check, validation
+    
 
-    def repair(self, solution, repairType, block_size):
+    def repair(self, solution, repairType):
         if repairType == 'simple':
             solution = self.repairSimple(solution)
         if repairType == 'complex':
-            solution = self.repairComplex(solution, block_size)
+            solution = self.repairComplex(solution)
         
         return solution
 
@@ -262,29 +254,34 @@ class SCP:
                 reparaciones +=1
         # print(f'total de reparaciones realizadas: {reparaciones}')
         return solution
-
-
-    def repairComplex(self, solution, block_size):
-        set = self.getCoverange()
-        feasible, aux = self.factibilityTest(solution, block_size)
+    
+    def repairComplex(self, solution):
+        # Convertir la matriz de cobertura a formato disperso CSR si no está ya en ese formato
+        set_sparse = csr_matrix(self.getCoverange())  # Cobertura en formato disperso
         costs = self.getCost()
+        # Realizar la prueba de factibilidad inicial
+        feasible, aux = self.factibilityTest(solution)
         reparaciones = 0
-        while not feasible:
-            r_no_cubiertas = np.zeros((self.getRows()))
-            r_no_cubiertas[np.argwhere(aux == 0)] = 1           # Vector indica las restricciones no cubiertas
-            # cnc = np.dot(r_no_cubiertas, set)                   # Cantidad de restricciones no cubiertas que cubre cada columna (de tamaño n)
-            cnc = matrix_dot_2(r_no_cubiertas, set, block_size)             # Cantidad de restricciones no cubiertas que cubre cada columna (de tamaño n)
-            indices = np.nonzero(cnc)[0]
-            trade_off = np.divide(costs[indices],cnc[indices])  # Trade off entre zonas no cubiertas y costo de seleccionar cada columna
-            idx = np.argmin(trade_off)                          # Selecciono la columna con el trade off mas bajo
-            solution[indices[idx]] = 1                          # Asigno 1 a esa columna
-            feasible, aux = self.factibilityTest(solution, block_size)      # Verifico si la solucion actualizada es factible
+        while not feasible: # repetimos hasta que la solución sea factible
+            # Crear un vector disperso para restricciones no cubiertas
+            r_no_cubiertas = (aux == 0).astype(np.int32) 
+            # Calcular la cantidad de restricciones no cubiertas que cubre cada columna usando multiplicación dispersa
+            cnc = r_no_cubiertas @ set_sparse  # Operador @ realiza np.dot en formato disperso
+            # Obtener los índices de columnas que cubren restricciones no cubiertas
+            indices = np.nonzero(cnc)[0]  
+            # Calcular el trade-off entre costos y cobertura
+            trade_off = costs[indices] / cnc[indices]
+            # Seleccionar la columna con el menor trade-off
+            idx = np.argmin(trade_off)
+            # Actualizar la solución asignando 1 a la columna seleccionada
+            solution[indices[idx]] = 1
+            # Verificar factibilidad nuevamente
+            feasible, aux = self.factibilityTest(solution)
             reparaciones += 1
         return solution
 
-    def fitness(self, solution, block_size):
-        return matrix_dot_3(solution, self.getCost(), block_size)
-        # return np.dot(solution, self.getCost())
+    def fitness(self, solution):
+        return matrix_dot_2(solution, self.getCost(), self.__block_size)
             
             
 def obtenerOptimo(archivoInstancia):

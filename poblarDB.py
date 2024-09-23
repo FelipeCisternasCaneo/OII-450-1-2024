@@ -23,7 +23,7 @@ DS_actions = [
 
 if ben:
     # funciones = ['F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12','F13','F14','F16','F17','F18','F19','F20','F15','F21','F22','F23']
-    funciones = ['F9']
+    funciones = ['F8']
     for funcion in funciones:
         # poblar ejecuciones Benchmark
         instancias = bd.obtenerInstancias(f'''"{funcion}"''')
@@ -43,8 +43,8 @@ if ben:
         # Para funciones F15, F21, F22, F23
         if funcion in ['F15','F21','F22','F23']:
             dimensiones = [4]
-        iteraciones = 100
-        experimentos = 1
+        iteraciones = 1000
+        experimentos = 3
         poblacion = 10
         for instancia in instancias:
             for dim in dimensiones:
@@ -60,21 +60,18 @@ if ben:
                     data['estado']      = 'pendiente'
                     cantidad +=experimentos
                     bd.insertarExperimentos(data, experimentos, instancia[0])
-
 if scp:
     # poblar ejecuciones SCP
     instancias = bd.obtenerInstancias(f'''
-                                      "scpnrg1"
+                                      "scp41"
                                       ''')
     iteraciones = 100
     experimentos = 1
     poblacion = 10
     for instancia in instancias:
-
         for mh in mhs:
-            binarizaciones = ['V3-STD']
+            binarizaciones = ['V3-ELIT']
             for binarizacion in binarizaciones:
-                
                 data = {}
                 data['experimento'] = f'{mh} {binarizacion}'
                 data['MH']          = mh
@@ -84,7 +81,6 @@ if scp:
                 data['ML_FS']       = ''
                 data['paramML_FS']  = ''
                 data['estado']      = 'pendiente'
-
                 cantidad +=experimentos
                 bd.insertarExperimentos(data, experimentos, instancia[0])
 

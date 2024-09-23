@@ -5,9 +5,6 @@ from scipy import special as scyesp
 import time
 
 def aplicarBinarizacion(ind, transferFunction, binarizationFunction, bestSolutionBin, indBin):
-    individuoBin = []
-    for j in range(ind.__len__()):
-        individuoBin.append(0)
     step1 = transferir(transferFunction, ind)
     individuoBin = binarizar(binarizationFunction, step1, bestSolutionBin, indBin)
     return individuoBin

@@ -35,9 +35,6 @@ def solverB(id, mh, maxIter, pop, function, lb, ub, dim):
     if function == 'F8':
         optimo = optimo * dim
     initializationTime1 = time.time()
-
-    print("------------------------------------------------------------------------------------------------------")
-    print(function,str(dim),mh)
     
     results = open(dirResult+mh+"_"+function+"_"+str(id)+".csv", "w")
     results.write(
@@ -88,12 +85,9 @@ def solverB(id, mh, maxIter, pop, function, lb, ub, dim):
     
     # mostramos nuestro fitness iniciales
     print("------------------------------------------------------------------------------------------------------")
-    print("fitness incial: "+str(fitness))
-    print("best fitness inicial: "+str(bestFitness))
+    print(f"{function} {str(dim)} {mh} - best fitness inicial: {str(bestFitness)}")
     print("------------------------------------------------------------------------------------------------------")
-    print("COMIENZA A TRABAJAR LA METAHEURISTICA "+mh)
-    print("------------------------------------------------------------------------------------------------------")
-    print("iteracion: "+
+    print("iter: "+
             str(0)+
             ", best: "+str(format(bestFitness,".2e"))+
             ", optimo: "+str(optimo)+
@@ -169,20 +163,23 @@ def solverB(id, mh, maxIter, pop, function, lb, ub, dim):
         # calculo mi tiempo para la iteracion t
         timeEjecuted = timerFinal - timerStart
         
-        print("iteracion: "+
-            str(iter+1)+
-            ", best: "+str(format(bestFitness,".2e"))+
-            ", optimo: "+str(optimo)+
-            ", time (s): "+str(round(timeEjecuted,3))+
-            ", XPT: "+str(XPT)+
-            ", XPL: "+str(XPL)+
-            ", DIV: "+str(div_t))
-            
+        if (iter+1) % (maxIter//4) == 0:
+        # if (iter+1) % 10 == 0:
+            print("iter: "+
+                str(iter+1)+
+                ", best: "+str(format(bestFitness,".2e"))+
+                ", optimo: "+str(optimo)+
+                ", time (s): "+str(round(timeEjecuted,3))+
+                ", XPT: "+str(XPT)+
+                ", XPL: "+str(XPL)+
+                ", DIV: "+str(div_t))
+                
         results.write(
             f'{iter+1},{str(format(bestFitness,".2e"))},{str(round(timeEjecuted,3))},{str(XPL)},{str(XPT)},{str(div_t)}\n'
         )
     finalTime = time.time()
     timeExecution = finalTime - initialTime
+    print("------------------------------------------------------------------------------------------------------")
     print("Tiempo de ejecucion (s): "+str(timeExecution))
     print("best fitness: "+str(bestFitness))
     print("------------------------------------------------------------------------------------------------------")

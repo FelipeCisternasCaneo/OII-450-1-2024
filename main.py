@@ -4,12 +4,9 @@ from Solver.solverSCP import solverSCP
 from BD.sqlite import BD
 import json
 
-
 def main():
     bd = BD()
-
     data = bd.obtenerExperimento()
-
     id              = 0
     experimento     = ''
     instancia       = ''
@@ -20,14 +17,9 @@ def main():
     pop             = 0
     dim             = 0 
     ds              = []
-    clasificador    = ''
-    parametrosC     = '' 
-
-
     while data != None:
         print("-------------------------------------------------------------------------------------------------------")
         print(data)
-        
         id = int(data[0][0])
         id_instancia = int(data[0][9])
         datosInstancia = bd.obtenerInstancia(id_instancia)
@@ -63,15 +55,12 @@ def main():
             
             solverSCP(id, mh, maxIter, pop, instancia, ds, repair, parMH)
         data = bd.obtenerExperimento()
-        
-        print(data)
-        
-    print("-------------------------------------------------------")
-    print("-------------------------------------------------------")
+    print("------------------------------------------------------------------------------------------------------")
+    print("------------------------------------------------------------------------------------------------------")
     print("Se han ejecutado todos los experimentos pendientes.")
-    print("-------------------------------------------------------")
-    print("-------------------------------------------------------")
+    print("------------------------------------------------------------------------------------------------------")
+    print("------------------------------------------------------------------------------------------------------")
 
-
-# cProfile.run('main()')
-main()
+if __name__ == "__main__":
+    main()
+    # cProfile.run('main()')
