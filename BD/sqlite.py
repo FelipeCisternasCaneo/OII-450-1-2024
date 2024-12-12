@@ -5,20 +5,25 @@ from util import util
 
 class BD:
     def __init__(self):
-        self.__dataBase = 'OII-450-1-2024/BD/resultados.db'
+        self.__dataBase = 'BD/resultados.db'
         self.__conexion = None
         self.__cursor   = None
 
     def getDataBase(self):
         return self.__dataBase
+    
     def setDataBase(self, dataBase):
         self.__dataBase = dataBase
+        
     def getConexion(self):
         return self.__conexion
+    
     def setConexion(self, conexion):
         self.__conexion = conexion
+        
     def getCursor(self):
         return self.__cursor
+    
     def setCursor(self, cursor):
         self.__cursor = cursor
 
@@ -119,7 +124,8 @@ class BD:
     def insertarInstanciasBEN(self):
         self.conectar()
         
-        data = ['F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12','F13','F14','F15','F16','F17','F18','F19','F20','F21','F22','F23', 'F1_cec2017', 'F2_cec2017', 'F3_cec2017', 'F5_cec2017']    
+        data = ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12', 'F13', 'F14', 'F15', 'F16', 'F17', 'F18', 'F19', 'F20', 'F21', 'F22', 'F23']
+        
         for instancia in data:
             
             tipoProblema = 'BEN'
@@ -224,7 +230,7 @@ class BD:
     def insertarInstanciasSCP(self):
         self.conectar()
         
-        data = os.listdir('OII-450-1-2024/Problem/SCP/Instances/')        
+        data = os.listdir('./Problem/SCP/Instances/')        
         for d in data:
             tipoProblema = 'SCP'
             nombre = d.split(".")[0]
