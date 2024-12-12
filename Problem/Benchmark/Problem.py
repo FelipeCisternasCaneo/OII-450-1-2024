@@ -1,8 +1,6 @@
 import numpy as np 
 import math
 
-from Problem.Benchmark import simple
-
 def fitness(problem, individual):
     fitness = 0
     
@@ -76,15 +74,6 @@ def fitness(problem, individual):
         
     if problem == 'F23':
         fitness = F23(individual)
-        
-    if problem == 'F1_cec2017':
-        fitness = F1_cec2017(individual)
-        
-    if problem == 'F2_cec2017':
-        fitness = F2_cec2017(individual)
-        
-    if problem == 'F5_cec2017':
-        fitness = F5_cec2017(individual)
     
     return fitness
 
@@ -450,19 +439,3 @@ def F23(L):
     o = fit.item(0)
     
     return o
-
-def F1_cec2017(x):
-    x = np.atleast_2d(x)
-    return simple.f1(x)
-
-def F2_cec2017(x):
-    x = np.atleast_2d(x)
-    return simple.f2(x)
-
-def F3_cec2017(x):
-    #x = np.atleast_2d(x)
-    return simple.f3(x)
-
-def F5_cec2017(x):
-    x = np.atleast_2d(x)
-    return simple.f5(x)

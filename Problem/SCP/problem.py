@@ -12,7 +12,6 @@ def matrix_dot_1(A, B, block_size):
         A_block = A[i: i + block_size, :]
         # Multiplicar el bloque de filas de A por el vector B
         C[i: i + block_size] = np.dot(A_block, B)
-        
     return C
 
 def matrix_dot_2(A, B, block_size):
@@ -86,7 +85,7 @@ class SCP:
 
     def readInstance(self, instance):
         
-        dirSCP = './Problem/SCP/Instances/'
+        dirSCP = 'OII-450-1-2024/Problem/SCP/Instances/'
         
         instance = dirSCP+instance+".txt" 
         

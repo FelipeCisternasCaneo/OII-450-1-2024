@@ -81,19 +81,21 @@ for instancia in instancias:
         for name in mhsList:
             if mh == name:
                 mhs[name].fitness.append(np.min(fitness))
-                mhs[name].time.append(np.round(np.sum(time),3))
-                mhs[name].xpl.append(np.round(np.mean(xpl), decimals=2))
-                mhs[name].xpt.append(np.round(np.mean(xpt), decimals=2))
+                mhs[name].time.append(np.round(np.sum(time), 3))
+                mhs[name].xpl.append(np.round(np.mean(xpl), decimals = 2))
+                mhs[name].xpt.append(np.round(np.mean(xpt), decimals = 2))
                 archivoFitness.write(f'{name},{str(np.min(fitness))}\n')
             
         if graficos:
-            fig , ax = plt.subplots()
+            fig, ax = plt.subplots()
             ax.plot(iteraciones,fitness)
             ax.set_title(f'Convergence {mh} \n {problem} run {corrida}')
             ax.set_ylabel("Fitness")
             ax.set_xlabel("Iteration")
+            
             plt.savefig(f'{dirResultado}/Graficos/Coverange_{mh}_{problem}_{corrida}.pdf')
             plt.close('all')
+            
             print(f'Grafico de covergencia realizado {mh} {problem} ')
             
             figPER, axPER = plt.subplots()
@@ -117,10 +119,11 @@ for instancia in instancias:
         os.remove('./Resultados/Transitorio/' + nombreArchivo + '.csv')
     
     resumenFitness = resumenTimes = resumenPercentage = ''''''
+    
     for name in mhsList:
         resumenFitness = resumenFitness + f''',{np.min(mhs[name].fitness)},{np.round(np.average(mhs[name].fitness), 3)},{np.round(np.std(mhs[name].fitness), 3)}''' 
         resumenTimes = resumenTimes + f''',{np.min(mhs[name].time)},{np.round(np.average(mhs[name].time), 3)},{np.round(np.std(mhs[name].time), 3)}'''
-        resumenPercentage = resumenPercentage + f''',{np.round(np.average(mhs[name].xpl), 3)},{np.round(np.average(mhs[name].xpt), 3)}'''
+        resumenPercentage = resumenPercentage + f''',{np.round(np.average(mhs[name].xpl),3)},{np.round(np.average(mhs[name].xpt), 3)}'''
     
     archivoResumenFitness.write(f'''{problem}{resumenFitness} \n''')
     archivoResumenTimes.write(f'''{problem}{resumenTimes} \n''')
@@ -217,3 +220,34 @@ for instancia in instancias:
 archivoResumenFitness.close()
 archivoResumenTimes.close()
 archivoResumenPercentage.close()
+
+# problemas = bd.obtenerTiposProblemas()
+
+
+# print(problemas)
+
+# for problema in problemas:
+#     instancias = bd.obtenerInstanciasByProblema(problema[0])
+    
+#     print(instancias)
+    
+#     archivoResumenFitness = open(f'{dirResultado}resumen_fitness_{problema[0]}.csv', 'w')
+#     archivoResumenTiempos = open(f'{dirResultado}resumen_tiempos_{problema[0]}.csv', 'w')
+#     archivoResumenFitness.write(f'experimento, instancia, optimo')
+#     archivoResumenTiempos.write(f'experimento, instancia')
+#     experimentos = bd.obtenerNombreExperimentos(problema[0])
+#     for experimento in experimentos:
+#         archivoResumenFitness.write(f',Best, AVG, std-dev, RPD')
+#         archivoResumenTiempos.write(f',min, AVG, std-dev')
+#     archivoResumenFitness.write('\n')
+#     archivoResumenTiempos.write('\n')
+        
+        
+#     for instancia in instancias:    
+#         experimentos = bd.obtenerNombreExperimentos(instancia[0])
+#         optimo = bd.obtenerOptimoInstancia(instancia[0])[0][0]    
+#         archivoResumenFitness.write(f',{instancia[0]},{optimo},')
+#         archivoResumenTiempos.write(f',{instancia[0]},')
+#     archivoResumenFitness.write('\n')
+#     archivoResumenTiempos.write('\n')
+        

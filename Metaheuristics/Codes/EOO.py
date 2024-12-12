@@ -2,7 +2,8 @@ import random
 import numpy as np
 
 # Eurasian Oystercatcher Optimiser (EOO)
-# doi.org/10.1515/jisys-2022-0017
+# https://doi.org/10.1515/jisys-2022-0017
+
 def iterarEOO(maxIter, it, population, bestSolution):
     population = np.array(population, dtype=np.float64)
     bestSolution = np.array(bestSolution, dtype=np.float64)

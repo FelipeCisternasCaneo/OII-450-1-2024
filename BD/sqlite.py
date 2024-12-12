@@ -5,7 +5,7 @@ from util import util
 
 class BD:
     def __init__(self):
-        self.__dataBase = 'BD/resultados.db'
+        self.__dataBase = 'OII-450-1-2024/BD/resultados.db'
         self.__conexion = None
         self.__cursor   = None
 
@@ -119,8 +119,7 @@ class BD:
     def insertarInstanciasBEN(self):
         self.conectar()
         
-        data = ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12', 'F13', 'F14', 'F15', 'F16', 'F17', 'F18', 'F19', 'F20', 'F21' ,'F22', 'F23']
-              
+        data = ['F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12','F13','F14','F15','F16','F17','F18','F19','F20','F21','F22','F23', 'F1_cec2017', 'F2_cec2017', 'F3_cec2017', 'F5_cec2017']    
         for instancia in data:
             
             tipoProblema = 'BEN'
@@ -216,7 +215,7 @@ class BD:
             if instancia == "F23":
                 param     = f'lb:0,ub:10'
                 optimo = -10.5363
-                
+           
             self.getCursor().execute(f'''  INSERT INTO instancias (tipo_problema, nombre, optimo, param) VALUES(?, ?, ?, ?) ''', (tipoProblema, instancia, optimo, param))
             
         self.commit()
@@ -225,7 +224,7 @@ class BD:
     def insertarInstanciasSCP(self):
         self.conectar()
         
-        data = os.listdir('./Problem/SCP/Instances/')        
+        data = os.listdir('OII-450-1-2024/Problem/SCP/Instances/')        
         for d in data:
             tipoProblema = 'SCP'
             nombre = d.split(".")[0]
@@ -605,7 +604,7 @@ class BD:
             SELECT DISTINCT i.tipo_problema from experimentos e 
             inner join instancias i ON e.fk_id_instancia = i.id_instancia
                         ''')
-        
+
         data = cursor.fetchall()
         
         return data
