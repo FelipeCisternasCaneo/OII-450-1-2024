@@ -1,8 +1,9 @@
 import cProfile
+import json
+
 from Solver.solverB import solverB
 from Solver.solverSCP import solverSCP
 from BD.sqlite import BD
-import json
 
 def main():
     bd = BD()
@@ -17,6 +18,7 @@ def main():
     pop             = 0
     dim             = 0 
     ds              = []
+    
     while data != None:
         print("-------------------------------------------------------------------------------------------------------")
         print(data)
@@ -31,7 +33,6 @@ def main():
         mh = data[0][2]
         parametrosMH = data[0][3]
         ml = data[0][4]
-
         
         maxIter = int(parametrosMH.split(",")[0].split(":")[1])
         pop = int(parametrosMH.split(",")[1].split(":")[1])
@@ -42,9 +43,9 @@ def main():
             dim = int(experimento.split(" ")[1])
             lb =  float(parametrosInstancia.split(",")[0].split(":")[1])
             ub =  float(parametrosInstancia.split(",")[1].split(":")[1])
-            solverB(id, mh, maxIter, pop, instancia, lb, ub, dim)
             
-
+            solverB(id, mh, maxIter, pop, instancia, lb, ub, dim)
+        
         if problema == 'SCP':
             bd.actualizarExperimento(id, 'ejecutando')
             repair = parametrosMH.split(",")[3].split(":")[1]
@@ -54,7 +55,9 @@ def main():
             parMH = parametrosMH.split(",")[4]
             
             solverSCP(id, mh, maxIter, pop, instancia, ds, repair, parMH)
+        
         data = bd.obtenerExperimento()
+    
     print("------------------------------------------------------------------------------------------------------")
     print("------------------------------------------------------------------------------------------------------")
     print("Se han ejecutado todos los experimentos pendientes.")
