@@ -16,7 +16,7 @@ from util import util
 from BD.sqlite import BD
 
 def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
-    dirResult = './Resultados/'
+    dirResult = 'OII-450-1-2024/Resultados/'
     
     instance = SCP(instances)
     

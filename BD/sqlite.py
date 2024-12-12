@@ -5,7 +5,7 @@ from util import util
 
 class BD:
     def __init__(self):
-        self.__dataBase = 'BD/resultados.db'
+        self.__dataBase = 'OII-450-1-2024/BD/resultados.db'
         self.__conexion = None
         self.__cursor   = None
 
@@ -97,7 +97,6 @@ class BD:
 
         
         self.desconectar()
-    
     
     def insertarExperimentos(self, data, corridas, id):
         self.conectar()
@@ -230,7 +229,7 @@ class BD:
     def insertarInstanciasSCP(self):
         self.conectar()
         
-        data = os.listdir('./Problem/SCP/Instances/')        
+        data = os.listdir('OII-450-1-2024/Problem/SCP/Instances/')
         for d in data:
             tipoProblema = 'SCP'
             nombre = d.split(".")[0]

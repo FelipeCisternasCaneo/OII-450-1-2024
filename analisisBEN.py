@@ -7,7 +7,7 @@ from util import util
 from BD.sqlite import BD
 bd = BD()
 
-dirResultado = './Resultados/'
+dirResultado = 'OII-450-1-2024/Resultados/'
 
 archivoResumenFitness = open(f'{dirResultado}resumen_fitness_BEN.csv', 'w')
 archivoResumenTimes = open(f'{dirResultado}resumen_times_BEN.csv', 'w')
@@ -63,11 +63,11 @@ for instancia in instancias:
         nombreArchivo = d[0]
         archivo = d[1]
 
-        direccionDestiono = './Resultados/Transitorio/' + nombreArchivo + '.csv'
+        direccionDestino = 'OII-450-1-2024/Resultados/Transitorio/' + nombreArchivo + '.csv'
         # print("-------------------------------------------------------------------------------")
-        util.writeTofile(archivo, direccionDestiono)
+        util.writeTofile(archivo, direccionDestino)
         
-        data = pd.read_csv(direccionDestiono)
+        data = pd.read_csv(direccionDestino)
         
         mh = nombreArchivo.split('_')[0]
         problem = nombreArchivo.split('_')[1]
@@ -116,7 +116,7 @@ for instancia in instancias:
         if corrida == 32:
             corrida = 1
         
-        os.remove('./Resultados/Transitorio/' + nombreArchivo + '.csv')
+        os.remove('OII-450-1-2024/Resultados/Transitorio/' + nombreArchivo + '.csv')
     
     resumenFitness = resumenTimes = resumenPercentage = ''''''
     
@@ -135,10 +135,10 @@ for instancia in instancias:
         nombreArchivo = d[4]
         archivo = d[5]
 
-        direccionDestiono = './Resultados/Transitorio/' + nombreArchivo + '.csv'
-        util.writeTofile(archivo,direccionDestiono)
+        direccionDestino = 'OII-450-1-2024/Resultados/Transitorio/' + nombreArchivo + '.csv'
+        util.writeTofile(archivo,direccionDestino)
         
-        data = pd.read_csv(direccionDestiono)
+        data = pd.read_csv(direccionDestino)
         
         mh = nombreArchivo.split('_')[0]
         problem = nombreArchivo.split('_')[1]
@@ -154,7 +154,7 @@ for instancia in instancias:
                 mhs[name].bestFitness = fitness
                 mhs[name].bestTime = time
         
-        os.remove('./Resultados/Transitorio/' + nombreArchivo + '.csv')
+        os.remove('OII-450-1-2024/Resultados/Transitorio/' + nombreArchivo + '.csv')
 
     print("------------------------------------------------------------------------------------------------------------")
     figPER, axPER = plt.subplots()

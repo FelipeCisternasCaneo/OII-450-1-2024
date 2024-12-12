@@ -67,7 +67,7 @@ for funcion in funciones:
     elif funcion == 'F22' or funcion == 'F23': ax.set_zlim(-0.6, 0)  # Ajustar el límite inferior del eje Z para que la proyección se vea bien 
     else: ax.set_zlim(0, np.max(Z))  # Ajustar el límite inferior del eje Z para que la proyección se vea bien
 
-    plt.savefig(f'./Graficos_Benchmark/{funcion}.pdf')
+    plt.savefig(f'OII-450-1-2024/Graficos_Benchmark/{funcion}.pdf')
     
     print(f'Grafico para la funcion {funcion} ha sido creado')
     
