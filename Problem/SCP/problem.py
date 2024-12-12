@@ -2,16 +2,15 @@ import random
 import numpy as np
 from scipy.sparse import csr_matrix, coo_matrix
 
-
 def matrix_dot_1(A, B, block_size):
     # Inicializar el resultado con ceros (es un vector de tamaño n)
     C = np.zeros(A.shape[0])
     # Multiplicación por bloques
     for i in range(0, A.shape[0], block_size):
         # Seleccionar un bloque de filas de A
-        A_block = A[i:i+block_size, :]
+        A_block = A[i: i + block_size, :]
         # Multiplicar el bloque de filas de A por el vector B
-        C[i:i+block_size] = np.dot(A_block, B)
+        C[i: i + block_size] = np.dot(A_block, B)
     return C
 
 def matrix_dot_2(A, B, block_size):
@@ -20,8 +19,8 @@ def matrix_dot_2(A, B, block_size):
     # Multiplicación por bloques
     for i in range(0, A.shape[0], block_size):
         # Seleccionar un bloque de A y B
-        A_block = A[i:i+block_size]
-        B_block = B[i:i+block_size]
+        A_block = A[i: i + block_size]
+        B_block = B[i: i + block_size]
         # Calcular el producto punto del bloque y sumarlo al resultado total
         result += np.dot(A_block, B_block)
     
@@ -84,7 +83,7 @@ class SCP:
 
     def readInstance(self, instance):
         
-        dirSCP = './Problem/SCP/Instances/'
+        dirSCP = 'OII-450-1-2024/Problem/SCP/Instances/'
         
         instance = dirSCP+instance+".txt" 
         
@@ -117,7 +116,6 @@ class SCP:
 
         # Lecutra de Restricciones
         row = 0
-
 
         while line != "":
             numUnos = int(line)
@@ -282,8 +280,7 @@ class SCP:
 
     def fitness(self, solution):
         return matrix_dot_2(solution, self.getCost(), self.__block_size)
-            
-            
+    
 def obtenerOptimo(archivoInstancia):
     orden = {
         'scp41':[0,429]

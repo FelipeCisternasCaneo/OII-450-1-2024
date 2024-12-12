@@ -3,7 +3,7 @@ import random
 import math
 
 # Gannet optimization algorithm
-# doi.org/10.1016/j.matcom.2022.06.007
+# https://doi.org/10.1016/j.matcom.2022.06.007
 
 def V(x):
     if x <= math.pi: return (-(1 / math.pi) * x + 1) # (0,π)
@@ -20,7 +20,7 @@ def levy():
     seno = math.sin(math.pi * beta / 2)
     expo = 1 / beta
     
-    sigma = ((gamma1 * seno) / (gamma2 * beta * 2**((beta-1)/2))) ** expo
+    sigma = ((gamma1 * seno) / (gamma2 * beta * 2 ** ((beta - 1) / 2))) ** expo
         
     return 0.01 * ((mu * sigma) / (abs(v) ** expo))
 
@@ -40,8 +40,10 @@ def iterarGOA(maxIter, it, dim, population, bestSolution, fitness, function, typ
     # ========= Exploracion =========
     for i in range(len(population)):
         r = random.uniform(0, 1)
+        
         if r > 0.5:
                 q = random.uniform(0, 1)
+                
                 if q >= 0.5:
                     for j in range(dim):
                         r2 = random.uniform(0, 1)
@@ -55,6 +57,7 @@ def iterarGOA(maxIter, it, dim, population, bestSolution, fitness, function, typ
 
                         # Ecuacion 7a
                         MX[i][j] = population[i,j] + u1 + u2
+                
                 else:
                     for j in range(dim):
                         r3 = random.uniform(0, 1)
@@ -90,8 +93,11 @@ def iterarGOA(maxIter, it, dim, population, bestSolution, fitness, function, typ
                         MX[i][j] = bestSolution[j] - (population[i,j] - bestSolution[j]) * p * t
         
         MX[i],mxFitness = function(MX[i])
+        
         if typeProblem == 'MIN': condition = mxFitness < fitness[i]
+        
         elif typeProblem == 'MAX': condition = mxFitness > fitness[i]
+        
         if condition: population[i] = MX[i]
 
     return population

@@ -5,7 +5,7 @@ from util import util
 
 class BD:
     def __init__(self):
-        self.__dataBase = 'BD/resultados.db'
+        self.__dataBase = 'OII-450-1-2024/BD/resultados.db'
         self.__conexion = None
         self.__cursor   = None
 
@@ -121,7 +121,7 @@ class BD:
         
         self.conectar()
         
-        data = ['F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12','F13','F14','F15','F16','F17','F18','F19','F20','F21','F22','F23']        
+        data = ['F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12','F13','F14','F15','F16','F17','F18','F19','F20','F21','F22','F23', 'F1_cec2017', 'F2_cec2017', 'F3_cec2017', 'F5_cec2017']    
         for instancia in data:
             
             tipoProblema = 'BEN'
@@ -194,6 +194,18 @@ class BD:
             if instancia == "F23":
                 param     = f'lb:0,ub:10'
                 optimo = -10.5363
+            if instancia == "F1_cec2017":
+                param     = f'lb:-100,ub:100'
+                optimo = 100
+            if instancia == "F2_cec2017":
+                param     = f'lb:-100,ub:100'
+                optimo = 200
+            if instancia == "F3_cec2017":
+                param     = f'lb:-100,ub:100'
+                optimo = 300
+            if instancia == "F5_cec2017":
+                param     = f'lb:-100,ub:100'
+                optimo = 500
                 
             self.getCursor().execute(f'''  INSERT INTO instancias (tipo_problema, nombre, optimo, param) VALUES(?, ?, ?, ?) ''', (tipoProblema, instancia, optimo, param))
             
@@ -204,7 +216,7 @@ class BD:
         
         self.conectar()
         
-        data = os.listdir('./Problem/SCP/Instances/')        
+        data = os.listdir('OII-450-1-2024/Problem/SCP/Instances/')        
         for d in data:
             
             tipoProblema = 'SCP'
