@@ -85,7 +85,7 @@ class SCP:
 
     def readInstance(self, instance):
         
-        dirSCP = 'OII-450-1-2024/Problem/SCP/Instances/'
+        dirSCP = './Problem/SCP/Instances/'
         
         instance = dirSCP+instance+".txt" 
         

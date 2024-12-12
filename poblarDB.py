@@ -4,7 +4,7 @@ import json
 
 bd = BD()
 
-ben = False
+ben = True
 scp = True
 
 mhs = ['SBOA'] # mhs = ['EOO', 'FOX', 'GOA', 'GWO', 'HBA', 'PSA', 'PSO', 'RSA', 'SCA', 'SHO', 'TDA', 'WOA', 'SBOA']
@@ -53,8 +53,8 @@ if ben:
             dimensiones = [4]
             
         iteraciones = 500
-        experimentos = 1
-        poblacion = 30
+        experimentos = 3
+        poblacion = 50
         
         for instancia in instancias:
             for dim in dimensiones:
@@ -73,10 +73,10 @@ if ben:
                     
 if scp:
     # poblar ejecuciones SCP
-    instancias = bd.obtenerInstancias(f'''"scp41"''')
+    instancias = bd.obtenerInstancias(f'''"41","61","cyc06","clr10"''')
     
-    iteraciones = 10
-    experimentos = 5
+    iteraciones = 100
+    experimentos = 3
     poblacion = 30
     
     for instancia in instancias:

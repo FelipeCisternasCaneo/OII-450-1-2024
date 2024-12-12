@@ -26,7 +26,7 @@ def generarPoblacionInicial(pop, dim, lb, ub):
     return population
 
 def solverB(id, mh, maxIter, pop, function, lb, ub, dim):
-    dirResult = 'OII-450-1-2024/Resultados/'
+    dirResult = './Resultados/'
     bd = BD()
     
     if not isinstance(lb, list):

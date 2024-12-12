@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 # Puma Optimizer (PO)
 # https://doi.org/10.1007/s10586-023-04221-5
 
-class IterarPO:
+class iterarPO:
     def __init__(self, cost_function, dim, n_sol, max_iter, lb, ub):
         self._cost_function = cost_function
         self._dim = dim
