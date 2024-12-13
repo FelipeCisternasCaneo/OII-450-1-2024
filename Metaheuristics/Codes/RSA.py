@@ -45,13 +45,16 @@ def iterarRSA(maxIter, it, dim, population, bestSolution, LB, UB):
             if it < maxIter / 4:
                 population[i][j] = bestSolution[j] - Eta * beta - R * rand
             # ec2
+            
             elif it < (2 * maxIter) / 4 and it >= maxIter / 4:
                 r1 = random.randint(0, N - 1)
                 population[i][j] = bestSolution[j] * population[r1][j] * ES * rand
             # ec3
+            
             elif it < (maxIter * 3) / 4 and it >= (2 * it) / 4:
                 population[i][j] = bestSolution[j] * P * rand
             # ec4
+            
             else:
                 population[i][j] = bestSolution[j] - Eta * eps - R * rand
         # fin for dim

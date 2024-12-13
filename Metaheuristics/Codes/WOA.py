@@ -6,11 +6,10 @@ import numpy as np
 # https://doi.org/10.1016/j.advengsoft.2016.01.008
 
 def iterarWOA(maxIter, t, dimension, population, bestSolution):
-    a = 2 - ((2*t)/maxIter)
+    a = 2 - ((2 * t) / maxIter)
     b = 1
     
     for i in range(population.__len__()):
-        
         p = random.uniform(0.0, 1.0) # p is a random number into [0, 1]
         r = random.uniform(0.0, 1.0) # aplicación de ecuación 2.3
         A = 2 * a * (r - a) # aplicación de ecuación 2.4
@@ -28,6 +27,7 @@ def iterarWOA(maxIter, t, dimension, population, bestSolution):
                     
             else:
                 randomPos = random.randint( 0, population.__len__() - 1 ) # seleccionar un individuo al azar
+                
                 for j in range(dimension):
                     # aplicacion de ecuacion 2.7
                     D = abs((C * population[randomPos][j]) - population[i][j])

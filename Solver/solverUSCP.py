@@ -20,13 +20,12 @@ def solverUSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
     
     # tomo el tiempo inicial de la ejecucion
     initialTime = time.time()
-    
     initializationTime1 = time.time()
 
     print("------------------------------------------------------------------------------------------------------")
     print("instancia USCP a resolver: "+instances)
     
-    results = open(dirResult+mh+"_"+instances.split(".")[0]+"_"+str(id)+".csv", "w")
+    results = open(dirResult+mh+"_" + instances.split(".")[0] + "_"+str(id) + ".csv", "w")
     results.write(
         f'iter,fitness,time,XPL,XPT,DIV\n'
     )
@@ -42,10 +41,10 @@ def solverUSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
         pBest = np.zeros((pop, instance.getColumns()))
     
     # Genero una población inicial binaria, esto ya que nuestro problema es binario
-    population = np.random.randint(low=0, high=2, size = (pop, instance.getColumns()))
+    population = np.random.randint(low = 0, high = 2, size = (pop, instance.getColumns()))
 
     maxDiversity = diversidadHussain(population)
-    XPL , XPT, state = porcentajesXLPXPT(maxDiversity, maxDiversity)
+    XPL, XPT, state = porcentajesXLPXPT(maxDiversity, maxDiversity)
     
     # Genero un vector donde almacenaré los fitness de cada individuo
     fitness = np.zeros(pop)
@@ -56,10 +55,10 @@ def solverUSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
     # calculo de factibilidad de cada individuo y calculo del fitness inicial
     for i in range(population.__len__()):
         flag, aux = instance.factibilityTest(population[i])
+        
         if not flag: #solucion infactible
             population[i] = instance.repair(population[i], repairType)
             
-
         fitness[i] = instance.fitness(population[i])
         
     solutionsRanking = np.argsort(fitness) # rankings de los mejores fitnes
@@ -84,12 +83,12 @@ def solverUSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
             str(0) +
             ", best: " + str(bestFitness) +
             ", optimo: " + str(instance.getOptimum()) +
-            ", time (s): " + str(round(initializationTime2-initializationTime1,3)) +
+            ", time (s): " + str(round(initializationTime2 - initializationTime1, 3)) +
             ", XPT: " + str(XPT) +
             ", XPL: " + str(XPL) +
             ", DIV: " + str(maxDiversity))
     results.write(
-        f'0,{str(bestFitness)},{str(round(initializationTime2-initializationTime1,3))},{str(XPL)},{str(XPT)},{maxDiversity}\n'
+        f'0,{str(bestFitness)},{str(round(initializationTime2 - initializationTime1, 3))},{str(XPL)},{str(XPT)},{maxDiversity}\n'
     )
 
     bestPop = np.copy(population)
@@ -185,7 +184,6 @@ def solverUSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
             ub = [1] * instance.getColumns()
             population = iterarWOM(maxIter, iter, instance.getColumns(), population.tolist(), fitness.tolist(), lb, ub, fo)
 
-        
         # Binarizo, calculo de factibilidad de cada individuo y calculo del fitness
         for i in range(population.__len__()):
 
@@ -209,13 +207,13 @@ def solverUSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
                 if fitn < fitness[i]:
                     population[i] = posibles_mejoras[i]
 
-
         solutionsRanking = np.argsort(fitness) # rankings de los mejores fitness
         
-        #Conservo el best
+        # Conservo el best
         if fitness[solutionsRanking[0]] < bestFitness:
             bestFitness = fitness[solutionsRanking[0]]
             best = population[solutionsRanking[0]]
+            
         matrixBin = population.copy()
 
         div_t = diversidadHussain(population)
@@ -223,7 +221,7 @@ def solverUSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
         if maxDiversity < div_t:
             maxDiversity = div_t
             
-        XPL , XPT, state = porcentajesXLPXPT(div_t, maxDiversity)
+        XPL, XPT, state = porcentajesXLPXPT(div_t, maxDiversity)
 
         timerFinal = time.time()
         # calculo mi tiempo para la iteracion t
@@ -232,7 +230,7 @@ def solverUSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
         if (iter + 1) % (maxIter // 4) == 0:
         # if (iter+1) % 10 == 0:
             print("iteracion: " +
-                str(iter+1) +
+                str(iter + 1) +
                 ", best: " + str(bestFitness) +
                 ", optimo: " + str(instance.getOptimum()) +
                 ", time (s): " + str(round(timeEjecuted, 3)) +
@@ -241,27 +239,28 @@ def solverUSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
                 ", DIV: " + str(div_t))
         
         results.write(
-            f'{iter+1},{str(bestFitness)},{str(round(timeEjecuted,3))},{str(XPL)},{str(XPT)},{str(div_t)}\n'
+            f'{iter + 1},{str(bestFitness)},{str(round(timeEjecuted, 3))},{str(XPL)},{str(XPT)},{str(div_t)}\n'
         )
+    
     print("------------------------------------------------------------------------------------------------------")
-    print("best fitness: "+str(bestFitness))
-    print("Cantidad de columnas seleccionadas: "+str(sum(best)))
+    print("best fitness: " + str(bestFitness))
+    print("Cantidad de columnas seleccionadas: " + str(sum(best)))
     print("------------------------------------------------------------------------------------------------------")
+    
     finalTime = time.time()
     timeExecution = finalTime - initialTime
-    print("Tiempo de ejecucion (s): "+str(timeExecution))
+    
+    print("Tiempo de ejecucion (s): " + str(timeExecution))
+    
     results.close()
     
-    binary = util.convert_into_binary(dirResult+mh+"_"+instances.split(".")[0]+"_"+str(id)+".csv")
+    binary = util.convert_into_binary(dirResult + mh + "_" + instances.split(".")[0] + "_" + str(id) + ".csv")
 
-    fileName = mh+"_"+instances.split(".")[0]
+    fileName = mh + "_" + instances.split(".")[0]
 
     bd = BD()
     bd.insertarIteraciones(fileName, binary, id)
     bd.insertarResultados(bestFitness, timeExecution, best, id)
     bd.actualizarExperimento(id, 'terminado')
     
-    os.remove(dirResult+mh+"_"+instances.split(".")[0]+"_"+str(id)+".csv")
-    
-    
-    
+    os.remove(dirResult + mh + "_" + instances.split(".")[0]+"_" + str(id) + ".csv")

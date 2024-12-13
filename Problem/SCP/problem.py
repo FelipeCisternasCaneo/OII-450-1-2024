@@ -12,6 +12,7 @@ def matrix_dot_1(A, B, block_size):
         A_block = A[i: i + block_size, :]
         # Multiplicar el bloque de filas de A por el vector B
         C[i: i + block_size] = np.dot(A_block, B)
+        
     return C
 
 def matrix_dot_2(A, B, block_size):
@@ -36,18 +37,24 @@ class SCP:
         self.__cost = []
         self.__optimum = 0
         self.__block_size = 0
+        
         if len(instance) == 5:
             if instance[3] == '4' or instance[3] == '5' or instance[3] == '6':
                 self.__block_size = 40
+                
             elif instance[3] == 'a' or instance[3] == 'b':
                 self.__block_size = 30
+                
             elif instance[3] == 'c' or instance[3] == 'd':
                 self.__block_size = 20
+        
         else:
             if instance[5] == 'e' or instance[5] == 'f':
                 self.__block_size = 10
+            
             elif instance[5] == 'g' or instance[5] == 'h':
                 self.__block_size = 120
+            
         self.readInstance(instance)
 
     def getBlockSizes(self):
@@ -87,7 +94,7 @@ class SCP:
         
         dirSCP = './Problem/SCP/Instances/'
         
-        instance = dirSCP+instance+".txt" 
+        instance = dirSCP + instance + ".txt" 
         
         self.setOptimum(self.obtenerOptimo(instance))
         
@@ -116,7 +123,7 @@ class SCP:
         # print("Cantidad de costos para cada columna: "+str(costos.__len__()))
 
         # Preparar matriz de restricciones (matriz A)
-        constrains = np.zeros((self.getRows(), self.getColumns()), dtype=np.int32).tolist()
+        constrains = np.zeros((self.getRows(), self.getColumns()), dtype = np.int32).tolist()
 
         # Lecutra de Restricciones
         row = 0
@@ -127,7 +134,7 @@ class SCP:
             countUnos = 0
             line = file.readline()
 
-            line = line.replace('\n',"").replace('\\n',"")
+            line = line.replace('\n', "").replace('\\n', "")
 
             while line != "" and countUnos < numUnos:
                 columns = line.split()
@@ -135,7 +142,8 @@ class SCP:
                 for i in range(len(columns)):
                     column = int(columns[i]) - 1
                     constrains[row][column] = 1
-                    countUnos +=1
+                    countUnos += 1
+                    
                 line = file.readline()
                 
             # print("Coberturas para la fila "+str(row)+": "+str(constrains[row]))
@@ -221,6 +229,7 @@ class SCP:
         for nomInstancia in orden:
             if nomInstancia in archivoInstancia:
                 #print(f"instancia {nomInstancia}")
+                
                 return orden[nomInstancia][1]
 
         return None
@@ -258,7 +267,7 @@ class SCP:
                 idxLowcost = idx[np.argmin(costs[idx])]
                 # print(f'indice del menor costo: {idxLowcost}')
                 solution[idxLowcost[0]] = 1
-                reparaciones +=1
+                reparaciones += 1
         # print(f'total de reparaciones realizadas: {reparaciones}')
         
         return solution
@@ -365,6 +374,7 @@ def obtenerOptimo(archivoInstancia):
     for nomInstancia in orden:
         if nomInstancia in archivoInstancia:
             #print(f"instancia {nomInstancia}")
+            
             return orden[nomInstancia][1]
 
     return None

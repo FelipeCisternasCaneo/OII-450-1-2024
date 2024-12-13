@@ -86,7 +86,7 @@ def S4(dimension):
     return np.divide(1, (1 + np.exp(np.divide(( -1 * dimension ), 3))))
 
 def V1(dimension):
-    return np.abs(scyesp.erf(np.divide(np.sqrt(np.pi), 2 ) * dimension))
+    return np.abs(scyesp.erf(np.divide(np.sqrt(np.pi), 2) * dimension))
 
 def V2(dimension):
     return np.abs(np.tanh(dimension))

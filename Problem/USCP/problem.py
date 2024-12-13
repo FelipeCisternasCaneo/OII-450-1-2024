@@ -44,7 +44,7 @@ class USCP:
         
         dirSCP = './Problem/USCP/Instances/'
         
-        instance = dirSCP+instance+".txt" 
+        instance = dirSCP + instance + ".txt" 
         
         self.setOptimum(self.obtenerOptimoUSCP(instance))
         
@@ -62,20 +62,21 @@ class USCP:
 
         while line != "" and countDim <= self.getColumns():
             values = line.split()
+            
             for i in range(len(values)):
                 costos.append(1)
-                countDim +=1
+                countDim += 1
+                
             line = file.readline()
         
         # print("Costos para cada columna: "+str(costos))
         # print("Cantidad de costos para cada columna: "+str(costos.__len__()))
 
         # Preparar matriz de restricciones (matriz A)
-        constrains = np.zeros((self.getRows(),self.getColumns()), dtype=np.int32).tolist()
+        constrains = np.zeros((self.getRows(), self.getColumns()), dtype = np.int32).tolist()
 
         # Lecutra de Restricciones
         row = 0
-
 
         while line != "":
             numUnos = int(line)
@@ -83,14 +84,16 @@ class USCP:
             countUnos = 0
             line = file.readline()
 
-            line = line.replace('\n',"").replace('\\n',"")
+            line = line.replace('\n', "").replace('\\n', "")
 
             while line != "" and countUnos < numUnos:
                 columns = line.split()
+                
                 for i in range(len(columns)):
                     column = int(columns[i]) - 1
                     constrains[row][column] = 1
-                    countUnos +=1
+                    countUnos += 1
+                    
                 line = file.readline()
             # print("Coberturas para la fila "+str(row)+": "+str(constrains[row]))
             # print("Suma de validacion: "+str(sum(constrains[row])))
@@ -105,86 +108,87 @@ class USCP:
      
     def obtenerOptimoUSCP(self, archivoInstancia):
         orden = {
-             'scp41':[0,38]
-            ,'scp42':[1,37]
-            ,'scp43':[2,38]
-            ,'scp44':[3,38]
-            ,'scp45':[4,38]
-            ,'scp46':[5,37]
-            ,'scp47':[6,38]
-            ,'scp48':[7,37]
-            ,'scp49':[8,38]
-            ,'scp410':[9,38]
-            ,'scp51':[10,34]
-            ,'scp52':[11,34]
-            ,'scp53':[12,34]
-            ,'scp54':[13,34]
-            ,'scp55':[14,34]
-            ,'scp56':[15,34]
-            ,'scp57':[16,34]
-            ,'scp58':[17,34]
-            ,'scp59':[18,35]
-            ,'scp510':[19,34]
-            ,'scp61':[20,21]
-            ,'scp62':[21,20]
-            ,'scp63':[22,21]
-            ,'scp64':[23,20]
-            ,'scp65':[24,21]
-            ,'scpa1':[25,38]
-            ,'scpa2':[26,38]
-            ,'scpa3':[27,38]
-            ,'scpa4':[28,37]
-            ,'scpa5':[29,38]
-            ,'scpb1':[30,22]
-            ,'scpb2':[31,22]
-            ,'scpb3':[32,22]
-            ,'scpb4':[33,22]
-            ,'scpb5':[34,22]
-            ,'scpc1':[35,43]
-            ,'scpc2':[36,43]
-            ,'scpc3':[37,43]
-            ,'scpc4':[38,43]
-            ,'scpc5':[39,43]
-            ,'scpd1':[40,24]
-            ,'scpd2':[41,24]
-            ,'scpd3':[42,24]
-            ,'scpd4':[43,24]
-            ,'scpd5':[44,24]
-            ,'scpnre1':[45,16]
-            ,'scpnre2':[46,16]
-            ,'scpnre3':[47,16]
-            ,'scpnre4':[48,16]
-            ,'scpnre5':[49,16]
-            ,'scpnrf1':[50,10]
-            ,'scpnrf2':[51,10]
-            ,'scpnrf3':[52,10]
-            ,'scpnrf4':[53,10]
-            ,'scpnrf5':[54,10]
-            ,'scpnrg1':[55,60]
-            ,'scpnrg2':[56,60]
-            ,'scpnrg3':[57,60]
-            ,'scpnrg4':[58,60]
-            ,'scpnrg5':[59,60]
-            ,'scpnrh1':[60,33]
-            ,'scpnrh2':[61,33]
-            ,'scpnrh3':[62,33]
-            ,'scpnrh4':[63,33]
-            ,'scpnrh5':[64,33]
-            ,'scpcyc06':[65,60]
-            ,'scpcyc07':[66,144]
-            ,'scpcyc08':[67,342]
-            ,'scpcyc09':[68,772]
-            ,'scpcyc10':[69,1794]
-            ,'scpcyc11':[70,3968]
-            ,'scpclr10':[71,25]
-            ,'scpclr11':[72,23]
-            ,'scpclr12':[73,23]
-            ,'scpclr13':[74,23]
+             'scp41':[0, 38]
+            ,'scp42':[1, 37]
+            ,'scp43':[2, 38]
+            ,'scp44':[3, 38]
+            ,'scp45':[4, 38]
+            ,'scp46':[5, 37]
+            ,'scp47':[6, 38]
+            ,'scp48':[7, 37]
+            ,'scp49':[8, 38]
+            ,'scp410':[9, 38]
+            ,'scp51':[10, 34]
+            ,'scp52':[11, 34]
+            ,'scp53':[12, 34]
+            ,'scp54':[13, 34]
+            ,'scp55':[14, 34]
+            ,'scp56':[15, 34]
+            ,'scp57':[16, 34]
+            ,'scp58':[17, 34]
+            ,'scp59':[18, 35]
+            ,'scp510':[19, 34]
+            ,'scp61':[20, 21]
+            ,'scp62':[21, 20]
+            ,'scp63':[22, 21]
+            ,'scp64':[23, 20]
+            ,'scp65':[24, 21]
+            ,'scpa1':[25, 38]
+            ,'scpa2':[26, 38]
+            ,'scpa3':[27, 38]
+            ,'scpa4':[28, 37]
+            ,'scpa5':[29, 38]
+            ,'scpb1':[30, 22]
+            ,'scpb2':[31, 22]
+            ,'scpb3':[32, 22]
+            ,'scpb4':[33, 22]
+            ,'scpb5':[34, 22]
+            ,'scpc1':[35, 43]
+            ,'scpc2':[36, 43]
+            ,'scpc3':[37, 43]
+            ,'scpc4':[38, 43]
+            ,'scpc5':[39, 43]
+            ,'scpd1':[40, 24]
+            ,'scpd2':[41, 24]
+            ,'scpd3':[42, 24]
+            ,'scpd4':[43, 24]
+            ,'scpd5':[44, 24]
+            ,'scpnre1':[45, 16]
+            ,'scpnre2':[46, 16]
+            ,'scpnre3':[47, 16]
+            ,'scpnre4':[48, 16]
+            ,'scpnre5':[49, 16]
+            ,'scpnrf1':[50, 10]
+            ,'scpnrf2':[51, 10]
+            ,'scpnrf3':[52, 10]
+            ,'scpnrf4':[53, 10]
+            ,'scpnrf5':[54, 10]
+            ,'scpnrg1':[55, 60]
+            ,'scpnrg2':[56, 60]
+            ,'scpnrg3':[57, 60]
+            ,'scpnrg4':[58, 60]
+            ,'scpnrg5':[59, 60]
+            ,'scpnrh1':[60, 33]
+            ,'scpnrh2':[61, 33]
+            ,'scpnrh3':[62, 33]
+            ,'scpnrh4':[63, 33]
+            ,'scpnrh5':[64, 33]
+            ,'scpcyc06':[65, 60]
+            ,'scpcyc07':[66, 144]
+            ,'scpcyc08':[67, 342]
+            ,'scpcyc09':[68, 772]
+            ,'scpcyc10':[69, 1794]
+            ,'scpcyc11':[70, 3968]
+            ,'scpclr10':[71, 25]
+            ,'scpclr11':[72, 23]
+            ,'scpclr12':[73, 23]
+            ,'scpclr13':[74, 23]
         }
 
         for nomInstancia in orden:
             if nomInstancia in archivoInstancia:
                 #print(f"instancia {nomInstancia}")
+                
                 return orden[nomInstancia][1]
 
         return None
@@ -203,6 +207,7 @@ class USCP:
     def repair(self, solution, repairType):
         if repairType == 'simple':
             solution = self.repairSimple(solution)
+        
         if repairType == 'complex':
             solution = self.repairComplex(solution)
         
@@ -226,13 +231,13 @@ class USCP:
         # print(f'total de reparaciones realizadas: {reparaciones}')
         return solution
 
-
     def repairComplex(self, solution):
         set = self.getCoverange()
         
         feasible, aux = self.factibilityTest(solution)
         costs = self.getCost()
         reparaciones = 0
+        
         while not feasible:
             r_no_cubiertas = np.zeros((self.getRows()))
             
@@ -248,90 +253,88 @@ class USCP:
             feasible, aux = self.factibilityTest(solution)      # Verifico si la solucion actualizada es factible
             reparaciones += 1
 
-        
         return solution
 
     def fitness(self, solution):
         return np.dot(solution, self.getCost())
             
-            
 def obtenerOptimoUSCP(archivoInstancia):
     orden = {
-             'scp41':[0,38]
-            ,'scp42':[1,37]
-            ,'scp43':[2,38]
-            ,'scp44':[3,38]
-            ,'scp45':[4,38]
-            ,'scp46':[5,37]
-            ,'scp47':[6,38]
-            ,'scp48':[7,37]
-            ,'scp49':[8,38]
-            ,'scp410':[9,38]
-            ,'scp51':[10,34]
-            ,'scp52':[11,34]
-            ,'scp53':[12,34]
-            ,'scp54':[13,34]
-            ,'scp55':[14,34]
-            ,'scp56':[15,34]
-            ,'scp57':[16,34]
-            ,'scp58':[17,34]
-            ,'scp59':[18,35]
-            ,'scp510':[19,34]
-            ,'scp61':[20,21]
-            ,'scp62':[21,20]
-            ,'scp63':[22,21]
-            ,'scp64':[23,20]
-            ,'scp65':[24,21]
-            ,'scpa1':[25,38]
-            ,'scpa2':[26,38]
-            ,'scpa3':[27,38]
-            ,'scpa4':[28,37]
-            ,'scpa5':[29,38]
-            ,'scpb1':[30,69]
-            ,'scpb2':[31,22]
-            ,'scpb3':[32,22]
-            ,'scpb4':[33,22]
-            ,'scpb5':[34,22]
-            ,'scpc1':[35,43]
-            ,'scpc2':[36,43]
-            ,'scpc3':[37,43]
-            ,'scpc4':[38,43]
-            ,'scpc5':[39,43]
-            ,'scpd1':[40,24]
-            ,'scpd2':[41,24]
-            ,'scpd3':[42,24]
-            ,'scpd4':[43,24]
-            ,'scpd5':[44,24]
-            ,'scpnre1':[45,16]
-            ,'scpnre2':[46,16]
-            ,'scpnre3':[47,16]
-            ,'scpnre4':[48,16]
-            ,'scpnre5':[49,16]
-            ,'scpnrf1':[50,10]
-            ,'scpnrf2':[51,10]
-            ,'scpnrf3':[52,10]
-            ,'scpnrf4':[53,10]
-            ,'scpnrf5':[54,10]
-            ,'scpnrg1':[55,60]
-            ,'scpnrg2':[56,60]
-            ,'scpnrg3':[57,60]
-            ,'scpnrg4':[58,60]
-            ,'scpnrg5':[59,60]
-            ,'scpnrh1':[60,33]
-            ,'scpnrh2':[61,33]
-            ,'scpnrh3':[62,33]
-            ,'scpnrh4':[63,33]
-            ,'scpnrh5':[64,33]
-            ,'scpcyc06':[65,60]
-            ,'scpcyc07':[66,144]
-            ,'scpcyc08':[67,342]
-            ,'scpcyc09':[68,772]
-            ,'scpcyc10':[69,1794]
-            ,'scpcyc11':[70,3968]
-            ,'scpclr10':[71,25]
-            ,'scpclr11':[72,23]
-            ,'scpclr12':[73,23]
-            ,'scpclr13':[74,23]
+             'scp41':[0, 38]
+            ,'scp42':[1, 37]
+            ,'scp43':[2, 38]
+            ,'scp44':[3, 38]
+            ,'scp45':[4, 38]
+            ,'scp46':[5, 37]
+            ,'scp47':[6, 38]
+            ,'scp48':[7, 37]
+            ,'scp49':[8, 38]
+            ,'scp410':[9, 38]
+            ,'scp51':[10, 34]
+            ,'scp52':[11, 34]
+            ,'scp53':[12, 34]
+            ,'scp54':[13, 34]
+            ,'scp55':[14, 34]
+            ,'scp56':[15, 34]
+            ,'scp57':[16, 34]
+            ,'scp58':[17, 34]
+            ,'scp59':[18, 35]
+            ,'scp510':[19, 34]
+            ,'scp61':[20, 21]
+            ,'scp62':[21, 20]
+            ,'scp63':[22, 21]
+            ,'scp64':[23, 20]
+            ,'scp65':[24, 21]
+            ,'scpa1':[25, 38]
+            ,'scpa2':[26, 38]
+            ,'scpa3':[27, 38]
+            ,'scpa4':[28, 37]
+            ,'scpa5':[29, 38]
+            ,'scpb1':[30, 69]
+            ,'scpb2':[31, 22]
+            ,'scpb3':[32, 22]
+            ,'scpb4':[33, 22]
+            ,'scpb5':[34, 22]
+            ,'scpc1':[35, 43]
+            ,'scpc2':[36, 43]
+            ,'scpc3':[37, 43]
+            ,'scpc4':[38, 43]
+            ,'scpc5':[39, 43]
+            ,'scpd1':[40, 24]
+            ,'scpd2':[41, 24]
+            ,'scpd3':[42, 24]
+            ,'scpd4':[43, 24]
+            ,'scpd5':[44, 24]
+            ,'scpnre1':[45, 16]
+            ,'scpnre2':[46, 16]
+            ,'scpnre3':[47, 16]
+            ,'scpnre4':[48, 16]
+            ,'scpnre5':[49, 16]
+            ,'scpnrf1':[50, 10]
+            ,'scpnrf2':[51, 10]
+            ,'scpnrf3':[52, 10]
+            ,'scpnrf4':[53, 10]
+            ,'scpnrf5':[54, 10]
+            ,'scpnrg1':[55, 60]
+            ,'scpnrg2':[56, 60]
+            ,'scpnrg3':[57, 60]
+            ,'scpnrg4':[58, 60]
+            ,'scpnrg5':[59, 60]
+            ,'scpnrh1':[60, 33]
+            ,'scpnrh2':[61, 33]
+            ,'scpnrh3':[62, 33]
+            ,'scpnrh4':[63, 33]
+            ,'scpnrh5':[64, 33]
+            ,'scpcyc06':[65, 60]
+            ,'scpcyc07':[66, 144]
+            ,'scpcyc08':[67, 342]
+            ,'scpcyc09':[68, 772]
+            ,'scpcyc10':[69, 1794]
+            ,'scpcyc11':[70, 3968]
+            ,'scpclr10':[71, 25]
+            ,'scpclr11':[72, 23]
+            ,'scpclr12':[73, 23]
+            ,'scpclr13':[74, 23]
         }
 
     for nomInstancia in orden:
@@ -340,6 +343,3 @@ def obtenerOptimoUSCP(archivoInstancia):
             return orden[nomInstancia][1]
 
     return None
-
-
-

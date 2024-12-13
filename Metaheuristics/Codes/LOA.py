@@ -29,28 +29,28 @@ def esconderse(lyrebird, ub, lb ,t,dim):
     return nueva_posicion
 
 def iterarLOA(maxIter: int, population: list, mejores_fitness: list, lb: int, ub: int, t:int, dim):
-        posibles_mejoras = []
-        population = np.array(population)
-        
-        for i in range(len(population)):
-            r = rd.uniform(0, 1)
-            # Exploracion
-            if r < 0.5:
-                # Se seleccionan las zonas mejor evaluadas a la actual para la exploracion.
-                mejores_zonas = []
-                for j in range(len(mejores_fitness)):
-                    mejores_zonas.append(mejores_fitness[j])
-                    
-                if len(mejores_zonas) > 0:
-                    nueva_posicion = escapar(population[i], mejores_zonas,dim)
+    posibles_mejoras = []
+    population = np.array(population)
+    
+    for i in range(len(population)):
+        r = rd.uniform(0, 1)
+        # Exploracion
+        if r < 0.5:
+            # Se seleccionan las zonas mejor evaluadas a la actual para la exploracion.
+            mejores_zonas = []
+            for j in range(len(mejores_fitness)):
+                mejores_zonas.append(mejores_fitness[j])
+                
+            if len(mejores_zonas) > 0:
+                nueva_posicion = escapar(population[i], mejores_zonas,dim)
 
-            # Explotación
-            else:
-                nueva_posicion = esconderse(population[i], ub, lb, t, dim)
-            
-            # Se evalua el fitness del resultado obtenido, reemplazandolo si es mejor
-            posibles_mejoras.append(nueva_posicion)
-
-        posibles_mejoras = np.array(posibles_mejoras)
+        # Explotación
+        else:
+            nueva_posicion = esconderse(population[i], ub, lb, t, dim)
         
-        return population,posibles_mejoras
+        # Se evalua el fitness del resultado obtenido, reemplazandolo si es mejor
+        posibles_mejoras.append(nueva_posicion)
+
+    posibles_mejoras = np.array(posibles_mejoras)
+    
+    return population,posibles_mejoras

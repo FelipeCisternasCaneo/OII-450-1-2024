@@ -15,7 +15,6 @@ def actualizarPosicionP2(individual, r, t, lb, ub):
     return individual + (1 - 2 * r) * ((ub - lb) / (t + 1))
 
 def iterarPOA(maxIter, iter, dim, population, fitness, function, lb, ub, typeProblem):
-
     population = np.array(population)
     fitness = np.array(fitness)
     
