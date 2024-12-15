@@ -48,11 +48,17 @@ for funcion in funciones:
     # Agregar la proyección en el plano x1, x2
     
     if funcion == 'F8': ax.contourf(X1, X2, Z, zdir = 'z', offset = -1000, cmap = 'viridis', alpha = 0.7)
+    
     elif funcion == 'F16': ax.contourf(X1, X2, Z, zdir = 'z', offset = -2, cmap = 'viridis', alpha = 0.7)
+    
     elif funcion == 'F19': ax.contourf(X1, X2, Z, zdir = 'z', offset = -0.12, cmap = 'viridis', alpha = 0.7)
+    
     elif funcion == 'F20': ax.contourf(X1, X2, Z, zdir = 'z', offset = -0.12, cmap = 'viridis', alpha = 0.7)
+    
     elif funcion == 'F21': ax.contourf(X1, X2, Z, zdir = 'z', offset = -0.5, cmap = 'viridis', alpha = 0.7)
+    
     elif funcion == 'F22' or funcion == 'F23': ax.contourf(X1, X2, Z, zdir = 'z', offset= -0.6, cmap = 'viridis', alpha = 0.7)
+    
     else: ax.contourf(X1, X2, Z, zdir = 'z', offset = 0, cmap = 'viridis', alpha = 0.7)
 
     ax.set_xlabel('x1')
@@ -60,11 +66,17 @@ for funcion in funciones:
     ax.set_zlabel(f'{funcion}(x)')
     
     if funcion == 'F8': ax.set_zlim(-1000, np.max(Z))  # Ajustar el límite inferior del eje Z para que la proyección se vea bien
+    
     elif funcion == 'F16': ax.set_zlim(-2, np.max(Z))  # Ajustar el límite inferior del eje Z para que la proyección se vea bien
-    elif funcion == 'F19': ax.set_zlim(-0.12, 0)  # Ajustar el límite inferior del eje Z para que la proyección se vea bien    
-    elif funcion == 'F20': ax.set_zlim(-0.12, 0)  # Ajustar el límite inferior del eje Z para que la proyección se vea bien    
-    elif funcion == 'F21': ax.set_zlim(-0.5, 0)  # Ajustar el límite inferior del eje Z para que la proyección se vea bien 
-    elif funcion == 'F22' or funcion == 'F23': ax.set_zlim(-0.6, 0)  # Ajustar el límite inferior del eje Z para que la proyección se vea bien 
+    
+    elif funcion == 'F19': ax.set_zlim(-0.12, 0)  # Ajustar el límite inferior del eje Z para que la proyección se vea bien
+    
+    elif funcion == 'F20': ax.set_zlim(-0.12, 0)  # Ajustar el límite inferior del eje Z para que la proyección se vea bien   
+     
+    elif funcion == 'F21': ax.set_zlim(-0.5, 0)  # Ajustar el límite inferior del eje Z para que la proyección se vea bien
+    
+    elif funcion == 'F22' or funcion == 'F23': ax.set_zlim(-0.6, 0)  # Ajustar el límite inferior del eje Z para que la proyección se vea bien
+    
     else: ax.set_zlim(0, np.max(Z))  # Ajustar el límite inferior del eje Z para que la proyección se vea bien
 
     plt.savefig(f'OII-450-1-2024/Graficos_Benchmark/{funcion}.pdf')
@@ -72,4 +84,5 @@ for funcion in funciones:
     print(f'Grafico para la funcion {funcion} ha sido creado')
     
     plt.close('all')
+    
     i += 1

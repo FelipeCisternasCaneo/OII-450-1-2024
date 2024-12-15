@@ -99,7 +99,6 @@ def F1(x):
 def F2(x):
     return np.sum(np.abs(x)) + np.prod(np.abs(x))
 
-
 def F3(x):
     dim = len(x) + 1
     o = 0
@@ -118,16 +117,14 @@ def F5(x):
     dim = len(x)
     o = np.sum(
         100 * (x[1:dim] - (x[0 : dim - 1] ** 2)) ** 2 + (x[0 : dim - 1] - 1) ** 2
-    )
+        )
     
     return o
-
 
 def F6(x):
     o = np.sum(abs((x + 0.5)) ** 2)
     
     return o
-
 
 def F7(x):
     dim = len(x)
@@ -141,19 +138,16 @@ def F7(x):
     
     return o
 
-
 def F8(x):
     o = sum(-x * (np.sin(np.sqrt(abs(x)))))
     
     return o
-
 
 def F9(x):
     dim = len(x)
     o = np.sum(x ** 2 - 10 * np.cos(2 * math.pi * x)) + 10 * dim
     
     return o
-
 
 def F10(x):
     dim = len(x)
@@ -174,7 +168,6 @@ def F11(x):
     
     return o
 
-
 def F12(x):
     dim = len(x)
     o = (math.pi / dim) * (
@@ -187,7 +180,6 @@ def F12(x):
     ) + np.sum(Ufun(x, 10, 100, 4))
     
     return o
-
 
 def F13(x):
     if x.ndim==1:
@@ -203,7 +195,6 @@ def F13(x):
     ) + np.sum(Ufun(x, 5, 100, 4))
     
     return o
-
 
 def F14(x):
     aS = [
@@ -410,7 +401,6 @@ def F22(L):
     o = fit.item(0)
     
     return o
-
 
 def F23(L):
     aSH = [

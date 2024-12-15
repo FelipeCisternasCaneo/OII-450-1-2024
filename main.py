@@ -68,8 +68,10 @@ def main():
             
         if problema == 'USCP':
             bd.actualizarExperimento(id, 'ejecutando')
+            
             if 'cyc' not in datosInstancia[0][2] and 'clr' not in datosInstancia[0][2]:
                 instancia = f'scp{datosInstancia[0][2][1:]}'
+            
             else:
                 instancia = f'scp{datosInstancia[0][2]}'
             

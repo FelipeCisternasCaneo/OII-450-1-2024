@@ -4,7 +4,6 @@ import numpy as np
 # https://doi.org/10.1515/jisys-2024-0051
 
 def iterarQSO(maxIter, iter, dim, pop, best, lb, ub):
-
     temp = np.random.uniform(0.2, 0.44) * np.exp(-3 * iter / maxIter)
     hidro = np.random.uniform(0.3, 0.65) * np.exp(-3 * iter / maxIter)
     nitro = np.random.uniform(0, 1)
