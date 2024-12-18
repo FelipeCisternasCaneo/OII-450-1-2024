@@ -4,9 +4,9 @@ import json
 
 bd = BD()
 
-ben = True
-scp = True
-uscp = False
+ben = False
+scp = False
+uscp = True
 
 mhs = ['SBOA']
 cantidad = 0
@@ -64,7 +64,7 @@ if ben:
         insertar_experimentos(instancias, dimensiones, mhs, experimentos, iteraciones, poblacion)
 
 if scp:
-    instancias = bd.obtenerInstancias(f'''"41", "42"''') # Ejemplo: "41", "42", "43", "44"
+    instancias = bd.obtenerInstancias(f'''"41", "nrh5"''') # Ejemplo: "41", "42", "43", "44"
     
     binarizaciones = ['V3-STD']
     iteraciones = 4
@@ -91,7 +91,7 @@ if scp:
                 bd.insertarExperimentos(data, experimentos, instancia[0])
 
 if uscp:
-    instancias = bd.obtenerInstancias(f'''"u43", "u44"''') # Ejemplo: "u43", "u44", "cyc06", "cyc11"
+    instancias = bd.obtenerInstancias(f'''"u43", "uclr11"''') # Ejemplo: "u43", "u44", "cyc06", "cyc11"
     
     binarizaciones = ['V3-STD']
     iteraciones = 4

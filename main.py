@@ -23,7 +23,6 @@ def main():
     dim             = 0 
     ds              = []
     
-    
     while data != None:
         print("-------------------------------------------------------------------------------------------------------")
         print(data)
@@ -47,15 +46,14 @@ def main():
         if problema == 'BEN':
             bd.actualizarExperimento(id, 'ejecutando')
             dim = int(experimento.split(" ")[1])
-            lb =  float(parametrosInstancia.split(",")[0].split(":")[1])
-            ub =  float(parametrosInstancia.split(",")[1].split(":")[1])
-            
+            lb = float(parametrosInstancia.split(",")[0].split(":")[1])
+            ub = float(parametrosInstancia.split(",")[1].split(":")[1])
             
             solverB(id, mh, maxIter, pop, instancia, lb, ub, dim)
         
-        
         if problema == 'SCP':
             bd.actualizarExperimento(id, 'ejecutando')
+            
             instancia = f'scp{datosInstancia[0][2]}'
             
             print("-------------------------------------------------------------------------------------------------------")
@@ -68,23 +66,12 @@ def main():
             
             parMH = parametrosMH.split(",")[4]
             
-            separacion = ds[1].split("_")
-            
-            # if len(separacion) > 1:
-            #     solverSCP_ChaoticMaps(id, mh, maxIter, pop, instancia, ds, repair, parMH)
-            # else:
             solverSCP(id, mh, maxIter, pop, instancia, ds, repair, parMH)
             
         if problema == 'USCP':
             bd.actualizarExperimento(id, 'ejecutando')
             
-            if 'cyc' not in datosInstancia[0][2] and 'clr' not in datosInstancia[0][2]:
-                instancia = f'uscp{datosInstancia[0][2][1:]}'
-                print(f'Instancia: {instancia}')
-            
-            else:
-                instancia = f'uscp{datosInstancia[0][2]}'
-                print(f'Instancia: {instancia}')
+            instancia = f'uscp{datosInstancia[0][2][1:]}'
             
             print("-------------------------------------------------------------------------------------------------------")
             print(f"Ejecutando el experimento: {experimento} - id: {str(id)}")
@@ -99,7 +86,6 @@ def main():
             solverUSCP(id, mh, maxIter, pop, instancia, ds, repair, parMH)
         
         data = bd.obtenerExperimento()
-    
     
     print("------------------------------------------------------------------------------------------------------")
     print("------------------------------------------------------------------------------------------------------")

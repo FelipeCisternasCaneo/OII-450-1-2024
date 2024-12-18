@@ -38,18 +38,25 @@ class USCP:
         self.__optimum = 0
         self.__block_size = 0
         
+        print("largo de la instancia: "+str(len(instance)))
+        
         if len(instance) == 6:
             if instance[4] == '4' or instance[4] == '5' or instance[4] == '6':
                 self.__block_size = 40
+            
             elif instance[4] == 'a' or instance[3] == 'b':
                 self.__block_size = 30
+            
             elif instance[4] == 'c' or instance[3] == 'd':
                 self.__block_size = 20
+            
         else:
             if instance[6] == 'e' or instance[6] == 'f':
                 self.__block_size = 10
+            
             elif instance[6] == 'g' or instance[6] == 'h':
                 self.__block_size = 120
+            
             elif 'cyc' in instance or 'clr' in instance:
                 self.__block_size = 20
         

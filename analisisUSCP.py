@@ -143,7 +143,7 @@ def graficar_mejores_resultados(instancia, mhs_instances):
         plt.savefig(f'{DIR_BEST}time_USCP_{instancia}.pdf')
         plt.close()
 
-lista_instancias = '''"u44"'''  # Ejemplo: "u43", "u44", "cyc06", "cyc11"
+lista_instancias = '''"uclr11"'''  # Ejemplo: "u43", "u44", "cyc06", "cyc11"
 
 # Procesar cada instancia
 instancias = bd.obtenerInstancias(lista_instancias)

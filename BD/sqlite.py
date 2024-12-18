@@ -414,8 +414,7 @@ class BD:
             inner join iteraciones i on i.fk_id_experimento = e.id_experimento
             inner join instancias i2 on e.fk_id_instancia = i2.id_instancia 
             where i2.nombre  = '{instancia}' and e.ML = '{ml}' and e.paramMH = 'iter:100,pop:10,DS:V4-STD,cros:0.9;mut:0.20' and e.ML_FS = '{ml_fs}' and e.MH = '{bss}'
-            group by e.MH , i2.nombre, e.paramMH  
-            group by e.MH , i2.nombre, e.paramMH  
+            group by e.MH , i2.nombre, e.paramMH
         ''')
         
         data = cursor.fetchall()
@@ -435,8 +434,7 @@ class BD:
             inner join iteraciones i on i.fk_id_experimento = e.id_experimento
             inner join instancias i2 on e.fk_id_instancia = i2.id_instancia 
             where i2.nombre  = '{instancia}' and e.ML = '{ml}' and e.paramMH like '%{bss}%' 
-            group by e.MH , i2.nombre      
-            group by e.MH , i2.nombre      
+            group by e.MH , i2.nombre     
         ''')
         
         data = cursor.fetchall()
@@ -457,7 +455,6 @@ class BD:
             inner join instancias i2 on e.fk_id_instancia = i2.id_instancia 
             where i2.nombre  = '{instancia}' and e.ML = '{ml}'
             group by e.MH , i2.nombre   
-            group by e.MH , i2.nombre   
         ''')
         
         data = cursor.fetchall()
@@ -476,8 +473,7 @@ class BD:
             inner join experimentos e on r.fk_id_experimento = e.id_experimento
             inner join iteraciones i on i.fk_id_experimento = e.id_experimento
             inner join instancias i2 on e.fk_id_instancia = i2.id_instancia 
-            where i2.nombre  = '{instancia}' and e.ML = '{ml}' and e.paramMH = 'iter:{bss},pop:40,DS:V4-STD,cros:0.9;mut:0.20' and e.ML_FS = '{clasificador}' and e.MH = 'GA'      
-            where i2.nombre  = '{instancia}' and e.ML = '{ml}' and e.paramMH = 'iter:{bss},pop:40,DS:V4-STD,cros:0.9;mut:0.20' and e.ML_FS = '{clasificador}' and e.MH = 'GA'      
+            where i2.nombre  = '{instancia}' and e.ML = '{ml}' and e.paramMH = 'iter:{bss},pop:40,DS:V4-STD,cros:0.9;mut:0.20' and e.ML_FS = '{clasificador}' and e.MH = 'GA'
         ''')
         
         data = cursor.fetchall()
@@ -496,7 +492,6 @@ class BD:
             inner join experimentos e on r.fk_id_experimento = e.id_experimento
             inner join iteraciones i on i.fk_id_experimento = e.id_experimento
             inner join instancias i2 on e.fk_id_instancia = i2.id_instancia 
-            where i2.nombre  = '{instancia}' and e.ML = '{ml}' and e.paramMH = 'iter:500,pop:50,DS:V4-STD,cros:0.9;mut:0.20' and e.ML_FS = '{clasificador}' and e.MH = '{tecnica}'        
             where i2.nombre  = '{instancia}' and e.ML = '{ml}' and e.paramMH = 'iter:500,pop:50,DS:V4-STD,cros:0.9;mut:0.20' and e.ML_FS = '{clasificador}' and e.MH = '{tecnica}'        
         ''')
         
@@ -538,13 +533,10 @@ class BD:
         
         self.desconectar()
         
-        
         return data
-    
     
     def obtenerExperimentosEspecial(self, tipo_problema, mh, especial):
         self.conectar()
-        
         
         cursor = self.getCursor()
         cursor.execute(f''' SELECT DISTINCT e.experimento  from experimentos e inner join instancias i on e.fk_id_instancia = i.id_instancia where i.tipo_problema = '{tipo_problema}' AND e.MH = '{mh}' and e.experimento like '%{especial}%' ''')
@@ -552,12 +544,10 @@ class BD:
         
         self.desconectar()
         
-        
         return data
     
     def obtenerEjecuciones(self, instancia, mh, experimento):
         self.conectar()
-        
         
         cursor = self.getCursor()
         cursor.execute(f'''
@@ -600,7 +590,6 @@ class BD:
         
         cursor = self.getCursor()
         cursor.execute(f''' 
-                       
                         select e.id_experimento , e.experimento, i.nombre , i.archivo , MAX(r.fitness) 
                         from resultados r 
                         inner join experimentos e on r.fk_id_experimento = e.id_experimento

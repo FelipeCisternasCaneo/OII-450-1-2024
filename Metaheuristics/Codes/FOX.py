@@ -4,7 +4,6 @@ import numpy as np
 # https://doi.org/10.21203/rs.3.rs-1939478/v1
 
 def iterarFOX(maxIter, it, dim, population, bestSolution):
-def iterarFOX(maxIter, it, dim, population, bestSolution):
     population = np.array(population)
     bestSolution = np.array(bestSolution)
     

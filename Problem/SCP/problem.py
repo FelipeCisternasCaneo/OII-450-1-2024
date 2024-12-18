@@ -108,7 +108,6 @@ class SCP:
         dirSCP = './Problem/SCP/Instances/'
         
         instance = dirSCP + instance + ".txt" 
-        instance = dirSCP + instance + ".txt" 
         
         self.setOptimum(self.obtenerOptimo(instance))
         
@@ -127,11 +126,9 @@ class SCP:
         while line != "" and countDim <= self.getColumns():
             values = line.split()
             
-            
             for i in range(len(values)):
                 costos.append(int(values[i]))
                 countDim +=1
-            
             
             line = file.readline()
         
@@ -139,7 +136,6 @@ class SCP:
         # print("Cantidad de costos para cada columna: "+str(costos.__len__()))
 
         # Preparar matriz de restricciones (matriz A)
-        constrains = np.zeros((self.getRows(), self.getColumns()), dtype = np.int32).tolist()
         constrains = np.zeros((self.getRows(), self.getColumns()), dtype = np.int32).tolist()
 
         # Lecutra de Restricciones
@@ -157,16 +153,12 @@ class SCP:
             while line != "" and countUnos < numUnos:
                 columns = line.split()
                 
-                
                 for i in range(len(columns)):
                     column = int(columns[i]) - 1
                     constrains[row][column] = 1
                     countUnos += 1
                     
-                    countUnos += 1
-                    
                 line = file.readline()
-                
                 
             # print("Coberturas para la fila "+str(row)+": "+str(constrains[row]))
             # print("Suma de validacion: "+str(sum(constrains[row])))
@@ -246,7 +238,7 @@ class SCP:
             ,'scpnrh3':[62, 59]
             ,'scpnrh4':[63, 58]
             ,'scpnrh5':[64, 55]
-            'scp41':[0, 429]
+            ,'scp41':[0, 429]
             ,'scp42':[1, 512]
             ,'scp43':[2, 516]
             ,'scp44':[3, 494]
@@ -317,7 +309,6 @@ class SCP:
             if nomInstancia in archivoInstancia:
                 #print(f"instancia {nomInstancia}")
                 
-                
                 return orden[nomInstancia][1]
 
         return None
@@ -326,18 +317,14 @@ class SCP:
         check = True        
         validation = matrix_dot_1(self.getCoverange(), solution, self.__block_size)
         
-        
         if 0 in validation:
             check = False
         
-        
         return check, validation
-    
     
     def repair(self, solution, repairType):
         if repairType == 'simple':
             solution = self.repairSimple(solution)
-            
             
         if repairType == 'complex':
             solution = self.repairComplex(solution)
@@ -352,7 +339,6 @@ class SCP:
 
         random.shuffle(indices)
         
-        
         for i in indices:
             if np.sum(coverange[i] * solution) < 1:
                 idx = np.argwhere(coverange[i] > 0)
@@ -361,9 +347,7 @@ class SCP:
                 # print(f'indice del menor costo: {idxLowcost}')
                 solution[idxLowcost[0]] = 1
                 reparaciones += 1
-                reparaciones += 1
         # print(f'total de reparaciones realizadas: {reparaciones}')
-        
         
         return solution
     
@@ -374,7 +358,6 @@ class SCP:
         # Realizar la prueba de factibilidad inicial
         feasible, aux = self.factibilityTest(solution)
         reparaciones = 0
-        
         
         while not feasible: # repetimos hasta que la solución sea factible
             # Crear un vector disperso para restricciones no cubiertas
@@ -393,12 +376,10 @@ class SCP:
             feasible, aux = self.factibilityTest(solution)
             reparaciones += 1
             
-            
         return solution
 
     def fitness(self, solution):
         return matrix_dot_2(solution, self.getCost(), self.__block_size)
-    
     
 def obtenerOptimo(archivoInstancia):
     orden = {
@@ -411,7 +392,7 @@ def obtenerOptimo(archivoInstancia):
         ,'scp47':[6, 430]
         ,'scp48':[7, 492]
         ,'scp49':[8, 641]
-        'scp41':[0, 429]
+        ,'scp41':[0, 429]
         ,'scp42':[1, 512]
         ,'scp43':[2, 516]
         ,'scp44':[3, 494]
@@ -536,7 +517,6 @@ def obtenerOptimo(archivoInstancia):
     for nomInstancia in orden:
         if nomInstancia in archivoInstancia:
             #print(f"instancia {nomInstancia}")
-            
             
             return orden[nomInstancia][1]
 
