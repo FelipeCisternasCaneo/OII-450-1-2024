@@ -1,9 +1,10 @@
 from BD.sqlite import BD
+
 import json
 
 bd = BD()
 
-ben = False
+ben = True
 scp = True
 uscp = False
 

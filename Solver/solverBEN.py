@@ -20,7 +20,10 @@ def generarPoblacionInicial(pop, dim, lb, ub):
     # Initialize the positions of search agents
     population = np.zeros((pop, dim))
     
+    
     for i in range(dim):
+        population[:, i] = (np.random.uniform(0, 1, pop) * (ub[i] - lb[i]) + lb[i])
+        
         population[:, i] = (np.random.uniform(0, 1, pop) * (ub[i] - lb[i]) + lb[i])
         
     return population
@@ -32,6 +35,7 @@ def solverB(id, mh, maxIter, pop, function, lb, ub, dim):
     if not isinstance(lb, list):
         lb = [lb] * dim
     
+    
     if not isinstance(ub, list):
         ub = [ub] * dim
     
@@ -40,11 +44,15 @@ def solverB(id, mh, maxIter, pop, function, lb, ub, dim):
     
     optimo = bd.obtenerOptimoInstancia(function)[0][0]
     
+    
     if function == 'F8':
         optimo = optimo * dim
         
+        
     initializationTime1 = time.time()
     
+    results = open(dirResult + mh + "_" + function + "_" + str(id) + ".csv", "w")
+    results.write(f'iter,fitness,time,XPL,XPT,DIV\n')
     results = open(dirResult + mh + "_" + function + "_" + str(id) + ".csv", "w")
     results.write(f'iter,fitness,time,XPL,XPT,DIV\n')
     
@@ -63,10 +71,12 @@ def solverB(id, mh, maxIter, pop, function, lb, ub, dim):
     
     maxDiversity = diversidadHussain(population)
     XPL, XPT, state = porcentajesXLPXPT(maxDiversity, maxDiversity)
+    XPL, XPT, state = porcentajesXLPXPT(maxDiversity, maxDiversity)
     
     # Genero un vector donde almacenaré los fitness de cada individuo
     fitness = np.zeros(pop)
 
+    # Genero un vector dedonde tendré mis soluciones rankeadas
     # Genero un vector dedonde tendré mis soluciones rankeadas
     solutionsRanking = np.zeros(pop)
     
@@ -75,12 +85,16 @@ def solverB(id, mh, maxIter, pop, function, lb, ub, dim):
         for j in range(dim):
             population[i, j] = np.clip(population[i, j], lb[j], ub[j])  
                   
+            population[i, j] = np.clip(population[i, j], lb[j], ub[j])  
+                  
         fitness[i] = f(function, population[i])
+        
         
         if mh == 'PSO':
             if pBestScore[i] > fitness[i]:
                 pBestScore[i] = fitness[i]
                 pBest[i, :] = population[i, :].copy()
+            
             
     solutionsRanking = np.argsort(fitness) # rankings de los mejores fitnes
     bestRowAux = solutionsRanking[0]
@@ -104,7 +118,18 @@ def solverB(id, mh, maxIter, pop, function, lb, ub, dim):
             ", DIV: " + str(maxDiversity))
     
     results.write(f'0,{str(format(bestFitness, ".2e"))},{str(round(initializationTime2 - initializationTime1, 3))},{str(XPL)},{str(XPT)},{str(maxDiversity)}\n')
+    print("iter: " +
+            str(0) +
+            ", best: " + str(format(bestFitness, ".2e")) +
+            ", optimo: " + str(optimo) +
+            ", time (s): " + str(round(initializationTime2-initializationTime1, 3)) +
+            ", XPT: " + str(XPT) +
+            ", XPL: " + str(XPL) +
+            ", DIV: " + str(maxDiversity))
+    
+    results.write(f'0,{str(format(bestFitness, ".2e"))},{str(round(initializationTime2 - initializationTime1, 3))},{str(XPL)},{str(XPT)},{str(maxDiversity)}\n')
 
+    # Función objetivo
     # Función objetivo
     def fo(x):
         for j in range(x.__len__()): x[j] = np.clip(x[j], lb[j], ub[j]) # Reparación de soluciones
@@ -123,34 +148,49 @@ def solverB(id, mh, maxIter, pop, function, lb, ub, dim):
         if mh == "SCA":
             population = iterarSCA(maxIter, iter, dim, population.tolist(), best.tolist())
             
+            
         if mh == "GWO":
             population = iterarGWO(maxIter, iter, dim, population.tolist(), fitness.tolist(), 'MIN')
+            
             
         if mh == 'WOA':
             population = iterarWOA(maxIter, iter, dim, population.tolist(), best.tolist())
             
+            
         if mh == 'PSA':
             population = iterarPSA(maxIter, iter, dim, population.tolist(), best.tolist())
+            
             
         if mh == 'PSO':
             population, vel = iterarPSO(maxIter, iter, dim, population.tolist(), best.tolist(), pBest.tolist(), vel, ub[0])
             
+            
         if mh == 'FOX':
             population = iterarFOX(maxIter, iter, dim, population.tolist(), best.tolist())
+            
             
         if mh == 'EOO':
             population = iterarEOO(maxIter, iter, population.tolist(), best.tolist())
             
+            
         if mh == 'RSA':
+            population = iterarRSA(maxIter, iter, dim, population.tolist(), best.tolist(), lb[0], ub[0])
+            
             population = iterarRSA(maxIter, iter, dim, population.tolist(), best.tolist(), lb[0], ub[0])
             
         if mh == 'GOA':
             population = iterarGOA(maxIter, iter, dim, population, best.tolist(), fitness.tolist(), fo, 'MIN')
             
+            population = iterarGOA(maxIter, iter, dim, population, best.tolist(), fitness.tolist(), fo, 'MIN')
+            
         if mh == 'HBA':
             population = iterarHBA(maxIter, iter, dim, population.tolist(), best.tolist(), fitness.tolist(), fo, 'MIN')
             
+            population = iterarHBA(maxIter, iter, dim, population.tolist(), best.tolist(), fitness.tolist(), fo, 'MIN')
+            
         if mh == 'TDO':
+            population = iterarTDO(maxIter, iter, dim, population.tolist(), fitness.tolist(), fo, 'MIN')
+            
             population = iterarTDO(maxIter, iter, dim, population.tolist(), fitness.tolist(), fo, 'MIN')
             
         if mh == 'SHO':
@@ -197,7 +237,15 @@ def solverB(id, mh, maxIter, pop, function, lb, ub, dim):
             for j in range(dim):
                 population[i, j] = np.clip(population[i, j], lb[j], ub[j])     
                    
+                population[i, j] = np.clip(population[i, j], lb[j], ub[j])     
+                   
             fitness[i] = f(function, population[i])
+            
+            if mh == 'LOA':
+                fitn = f(function, posibles_mejoras[i])
+                
+                if fitn < fitness[i]:
+                    population[i] = posibles_mejoras[i]
             
             if mh == 'LOA':
                 fitn = f(function, posibles_mejoras[i])
@@ -209,8 +257,10 @@ def solverB(id, mh, maxIter, pop, function, lb, ub, dim):
                 if fitness[i] < pBestScore[i]:
                     pBest[i] = np.copy(population[i])
         
+        
         solutionsRanking = np.argsort(fitness) # rankings de los mejores fitness
         
+        # conservo el best
         # conservo el best
         if fitness[solutionsRanking[0]] < bestFitness:
             bestFitness = fitness[solutionsRanking[0]]
@@ -219,7 +269,9 @@ def solverB(id, mh, maxIter, pop, function, lb, ub, dim):
         div_t = diversidadHussain(population)
 
         if maxDiversity < div_t: maxDiversity = div_t
+        if maxDiversity < div_t: maxDiversity = div_t
             
+        XPL, XPT, state = porcentajesXLPXPT(div_t, maxDiversity)
         XPL, XPT, state = porcentajesXLPXPT(div_t, maxDiversity)
 
         timerFinal = time.time()
@@ -227,7 +279,16 @@ def solverB(id, mh, maxIter, pop, function, lb, ub, dim):
         timeEjecuted = timerFinal - timerStart
         
         if (iter + 1) % (maxIter // 4) == 0:
+        if (iter + 1) % (maxIter // 4) == 0:
         # if (iter+1) % 10 == 0:
+            print("iter: " +
+                str(iter + 1) +
+                ", best: " + str(format(bestFitness, ".2e")) +
+                ", optimo: " + str(optimo) +
+                ", time (s): " + str(round(timeEjecuted, 3)) +
+                ", XPT: " + str(XPT) +
+                ", XPL: " + str(XPL) +
+                ", DIV: " + str(div_t))
             print("iter: " +
                 str(iter + 1) +
                 ", best: " + str(format(bestFitness, ".2e")) +
@@ -240,22 +301,31 @@ def solverB(id, mh, maxIter, pop, function, lb, ub, dim):
         results.write(
             f'{iter + 1},{str(format(bestFitness, ".2e"))},{str(round(timeEjecuted, 3))},{str(XPL)},{str(XPT)},{str(div_t)}\n')
         
+            f'{iter + 1},{str(format(bestFitness, ".2e"))},{str(round(timeEjecuted, 3))},{str(XPL)},{str(XPT)},{str(div_t)}\n')
+        
     finalTime = time.time()
     timeExecution = finalTime - initialTime
+    
     
     print("------------------------------------------------------------------------------------------------------")
     print("Tiempo de ejecucion (s): " + str(timeExecution))
     print("best fitness: " + str(bestFitness))
+    print("Tiempo de ejecucion (s): " + str(timeExecution))
+    print("best fitness: " + str(bestFitness))
     print("------------------------------------------------------------------------------------------------------")
+    
     
     results.close()
     
     binary = util.convert_into_binary(dirResult + mh + "_" + function + "_" + str(id) + ".csv")
+    binary = util.convert_into_binary(dirResult + mh + "_" + function + "_" + str(id) + ".csv")
 
+    fileName = mh + "_" + function
     fileName = mh + "_" + function
 
     bd.insertarIteraciones(fileName, binary, id)
     bd.insertarResultados(bestFitness, timeExecution, best, id)
     bd.actualizarExperimento(id, 'terminado')
     
+    os.remove(dirResult + mh + "_" + function + "_" + str(id) + ".csv")
     os.remove(dirResult + mh + "_" + function + "_" + str(id) + ".csv")

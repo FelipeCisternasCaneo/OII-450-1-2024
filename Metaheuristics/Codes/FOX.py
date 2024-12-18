@@ -1,7 +1,9 @@
 import numpy as np
-# Fox-inspired Optimization Algorithm (FOX)
-# doi.org/10.21203/rs.3.rs-1939478/v1
 
+# Fox-inspired Optimization Algorithm (FOX)
+# https://doi.org/10.21203/rs.3.rs-1939478/v1
+
+def iterarFOX(maxIter, it, dim, population, bestSolution):
 def iterarFOX(maxIter, it, dim, population, bestSolution):
     population = np.array(population)
     bestSolution = np.array(bestSolution)
@@ -25,14 +27,17 @@ def iterarFOX(maxIter, it, dim, population, bestSolution):
             Dist_Fox_Prey = 0.5 * Dist_S_T
             tt = np.sum(Time_S_T) / dim
             t = tt / 2
-            Jump = 0.5 * 9.81 * t**2
+            Jump = 0.5 * 9.81 * t ** 2
             
             if p > 0.18:
                 population[i, :] = Dist_Fox_Prey * Jump * c1
+                
             elif p <= 0.18:
                 population[i, :] = Dist_Fox_Prey * Jump * c2
             
             if MinT > tt: MinT = tt
+            
         elif r < 0.5:
             population[i, :] = bestSolution + np.random.randn(dim) * (MinT * a)
+            
     return population

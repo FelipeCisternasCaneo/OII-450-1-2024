@@ -1,4 +1,3 @@
-#PSA
 import random
 import numpy as np
 

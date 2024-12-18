@@ -23,6 +23,7 @@ def main():
     dim             = 0 
     ds              = []
     
+    
     while data != None:
         print("-------------------------------------------------------------------------------------------------------")
         print(data)
@@ -49,7 +50,9 @@ def main():
             lb =  float(parametrosInstancia.split(",")[0].split(":")[1])
             ub =  float(parametrosInstancia.split(",")[1].split(":")[1])
             
+            
             solverB(id, mh, maxIter, pop, instancia, lb, ub, dim)
+        
         
         if problema == 'SCP':
             bd.actualizarExperimento(id, 'ejecutando')
@@ -65,6 +68,11 @@ def main():
             
             parMH = parametrosMH.split(",")[4]
             
+            separacion = ds[1].split("_")
+            
+            # if len(separacion) > 1:
+            #     solverSCP_ChaoticMaps(id, mh, maxIter, pop, instancia, ds, repair, parMH)
+            # else:
             solverSCP(id, mh, maxIter, pop, instancia, ds, repair, parMH)
             
         if problema == 'USCP':
@@ -91,6 +99,7 @@ def main():
             solverUSCP(id, mh, maxIter, pop, instancia, ds, repair, parMH)
         
         data = bd.obtenerExperimento()
+    
     
     print("------------------------------------------------------------------------------------------------------")
     print("------------------------------------------------------------------------------------------------------")

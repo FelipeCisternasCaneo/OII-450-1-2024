@@ -1,4 +1,3 @@
-#WOA
 import math
 import random
 import numpy as np
@@ -8,7 +7,9 @@ import numpy as np
 
 def iterarWOA(maxIter, t, dimension, population, bestSolution):
     a = 2 - ((2 * t) / maxIter)
+    a = 2 - ((2 * t) / maxIter)
     b = 1
+    
     
     for i in range(population.__len__()):
         #  p is a random number into [0,1]
@@ -35,6 +36,7 @@ def iterarWOA(maxIter, t, dimension, population, bestSolution):
                 randomPos = random.randint(0, population.__len__() - 1) # seleccionar un individuo al azar
                 for j in range(dimension):
                     # aplicacion de ecuacion 2.7
+                    D = abs((C * population[randomPos][j]) - population[i][j])
                     D = abs((C * population[randomPos][j]) - population[i][j])
                     # aplicacion de ecuacion 2.8
                     population[i][j] = population[randomPos][j] - (A * D)

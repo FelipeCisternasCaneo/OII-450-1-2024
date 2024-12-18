@@ -7,10 +7,14 @@ def matrix_dot_1(A, B, block_size):
     C = np.zeros(A.shape[0])
     # Multiplicación por bloques
     
+    
     for i in range(0, A.shape[0], block_size):
         # Seleccionar un bloque de filas de A
         A_block = A[i: i + block_size, :]
+        A_block = A[i: i + block_size, :]
         # Multiplicar el bloque de filas de A por el vector B
+        C[i: i + block_size] = np.dot(A_block, B)
+        
         C[i: i + block_size] = np.dot(A_block, B)
         
     return C
@@ -20,8 +24,11 @@ def matrix_dot_2(A, B, block_size):
     result = 0.0
     # Multiplicación por bloques
     
+    
     for i in range(0, A.shape[0], block_size):
         # Seleccionar un bloque de A y B
+        A_block = A[i: i + block_size]
+        B_block = B[i: i + block_size]
         A_block = A[i: i + block_size]
         B_block = B[i: i + block_size]
         # Calcular el producto punto del bloque y sumarlo al resultado total
@@ -43,18 +50,23 @@ class SCP:
             if instance[3] == '4' or instance[3] == '5' or instance[3] == '6':
                 self.__block_size = 40
                 
+                
             elif instance[3] == 'a' or instance[3] == 'b':
                 self.__block_size = 30
                 
+                
             elif instance[3] == 'c' or instance[3] == 'd':
                 self.__block_size = 20
+        
         
         else:
             if instance[5] == 'e' or instance[5] == 'f':
                 self.__block_size = 10
             
+            
             elif instance[5] == 'g' or instance[5] == 'h':
                 self.__block_size = 120
+            
             
         self.readInstance(instance)
 
@@ -96,6 +108,7 @@ class SCP:
         dirSCP = 'D:/Descargas/OII-450-1-2024/Problem/SCP/Instances/'
         
         instance = dirSCP + instance + ".txt" 
+        instance = dirSCP + instance + ".txt" 
         
         self.setOptimum(self.obtenerOptimo(instance))
         
@@ -114,9 +127,11 @@ class SCP:
         while line != "" and countDim <= self.getColumns():
             values = line.split()
             
+            
             for i in range(len(values)):
                 costos.append(int(values[i]))
                 countDim +=1
+            
             
             line = file.readline()
         
@@ -124,6 +139,7 @@ class SCP:
         # print("Cantidad de costos para cada columna: "+str(costos.__len__()))
 
         # Preparar matriz de restricciones (matriz A)
+        constrains = np.zeros((self.getRows(), self.getColumns()), dtype = np.int32).tolist()
         constrains = np.zeros((self.getRows(), self.getColumns()), dtype = np.int32).tolist()
 
         # Lecutra de Restricciones
@@ -136,16 +152,21 @@ class SCP:
             line = file.readline()
 
             line = line.replace('\n', "").replace('\\n', "")
+            line = line.replace('\n', "").replace('\\n', "")
 
             while line != "" and countUnos < numUnos:
                 columns = line.split()
+                
                 
                 for i in range(len(columns)):
                     column = int(columns[i]) - 1
                     constrains[row][column] = 1
                     countUnos += 1
                     
+                    countUnos += 1
+                    
                 line = file.readline()
+                
                 
             # print("Coberturas para la fila "+str(row)+": "+str(constrains[row]))
             # print("Suma de validacion: "+str(sum(constrains[row])))
@@ -225,11 +246,77 @@ class SCP:
             ,'scpnrh3':[62, 59]
             ,'scpnrh4':[63, 58]
             ,'scpnrh5':[64, 55]
+            'scp41':[0, 429]
+            ,'scp42':[1, 512]
+            ,'scp43':[2, 516]
+            ,'scp44':[3, 494]
+            ,'scp45':[4, 512]
+            ,'scp46':[5, 560]
+            ,'scp47':[6, 430]
+            ,'scp48':[7, 492]
+            ,'scp49':[8, 641]
+            ,'scp410':[9, 514]
+            ,'scp51':[10, 253]
+            ,'scp52':[11, 302]
+            ,'scp53':[12, 226]
+            ,'scp54':[13, 242]
+            ,'scp55':[14, 211]
+            ,'scp56':[15, 213]
+            ,'scp57':[16, 293]
+            ,'scp58':[17, 288]
+            ,'scp59':[18, 279]
+            ,'scp510':[19, 265]
+            ,'scp61':[20, 138]
+            ,'scp62':[21, 146]
+            ,'scp63':[22, 145]
+            ,'scp64':[23, 131]
+            ,'scp65':[24, 161]
+            ,'scpa1':[25, 253]
+            ,'scpa2':[26, 252]
+            ,'scpa3':[27, 232]
+            ,'scpa4':[28, 234]
+            ,'scpa5':[29, 236]
+            ,'scpb1':[30, 69]
+            ,'scpb2':[31, 76]
+            ,'scpb3':[32, 80]
+            ,'scpb4':[33, 79]
+            ,'scpb5':[34, 72]
+            ,'scpc1':[35, 227]
+            ,'scpc2':[36, 219]
+            ,'scpc3':[37, 243]
+            ,'scpc4':[38, 219]
+            ,'scpc5':[39, 215]
+            ,'scpd1':[40, 60]
+            ,'scpd2':[41, 66]
+            ,'scpd3':[42, 72]
+            ,'scpd4':[43, 62]
+            ,'scpd5':[44, 61]
+            ,'scpnre1':[45, 29]
+            ,'scpnre2':[46, 30]
+            ,'scpnre3':[47, 27]
+            ,'scpnre4':[48, 28]
+            ,'scpnre5':[49, 28]
+            ,'scpnrf1':[50, 14]
+            ,'scpnrf2':[51, 15]
+            ,'scpnrf3':[52, 14]
+            ,'scpnrf4':[53, 14]
+            ,'scpnrf5':[54, 13]
+            ,'scpnrg1':[55, 176]
+            ,'scpnrg2':[56, 154]
+            ,'scpnrg3':[57, 166]
+            ,'scpnrg4':[58, 168]
+            ,'scpnrg5':[59, 168]
+            ,'scpnrh1':[60, 63]
+            ,'scpnrh2':[61, 63]
+            ,'scpnrh3':[62, 59]
+            ,'scpnrh4':[63, 58]
+            ,'scpnrh5':[64, 55]
         }
 
         for nomInstancia in orden:
             if nomInstancia in archivoInstancia:
                 #print(f"instancia {nomInstancia}")
+                
                 
                 return orden[nomInstancia][1]
 
@@ -239,14 +326,18 @@ class SCP:
         check = True        
         validation = matrix_dot_1(self.getCoverange(), solution, self.__block_size)
         
+        
         if 0 in validation:
             check = False
         
+        
         return check, validation
+    
     
     def repair(self, solution, repairType):
         if repairType == 'simple':
             solution = self.repairSimple(solution)
+            
             
         if repairType == 'complex':
             solution = self.repairComplex(solution)
@@ -261,6 +352,7 @@ class SCP:
 
         random.shuffle(indices)
         
+        
         for i in indices:
             if np.sum(coverange[i] * solution) < 1:
                 idx = np.argwhere(coverange[i] > 0)
@@ -269,7 +361,9 @@ class SCP:
                 # print(f'indice del menor costo: {idxLowcost}')
                 solution[idxLowcost[0]] = 1
                 reparaciones += 1
+                reparaciones += 1
         # print(f'total de reparaciones realizadas: {reparaciones}')
+        
         
         return solution
     
@@ -280,6 +374,7 @@ class SCP:
         # Realizar la prueba de factibilidad inicial
         feasible, aux = self.factibilityTest(solution)
         reparaciones = 0
+        
         
         while not feasible: # repetimos hasta que la solución sea factible
             # Crear un vector disperso para restricciones no cubiertas
@@ -298,13 +393,24 @@ class SCP:
             feasible, aux = self.factibilityTest(solution)
             reparaciones += 1
             
+            
         return solution
 
     def fitness(self, solution):
         return matrix_dot_2(solution, self.getCost(), self.__block_size)
     
+    
 def obtenerOptimo(archivoInstancia):
     orden = {
+        'scp41':[0, 429]
+        ,'scp42':[1, 512]
+        ,'scp43':[2, 516]
+        ,'scp44':[3, 494]
+        ,'scp45':[4, 512]
+        ,'scp46':[5, 560]
+        ,'scp47':[6, 430]
+        ,'scp48':[7, 492]
+        ,'scp49':[8, 641]
         'scp41':[0, 429]
         ,'scp42':[1, 512]
         ,'scp43':[2, 516]
@@ -370,11 +476,67 @@ def obtenerOptimo(archivoInstancia):
         ,'scpnrh3':[62, 59]
         ,'scpnrh4':[63, 58]
         ,'scpnrh5':[64, 55]
+        ,'scp51':[10, 253]
+        ,'scp52':[11, 302]
+        ,'scp53':[12, 226]
+        ,'scp54':[13, 242]
+        ,'scp55':[14, 211]
+        ,'scp56':[15, 213]
+        ,'scp57':[16, 293]
+        ,'scp58':[17, 288]
+        ,'scp59':[18, 279]
+        ,'scp510':[19, 265]
+        ,'scp61':[20, 138]
+        ,'scp62':[21, 146]
+        ,'scp63':[22, 145]
+        ,'scp64':[23, 131]
+        ,'scp65':[24, 161]
+        ,'scpa1':[25, 253]
+        ,'scpa2':[26, 252]
+        ,'scpa3':[27, 232]
+        ,'scpa4':[28, 234]
+        ,'scpa5':[29, 236]
+        ,'scpb1':[30, 69]
+        ,'scpb2':[31, 76]
+        ,'scpb3':[32, 80]
+        ,'scpb4':[33, 79]
+        ,'scpb5':[34, 72]
+        ,'scpc1':[35, 227]
+        ,'scpc2':[36, 219]
+        ,'scpc3':[37, 243]
+        ,'scpc4':[38, 219]
+        ,'scpc5':[39, 215]
+        ,'scpd1':[40, 60]
+        ,'scpd2':[41, 66]
+        ,'scpd3':[42, 72]
+        ,'scpd4':[43, 62]
+        ,'scpd5':[44, 61]
+        ,'scpnre1':[45, 29]
+        ,'scpnre2':[46, 30]
+        ,'scpnre3':[47, 27]
+        ,'scpnre4':[48, 28]
+        ,'scpnre5':[49, 28]
+        ,'scpnrf1':[50, 14]
+        ,'scpnrf2':[51, 15]
+        ,'scpnrf3':[52, 14]
+        ,'scpnrf4':[53, 14]
+        ,'scpnrf5':[54, 13]
+        ,'scpnrg1':[55, 176]
+        ,'scpnrg2':[56, 154]
+        ,'scpnrg3':[57, 166]
+        ,'scpnrg4':[58, 168]
+        ,'scpnrg5':[59, 168]
+        ,'scpnrh1':[60, 63]
+        ,'scpnrh2':[61, 63]
+        ,'scpnrh3':[62, 59]
+        ,'scpnrh4':[63, 58]
+        ,'scpnrh5':[64, 55]
     }
 
     for nomInstancia in orden:
         if nomInstancia in archivoInstancia:
             #print(f"instancia {nomInstancia}")
+            
             
             return orden[nomInstancia][1]
 
