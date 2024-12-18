@@ -14,7 +14,7 @@ from util import util
 from BD.sqlite import BD
 
 def solverUSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
-    dirResult = 'D:/Descargas/OII-450-1-2024/Resultados/'
+    dirResult = './Resultados/'
     instance = USCP(instances)
     
     # tomo el tiempo inicial de la ejecucion

@@ -7,13 +7,12 @@ from util import util
 
 class BD:
     def __init__(self):
-        self.__dataBase = 'D:/Descargas/OII-450-1-2024/BD/resultados.db'
+        self.__dataBase = './BD/resultados.db'
         self.__conexion = None
         self.__cursor   = None
 
     def getDataBase(self):
         return self.__dataBase
-    
     
     def setDataBase(self, dataBase):
         self.__dataBase = dataBase
@@ -22,14 +21,11 @@ class BD:
     def getConexion(self):
         return self.__conexion
     
-    
     def setConexion(self, conexion):
         self.__conexion = conexion
         
-        
     def getCursor(self):
         return self.__cursor
-    
     
     def setCursor(self, cursor):
         self.__cursor = cursor
@@ -108,7 +104,7 @@ class BD:
     def insertarExperimentos(self, data, corridas, id):
         self.conectar()
 
-        for corrida in range(corridas):
+        for _ in range(corridas):
             self.getCursor().execute(f'''
                 INSERT INTO experimentos VALUES (
                     NULL,
@@ -123,136 +119,108 @@ class BD:
                     {id}
                 )''')
         
-        
         self.commit()
         self.desconectar()
         
-    
     def insertarInstanciasBEN(self):
         self.conectar()
-        
-        data = ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12', 'F13', 'F14', 'F15', 'F16', 'F17', 'F18', 'F19', 'F20', 'F21', 'F22', 'F23']
         
         data = ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12', 'F13', 'F14', 'F15', 'F16', 'F17', 'F18', 'F19', 'F20', 'F21', 'F22', 'F23']
         
         for instancia in data:
             tipoProblema = 'BEN'
             
-            
             if instancia == 'F1':
                 param     = f'lb:-100,ub:100'
                 optimo = 0
-                
                 
             if instancia == 'F2':
                 param     = f'lb:-10,ub:10'
                 optimo = 0
                 
-                
             if instancia == 'F3':
                 param     = f'lb:-100,ub:100'
                 optimo = 0
-                
                 
             if instancia == 'F4':
                 param     = f'lb:-100,ub:100'
                 optimo = 0
                 
-                
             if instancia == 'F5':
                 param     = f'lb:-30,ub:30'
                 optimo = 0
-                
                 
             if instancia == 'F6':
                 param     = f'lb:-100,ub:100'
                 optimo = 0
                 
-                
             if instancia == 'F7':
                 param     = f'lb:-1.28,ub:1.28'
                 optimo = 0
-                
                 
             if instancia == 'F8':
                 param     = f'lb:-500,ub:500'
                 optimo = -418.9829
                 
-                
             if instancia == 'F9':
                 param     = f'lb:-5.12,ub:5.12'
                 optimo = 0
-                
                 
             if instancia == 'F10':
                 param     = f'lb:-32,ub:32'
                 optimo = 0
                 
-                
             if instancia == 'F11':
                 param     = f'lb:-600,ub:600'
                 optimo = 0
-                
                 
             if instancia == "F12":
                 param     = f'lb:-50,ub:50'
                 optimo = 0
                 
-                
             if instancia == "F13":
                 param     = f'lb:-50,ub:50'
                 optimo = 0
-                
                 
             if instancia == "F14":
                 param     = f'lb:-65.536,ub:65.536'
                 optimo = 1
                 
-                
             if instancia == "F15":
                 param     = f'lb:-5,ub:5'
                 optimo = 0.00030
-                
                 
             if instancia == "F16":
                 param     = f'lb:-5,ub:5'
                 optimo = -1.0316
                 
-                
             if instancia == "F17":
                 param     = f'lb:-5,ub:5'
                 optimo = 0.398
-                
                 
             if instancia == "F18":
                 param     = f'lb:-2,ub:2'
                 optimo = 3
                 
-                
             if instancia == "F19":
                 param     = f'lb:0,ub:1'
                 optimo = -3.86
                 
-                
             if instancia == "F20":
                 param     = f'lb:0,ub:1'
                 optimo = -3.32
-                
-                
+                   
             if instancia == "F21":
                 param     = f'lb:0,ub:10'
                 optimo = -10.1532
-                
                 
             if instancia == "F22":
                 param     = f'lb:0,ub:10'
                 optimo = -10.4028
                 
-                
             if instancia == "F23":
                 param     = f'lb:0,ub:10'
                 optimo = -10.5363
-           
            
             self.getCursor().execute(f'''  INSERT INTO instancias (tipo_problema, nombre, optimo, param) VALUES(?, ?, ?, ?) ''', (tipoProblema, instancia, optimo, param))
             
@@ -262,7 +230,7 @@ class BD:
     def insertarInstanciasSCP(self):
         self.conectar()
         
-        data = os.listdir('D:/Descargas/OII-450-1-2024/Problem/SCP/Instances/')
+        data = os.listdir('./Problem/SCP/Instances/')
         
         for d in data:
             tipoProblema = 'SCP'
@@ -279,7 +247,7 @@ class BD:
     def insertarInstanciasUSCP(self):
         self.conectar()
         
-        data = os.listdir('D:/Descargas/OII-450-1-2024/Problem/USCP/Instances/')        
+        data = os.listdir('./Problem/USCP/Instances/')        
         for d in data:
             
             tipoProblema = 'USCP'
@@ -308,14 +276,11 @@ class BD:
             conn.commit()
             conn.close()
             
-            
             return data
-        
         
         else:
             conn.commit()
             conn.close()
-            
             
             return None
     
@@ -395,7 +360,6 @@ class BD:
         
         self.desconectar()
         
-        
         return data
     
     def obtenerMejoresArchivos(self, instancia, ml):
@@ -415,7 +379,6 @@ class BD:
         data = cursor.fetchall()
         
         self.desconectar()
-        
         
         return data
     
@@ -438,7 +401,6 @@ class BD:
         
         self.desconectar()
         
-        
         return data
     
     def obtenerMejoresArchivosconClasificadorBSS(self, instancia, ml, ml_fs,bss):
@@ -459,7 +421,6 @@ class BD:
         data = cursor.fetchall()
         
         self.desconectar()
-        
         
         return data
     
@@ -482,7 +443,6 @@ class BD:
         
         self.desconectar()
         
-        
         return data
     
     def obtenerMejoresSoluciones(self, instancia, ml):
@@ -504,7 +464,6 @@ class BD:
         
         self.desconectar()
         
-        
         return data
     
     def obtenerArchivosBSSClasificador(self, instancia, ml, bss, clasificador):
@@ -524,7 +483,6 @@ class BD:
         data = cursor.fetchall()
         
         self.desconectar()
-        
         
         return data
     
@@ -546,12 +504,10 @@ class BD:
         
         self.desconectar()
         
-        
         return data
     
     def obtenerInstancias(self, problema):
         self.conectar()
-        
         
         cursor = self.getCursor()
         cursor.execute(f''' select DISTINCT id_instancia, nombre from instancias i where nombre in ({problema})   ''')
@@ -560,12 +516,10 @@ class BD:
         
         self.desconectar()
         
-        
         return data
     
     def obtenerTecnicas(self):
         self.conectar()
-        
         
         cursor = self.getCursor()
         cursor.execute(f''' SELECT DISTINCT MH from experimentos e   ''')
@@ -573,12 +527,10 @@ class BD:
         
         self.desconectar()
         
-        
         return data
     
     def obtenerInstanciasEjecutadas(self, tipo_problema):
         self.conectar()
-        
         
         cursor = self.getCursor()
         cursor.execute(f''' select DISTINCT i.nombre  from experimentos e inner join instancias i on e.fk_id_instancia = i.id_instancia where i.tipo_problema = '{tipo_problema}' order by i.nombre asc ''')
@@ -589,15 +541,6 @@ class BD:
         
         return data
     
-    # def obtenerExperimentos(self, tipo_problema, mh):
-    #     self.conectar()
-    #     cursor = self.getCursor()
-    #     cursor.execute(f''' SELECT DISTINCT e.experimento  from experimentos e inner join instancias i on e.fk_id_instancia = i.id_instancia where i.tipo_problema = '{tipo_problema}' AND e.MH = '{mh}' ''')
-    #     data = cursor.fetchall()
-        
-        
-    #     self.desconectar()
-    #     return data
     
     def obtenerExperimentosEspecial(self, tipo_problema, mh, especial):
         self.conectar()
@@ -618,7 +561,6 @@ class BD:
         
         cursor = self.getCursor()
         cursor.execute(f'''
-        cursor.execute(f'''
                         select e.id_experimento , e.experimento, i.nombre , i.archivo , r.fitness, r.tiempoEjecucion  
                         from resultados r 
                         inner join experimentos e on r.fk_id_experimento = e.id_experimento
@@ -627,11 +569,9 @@ class BD:
                         where i2.nombre  = '{instancia}' and e.experimento = '{experimento}' and e.MH = '{mh}'
                         ''')
         
-        
         data = cursor.fetchall()
         
         self.desconectar()
-        
         
         return data
     
@@ -649,17 +589,14 @@ class BD:
                         where i2.nombre  = '{instancia}' and e.experimento = '{experimento}' and e.MH = '{mh}'
                         ''')
         
-        
         data = cursor.fetchall()
         
         self.desconectar()
-        
         
         return data
     
     def obtenerMejoresEjecucionesKP(self, instancia, mh, experimento):
         self.conectar()
-        
         
         cursor = self.getCursor()
         cursor.execute(f''' 
@@ -670,18 +607,16 @@ class BD:
                         inner join iteraciones i on i.fk_id_experimento = e.id_experimento
                         inner join instancias i2 on e.fk_id_instancia = i2.id_instancia 
                         where i2.nombre  = '{instancia}' and e.experimento = '{experimento}' and e.MH = '{mh}'
-                        
                         ''')
+        
         data = cursor.fetchall()
         
         self.desconectar()
-        
         
         return data
     
     def obtenerOptimoInstancia(self, instancia):
         self.conectar()
-        
         
         cursor = self.getCursor()
         cursor.execute(f''' SELECT optimo  from instancias i where nombre = '{instancia}'  ''')
@@ -689,29 +624,23 @@ class BD:
         
         self.desconectar()
         
-        
         return data
-    
     
     def obtenerTiposProblemas(self):
         self.conectar()
-        
         
         cursor = self.getCursor()
         cursor.execute(f''' 
             SELECT DISTINCT i.tipo_problema from experimentos e 
             inner join instancias i ON e.fk_id_instancia = i.id_instancia
                         ''')
-
-
-        data = cursor.fetchall()
         
+        data = cursor.fetchall()
         
         return data
     
     def obtenerNombreExperimentos(self, tipo_problema):
         self.conectar()
-        
         
         cursor = self.getCursor()
         cursor.execute(f''' 
@@ -720,16 +649,15 @@ class BD:
             inner join instancias i ON e.fk_id_instancia = i.id_instancia
             where i.tipo_problema = '{tipo_problema}'
                         ''')
+        
         data = cursor.fetchall()
         
         self.desconectar()
-        
         
         return data
     
     def obtenerInstanciasByProblema(self, problema):
         self.conectar()
-        
         
         cursor = self.getCursor()
         cursor.execute(f''' 
@@ -738,10 +666,8 @@ class BD:
             where i.tipo_problema = '{problema}'
                         ''')
         
-        
         data = cursor.fetchall()
         
         self.desconectar()
-        
         
         return data

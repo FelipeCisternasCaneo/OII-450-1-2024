@@ -8,7 +8,7 @@ from util import util
 from BD.sqlite import BD
 
 # Configuración global
-DIR_RESULTADO = 'D:/Descargas/OII-450-1-2024/Resultados/'
+DIR_RESULTADO = './Resultados/'
 DIR_TRANSITORIO = f'{DIR_RESULTADO}Transitorio/'
 DIR_GRAFICOS = f'{DIR_RESULTADO}Graficos/'
 DIR_BEST = f'{DIR_RESULTADO}Best/'
