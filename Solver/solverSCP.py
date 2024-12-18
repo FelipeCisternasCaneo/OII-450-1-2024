@@ -201,7 +201,6 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
             if not flag: #solucion infactible
                 population[i] = instance.repair(population[i], repairType)
                 
-                
             fitness[i] = instance.fitness(population[i])
 
             if mh == 'PSO':
@@ -219,7 +218,6 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
         if fitness[solutionsRanking[0]] < bestFitness:
             bestFitness = fitness[solutionsRanking[0]]
             best = population[solutionsRanking[0]]
-        
         
         matrixBin = population.copy()
 

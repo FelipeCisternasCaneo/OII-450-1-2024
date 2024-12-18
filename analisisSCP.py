@@ -143,7 +143,7 @@ def graficar_mejores_resultados(instancia, mhs_instances):
         plt.savefig(f'{DIR_BEST}time_SCP_{instancia}.pdf')
         plt.close()
 
-lista_instancias = '''"41", "42", "43", "44"'''  # Ejemplo: "41", "42", "43", "44"
+lista_instancias = '''"41", "42", "43", "nrh5"'''  # Ejemplo: "41", "42", "43", "44"
 
 # Procesar cada instancia
 instancias = bd.obtenerInstancias(lista_instancias)

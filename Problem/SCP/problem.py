@@ -50,23 +50,18 @@ class SCP:
             if instance[3] == '4' or instance[3] == '5' or instance[3] == '6':
                 self.__block_size = 40
                 
-                
             elif instance[3] == 'a' or instance[3] == 'b':
                 self.__block_size = 30
                 
-                
             elif instance[3] == 'c' or instance[3] == 'd':
                 self.__block_size = 20
-        
         
         else:
             if instance[5] == 'e' or instance[5] == 'f':
                 self.__block_size = 10
             
-            
             elif instance[5] == 'g' or instance[5] == 'h':
                 self.__block_size = 120
-            
             
         self.readInstance(instance)
 
@@ -104,7 +99,6 @@ class SCP:
         self.__optimum = optimum
 
     def readInstance(self, instance):
-        
         dirSCP = './Problem/SCP/Instances/'
         
         instance = dirSCP + instance + ".txt" 

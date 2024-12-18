@@ -124,6 +124,7 @@ def solverB(id, mh, maxIter, pop, function, lb, ub, dim):
         
         # perturbo la population con la metaheuristica, pueden usar SCA y GWO
         # en las funciones internas tenemos los otros dos for, for de individuos y for de dimensiones
+        
         if mh == "SCA":
             population = iterarSCA(maxIter, iter, dim, population.tolist(), best.tolist())
             
@@ -248,8 +249,6 @@ def solverB(id, mh, maxIter, pop, function, lb, ub, dim):
     timeExecution = finalTime - initialTime
     
     print("------------------------------------------------------------------------------------------------------")
-    print("Tiempo de ejecucion (s): " + str(timeExecution))
-    print("best fitness: " + str(bestFitness))
     print("Tiempo de ejecucion (s): " + str(timeExecution))
     print("best fitness: " + str(bestFitness))
     print("------------------------------------------------------------------------------------------------------")
