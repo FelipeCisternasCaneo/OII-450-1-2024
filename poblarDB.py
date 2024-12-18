@@ -48,7 +48,7 @@ def insertar_experimentos(instancias, dimensiones, mhs, experimentos, iteracione
     for instancia in instancias:
         total_experimentos = len(dimensiones) * len(mhs) * experimentos
         
-        print(f"🔍 Generando {total_experimentos} experimentos para {problemaActual} {instancia[1]}")  # Mostrar nombre correcto
+        print(f"Generando {total_experimentos} experimentos para {problemaActual} {instancia[1]}")  # Mostrar nombre correcto
 
         for dim in dimensiones:
             for mh in mhs:
@@ -96,7 +96,7 @@ for problema, activar in [('SCP', scp), ('USCP', uscp)]:
 
         for instancia in instancias:
             total_experimentos = len(binarizaciones) * len(mhs) * experimentos
-            print(f"🔍 Generando {total_experimentos} experimentos para {problema} {instancia[1]}")
+            print(f"Generando {total_experimentos} experimentos para {problema} {instancia[1]}")
 
             for mh in mhs:
                 for binarizacion in binarizaciones:

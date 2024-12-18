@@ -147,13 +147,14 @@ lista_instancias = '''"uclr11"'''  # Ejemplo: "u43", "u44", "cyc06", "cyc11"
 
 # Procesar cada instancia
 instancias = bd.obtenerInstancias(lista_instancias)
+
 for instancia in instancias:
     print(f"Procesando instancia: {instancia[1]}")
     blob = bd.obtenerArchivos(instancia[1])
 
     # Validar si hay experimentos para la instancia
     if not blob:
-        print(f"⚠️  Advertencia: La instancia '{instancia[1]}' no tiene experimentos asociados. Saltando esta instancia...")
+        print(f"Advertencia: La instancia '{instancia[1]}' no tiene experimentos asociados. Saltando esta instancia...")
         
         continue
 

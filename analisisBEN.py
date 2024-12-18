@@ -160,7 +160,8 @@ for instancia in bd.obtenerInstancias(lista_instancias):
 
     # Validar si hay experimentos para la instancia
     if not blob:
-        print(f"⚠️  Advertencia: La instancia '{instancia[1]}' no tiene experimentos asociados. Saltando esta instancia.")
+        print(f"Advertencia: La instancia '{instancia[1]}' no tiene experimentos asociados. Saltando esta instancia.")
+        
         continue
 
     # Crear archivos
