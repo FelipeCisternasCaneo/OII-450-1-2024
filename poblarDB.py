@@ -4,11 +4,11 @@ import json
 
 bd = BD()
 
-ben = True
+ben = False
 scp = True
 uscp = True
 
-mhs = ['SBOA']
+mhs = ['SBOA','GWO','PSO']
 cantidad = 0
 
 # Dimensiones válidas globales para BEN
@@ -39,7 +39,7 @@ DS_actions = [
 def validar_dimensiones(dimensiones):
     for dim in dimensiones:
         if dim not in DIMENSIONES_VALIDAS:
-            raise ValueError(f"❌ Error: Dimensión {dim} no permitida. Las dimensiones válidas son: {DIMENSIONES_VALIDAS}.")
+            raise ValueError(f" Error: Dimensión {dim} no permitida. Las dimensiones válidas son: {DIMENSIONES_VALIDAS}.")
 
 # Inserta experimentos en la base de datos
 def insertar_experimentos(instancias, dimensiones, mhs, experimentos, iteraciones, poblacion, problemaActual, extra_params=""):
@@ -48,7 +48,7 @@ def insertar_experimentos(instancias, dimensiones, mhs, experimentos, iteracione
     for instancia in instancias:
         total_experimentos = len(dimensiones) * len(mhs) * experimentos
         
-        print(f"Generando {total_experimentos} experimentos para {problemaActual} {instancia[1]}")  # Mostrar nombre correcto
+        print(f" Generando {total_experimentos} experimentos para {problemaActual} {instancia[1]}")  # Mostrar nombre correcto
 
         for dim in dimensiones:
             for mh in mhs:
@@ -88,15 +88,15 @@ if ben:
 # Proceso SCP y USCP (dimensiones automáticas calculadas)
 for problema, activar in [('SCP', scp), ('USCP', uscp)]:
     if activar:
-        instancias = bd.obtenerInstancias(f'''"41", "nrh5"''') if problema == 'SCP' else bd.obtenerInstancias(f'''"u43", "uclr11"''')
-        binarizaciones = ['V3-STD']
-        iteraciones = 4
-        experimentos = 2
-        poblacion = 30
+        instancias = bd.obtenerInstancias(f'''"41","42","51","52","61","62","a1","a2","b1","b2","c1","c2","d1","d2","nre1","nre2","nrf1","nrf2","nrg1","nrg2","nrh1","nrh2"''') if problema == 'SCP' else bd.obtenerInstancias(f'''"u41","u51","u61","ua1","ub1","uc1","ud1","unre1","unrf1","unrg1","unrh1","ucyc06","ucyc07","ucyc08","uclr10","uclr11","uclr12"''')
+        binarizaciones = ['V3-ELIT']
+        iteraciones = 600
+        experimentos = 31
+        poblacion = 10
 
         for instancia in instancias:
             total_experimentos = len(binarizaciones) * len(mhs) * experimentos
-            print(f"Generando {total_experimentos} experimentos para {problema} {instancia[1]}")
+            print(f" Generando {total_experimentos} experimentos para {problema} {instancia[1]}")
 
             for mh in mhs:
                 for binarizacion in binarizaciones:
