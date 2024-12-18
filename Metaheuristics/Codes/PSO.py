@@ -1,13 +1,11 @@
 import random
 import numpy as np
 
-# Particle Swarm Optimization
-
+# Particle Swarm Optimization (PSO)
 
 def obtenerRandom(chaotic_map):
     return random.choice(chaotic_map)
     
-
 def iterarPSO(maxIter, it, dim, population, gBest, pBest, vel, ub):
     '''
     maxIter: Máximo de iteraciones 
@@ -55,4 +53,5 @@ def iterarPSO(maxIter, it, dim, population, gBest, pBest, vel, ub):
 
             #se actualiza la población utilizando las velocidades calculadas
             population[i][j] = population[i][j] + vel[i][j]
+
     return np.array(population), np.array(vel)

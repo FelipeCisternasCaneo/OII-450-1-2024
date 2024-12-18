@@ -11,4 +11,15 @@ from Metaheuristics.Codes.GOA import iterarGOA
 from Metaheuristics.Codes.HBA import iterarHBA
 from Metaheuristics.Codes.TDO import iterarTDO
 from Metaheuristics.Codes.SHO import iterarSHO
-# from Metaheuristics.Codes.DA import iterarDA
+from Metaheuristics.Codes.SBOA import iterarSBOA
+from Metaheuristics.Codes.EBWOA import iterarEBWOA
+from Metaheuristics.Codes.EHO import iterarEHO
+from Metaheuristics.Codes.FLO import iterarFLO
+from Metaheuristics.Codes.HLOA import iterarHLOAScp
+from Metaheuristics.Codes.HLOA import iterarHLOABen
+from Metaheuristics.Codes.LOA import iterarLOA
+from Metaheuristics.Codes.NO import iterarNO
+from Metaheuristics.Codes.PO import IterarPO
+from Metaheuristics.Codes.POA import iterarPOA
+from Metaheuristics.Codes.QSO import iterarQSO
+from Metaheuristics.Codes.WOM import iterarWOM

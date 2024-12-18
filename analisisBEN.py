@@ -3,266 +3,187 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import os
 import seaborn as sns
+
 from util import util
 from BD.sqlite import BD
-bd = BD()
 
-dirResultado = './Resultados/'
+# Configuración global
+DIR_RESULTADO = 'D:/Descargas/OII-450-1-2024/Resultados/'
+DIR_TRANSITORIO = f'{DIR_RESULTADO}Transitorio/'
+DIR_GRAFICOS = f'{DIR_RESULTADO}Graficos/'
+DIR_BEST = f'{DIR_RESULTADO}Best/'
+DIR_BOXPLOT = f'{DIR_RESULTADO}boxplot/'
+DIR_VIOLIN = f'{DIR_RESULTADO}violinplot/'
 
+GRAFICOS = True
+MHS_LIST = ['SBOA']
+COLORS = ['r', 'g']
 
-
-
-archivoResumenFitness = open(f'{dirResultado}resumen_fitness_BEN.csv', 'w')
-archivoResumenTimes = open(f'{dirResultado}resumen_times_BEN.csv', 'w')
-archivoResumenPercentage = open(f'{dirResultado}resumen_percentage_BEN.csv', 'w')
-
-archivoResumenFitness.write("instance,best,avg. fitness, std fitness,best,avg. fitness, std fitness,best,avg. fitness, std fitness, best,avg. fitness, std fitness\n")
-archivoResumenTimes.write("instance, min time (s), avg. time (s), std time (s), min time (s), avg. time (s), std time (s), min time (s), avg. time (s), std time (s), min time (s), avg. time (s), std time (s)\n")
-archivoResumenPercentage.write("instance, avg. XPL%, avg. XPT%, avg. XPL%, avg. XPT%, avg. XPL%, avg. XPT%, avg. XPL%, avg. XPT%\n")
-
-
-graficos = True
+# Clase para almacenar resultados
 class InstancesMhs:
     def __init__(self):
-        self.div = []
-        self.fitness = []
-        self.time = []
-        self.xpl = []
-        self.xpt = []
-        self.bestFitness = []
-        self.bestTime = []
+        self.div, self.fitness, self.time = [], [], []
+        self.xpl, self.xpt = [], []
+        self.bestFitness, self.bestTime = [], []
 
-# Listas de metaheuristicas a implementar
-mhsList = ['WOA']
-# Lista de colores de grafico por metaheuristica
-color = ['r','g']
-
-# Diccionario de metaheuristicas
-mhs = {name: InstancesMhs() for name in mhsList}
+# Inicializa las metaheurísticas
+mhs_instances = {name: InstancesMhs() for name in MHS_LIST}
 
 bd = BD()
 
-instancias = bd.obtenerInstancias(f'''
-                                  "F9"
-                                  ''')
+def actualizar_datos(mhs_instances, mh, archivo_fitness, data):
+    instancia_mh = mhs_instances[mh]
+    instancia_mh.fitness.append(np.min(data['fitness']))
+    instancia_mh.time.append(np.round(np.sum(data['time']), 3))
+    instancia_mh.xpl.append(np.round(np.mean(data['XPL']), 2))
+    instancia_mh.xpt.append(np.round(np.mean(data['XPT']), 2))
+    archivo_fitness.write(f'{mh}, {np.min(data["fitness"])}\n')
 
-for instancia in instancias:
-    print(instancia)
+def graficar_datos(iteraciones, fitness, xpl, xpt, tiempo, mh, problem, corrida):
+    # Gráfico de convergencia
+    fig, ax = plt.subplots()
+    ax.plot(iteraciones, fitness)
+    ax.set_title(f'Convergence {mh} \n {problem} run {corrida}')
+    ax.set_ylabel("Fitness")
+    ax.set_xlabel("Iteration")
+    plt.savefig(f'{DIR_GRAFICOS}Convergence_{mh}_{problem}_{corrida}.pdf')
+    plt.close('all')
+
+    # Gráfico XPL vs XPT
+    figPER, axPER = plt.subplots()
+    axPER.plot(iteraciones, xpl, color="r", label=r"$\overline{XPL}$" + ": " + str(np.round(np.mean(xpl), decimals=2)) + "%")
+    axPER.plot(iteraciones, xpt, color="b", label=r"$\overline{XPT}$" + ": " + str(np.round(np.mean(xpt), decimals=2)) + "%")
+    axPER.set_title(f'XPL% - XPT% {mh} \n {problem} run {corrida}')
+    axPER.set_ylabel("Percentage")
+    axPER.set_xlabel("Iteration")
+    axPER.legend(loc='upper right')
+    plt.savefig(f'{DIR_GRAFICOS}Percentage_{mh}_{problem}_{corrida}.pdf')
+    plt.close('all')
     
-    blob = bd.obtenerArchivos(instancia[1])
+    # Gráfico de tiempo por iteración
+    figTime, axTime = plt.subplots()
+    axTime.plot(iteraciones, tiempo, color='g', label='Time per Iteration')
+    axTime.set_title(f'Time per Iteration {mh} \n {problem} run {corrida}')
+    axTime.set_ylabel("Time (s)")
+    axTime.set_xlabel("Iteration")
+    axTime.legend(loc='upper right')
+    plt.savefig(f'{DIR_GRAFICOS}Time_{mh}_{problem}_{corrida}.pdf')
+    plt.close('all')
+
+def graficar_mejores_resultados(instancia, mhs_instances):
+    for name in MHS_LIST:
+        mh = mhs_instances[name]
+        
+        # Gráfico de mejores fitness
+        plt.plot(range(len(mh.bestFitness)), mh.bestFitness, color = 'r', label = 'Best Fitness')
+        plt.title(f'Best Fitness \n {instancia}')
+        plt.ylabel("Fitness")
+        plt.xlabel("Iteration")
+        plt.legend()
+        plt.savefig(f'{DIR_BEST}fitness_{instancia}.pdf')
+        plt.close()
+
+        # Gráfico de mejores tiempos
+        plt.plot(range(len(mh.bestTime)), mh.bestTime, color = 'b', label = 'Best Time')
+        plt.title(f'Time (s) \n {instancia}')
+        plt.ylabel("Time (s)")
+        plt.xlabel("Iteration")
+        plt.legend()
+        plt.savefig(f'{DIR_BEST}time_{instancia}.pdf')
+        plt.close()
+        
+def graficar_boxplot_violin(instancia):
+    direccion_datos = f'{DIR_RESULTADO}fitness_{instancia}.csv'
+    
+    datos = pd.read_csv(direccion_datos)
+    
+    figFitness, axFitness = plt.subplots()
+    axFitness = sns.boxplot(x = 'MH', y = ' FITNESS', data=datos)
+    axFitness.set_title(f'Fitness \n{instancia}', loc = "center", fontdict = {'fontsize': 10, 'fontweight': 'bold', 'color': 'black'})
+
+    axFitness.set_title(f'Fitness \n{instancia}', loc = "center", fontdict = {'fontsize': 10, 'fontweight': 'bold', 'color': 'black'})
+    axFitness.set_ylabel("Fitness")
+    axFitness.set_xlabel("Metaheuristics")
+    figFitness.savefig(DIR_RESULTADO + "/boxplot/boxplot_fitness_" + instancia + '.pdf')
+    
+    plt.close('all')
+    
+    figFitness, axFitness = plt.subplots()
+    axFitness = sns.violinplot(x = 'MH', y = ' FITNESS', data = datos, gridsize= 50)
+    axFitness.set_title(f'Fitness \n{instancia}', loc = "center", fontdict = {'fontsize': 10, 'fontweight': 'bold', 'color': 'black'})
+    axFitness.set_ylabel("Fitness")
+    axFitness.set_xlabel("Metaheuristics")
+    figFitness.savefig(DIR_RESULTADO + "/violinplot/violinplot_fitness_" + instancia + '.pdf')
+    
+    plt.close('all')
+    
+# Escribir estadísticas resumidas
+def escribir_resumenes(mhs_instances, archivoResumenFitness, archivoResumenTimes, archivoResumenPercentage):
+    for name in MHS_LIST:
+        mh = mhs_instances[name]
+        archivoResumenFitness.write(f"{name}, {np.min(mh.fitness)}, {np.round(np.mean(mh.fitness), 3)}, {np.round(np.std(mh.fitness), 3)}\n")
+        archivoResumenTimes.write(f"{name}, {np.min(mh.time)}, {np.round(np.mean(mh.time), 3)}, {np.round(np.std(mh.time), 3)}\n")
+        archivoResumenPercentage.write(f"{name}, {np.round(np.mean(mh.xpl), 3)}, {np.round(np.mean(mh.xpt), 3)}\n")
+
+# Procesar archivos de resultados
+def procesar_archivos(instancia, blob, archivo_fitness):
     corrida = 1
-    
-    archivoFitness = open(f'{dirResultado}fitness_'+instancia[1]+'.csv', 'w')
-    archivoFitness.write('MH,FITNESS\n')
+    for nombre_archivo, contenido in blob:
+        direccion_destino = f'{DIR_TRANSITORIO}{nombre_archivo}.csv'
+        util.writeTofile(contenido, direccion_destino)
 
-    for name in mhsList:
-        mhs[name].div = []
-        mhs[name].fitness = [] 
-        mhs[name].time = []
-        mhs[name].xpl = [] 
-        mhs[name].xpt = []
-        mhs[name].bestFitness = []
-        mhs[name].bestTime = []
-    
-    for d in blob:
-        nombreArchivo = d[0]
-        archivo = d[1]
+        # Leer el archivo
+        data = pd.read_csv(direccion_destino)
+        mh, problem = nombre_archivo.split('_')[0], instancia
 
-        direccionDestiono = './Resultados/Transitorio/'+nombreArchivo+'.csv'
-        # print("-------------------------------------------------------------------------------")
-        util.writeTofile(archivo,direccionDestiono)
-        
-        data = pd.read_csv(direccionDestiono)
-        
-        mh = nombreArchivo.split('_')[0]
-        problem = nombreArchivo.split('_')[1]
+        # Actualizar datos
+        if mh in MHS_LIST:
+            actualizar_datos(mhs_instances, mh, archivo_fitness, data)
+            mhs_instances[mh].bestFitness = data['fitness']
+            mhs_instances[mh].bestTime = data['time']
 
-        iteraciones = data['iter']
-        fitness     = data['fitness']
-        time        = data['time']
-        xpl         = data['XPL']
-        xpt         = data['XPT']
+        # Generar gráficos
+        if GRAFICOS:
+            graficar_datos(data['iter'], data['fitness'], data['XPL'], data['XPT'], data['time'], mh, problem, corrida)
         
-        for name in mhsList:
-            if mh == name:
-                mhs[name].fitness.append(np.min(fitness))
-                mhs[name].time.append(np.round(np.sum(time),3))
-                mhs[name].xpl.append(np.round(np.mean(xpl), decimals=2))
-                mhs[name].xpt.append(np.round(np.mean(xpt), decimals=2))
-                archivoFitness.write(f'{name},{str(np.min(fitness))}\n')
-            
-        if graficos:
-
-            fig , ax = plt.subplots()
-            ax.plot(iteraciones,fitness)
-            ax.set_title(f'Convergence {mh} \n {problem} run {corrida}')
-            ax.set_ylabel("Fitness")
-            ax.set_xlabel("Iteration")
-            plt.savefig(f'{dirResultado}/Graficos/Coverange_{mh}_{problem}_{corrida}.pdf')
-            plt.close('all')
-            print(f'Grafico de covergencia realizado {mh} {problem} ')
-            
-            figPER, axPER = plt.subplots()
-            axPER.plot(iteraciones, xpl, color="r", label=r"$\overline{XPL}$"+": "+str(np.round(np.mean(xpl), decimals=2))+"%")
-            axPER.plot(iteraciones, xpt, color="b", label=r"$\overline{XPT}$"+": "+str(np.round(np.mean(xpt), decimals=2))+"%")
-            axPER.set_title(f'XPL% - XPT% {mh} \n {problem} run {corrida}')
-            axPER.set_ylabel("Percentage")
-            axPER.set_xlabel("Iteration")
-            axPER.legend(loc = 'upper right')
-            plt.savefig(f'{dirResultado}/Graficos/Percentage_{mh}_{problem}_{corrida}.pdf')
-            plt.close('all')
-            print(f'Grafico de exploracion y explotacion realizado para {mh}, problema: {problem}, corrida: {corrida} ')
-        
-        corrida +=1
-        
-        if corrida == 32:
-            corrida = 1
-        
-        os.remove('./Resultados/Transitorio/'+nombreArchivo+'.csv')
-    
-    resumenFitness = resumenTimes = resumenPercentage = ''''''
-    for name in mhsList:
-        resumenFitness = resumenFitness + f''',{np.min(mhs[name].fitness)},{np.round(np.average(mhs[name].fitness),3)},{np.round(np.std(mhs[name].fitness),3)}''' 
-        resumenTimes = resumenTimes + f''',{np.min(mhs[name].time)},{np.round(np.average(mhs[name].time),3)},{np.round(np.std(mhs[name].time),3)}'''
-        resumenPercentage = resumenPercentage + f''',{np.round(np.average(mhs[name].xpl),3)},{np.round(np.average(mhs[name].xpt),3)}'''
-    
-    archivoResumenFitness.write(f'''{problem}{resumenFitness} \n''')
-    archivoResumenTimes.write(f'''{problem}{resumenTimes} \n''')
-    archivoResumenPercentage.write(f'''{problem}{resumenPercentage} \n''')
-
-    blob = bd.obtenerMejoresArchivos(instancia[1],"")
-    
-    for d in blob:
-
-        nombreArchivo = d[4]
-        archivo = d[5]
-
-        direccionDestiono = './Resultados/Transitorio/'+nombreArchivo+'.csv'
-        util.writeTofile(archivo,direccionDestiono)
-        
-        data = pd.read_csv(direccionDestiono)
-        
-        mh = nombreArchivo.split('_')[0]
-        problem = nombreArchivo.split('_')[1]
-
-        iteraciones = data['iter']
-        fitness     = data['fitness']
-        time        = data['time']
-        xpl         = data['XPL']
-        xpt         = data['XPT']
-        
-        for name in mhsList:
-            if mh == name:
-                mhs[name].bestFitness = fitness
-                mhs[name].bestTime = time
-        
-        os.remove('./Resultados/Transitorio/'+nombreArchivo+'.csv')
-
-    print("------------------------------------------------------------------------------------------------------------")
-    figPER, axPER = plt.subplots()
-    for i,name in enumerate(mhsList):
-        axPER.plot(iteraciones, mhs[name].bestFitness, color=color[i], label=name)
-    axPER.set_title(f'Coverage \n {problem}')
-    axPER.set_ylabel("Fitness")
-    axPER.set_xlabel("Iteration")
-    axPER.legend(loc = 'upper right')
-    plt.savefig(f'{dirResultado}/Best/fitness_{problem}.pdf')
-    plt.close('all')
-    print(f'Grafico de fitness realizado {problem} ')
-    
-    figPER, axPER = plt.subplots()
-    for i,name in enumerate(mhsList):
-        axPER.plot(iteraciones, mhs[name].bestTime, color=color[i], label=name)
-    axPER.set_title(f'Time (s) \n {problem}')
-    axPER.set_ylabel("Time (s)")
-    axPER.set_xlabel("Iteration")
-    axPER.legend(loc = 'lower right')
-    plt.savefig(f'{dirResultado}/Best/time_{problem}.pdf')
-    plt.close('all')
-    print(f'Grafico de time realizado {problem} ')
-    
+        os.remove(direccion_destino)
+        corrida = 1 if corrida == 32 else corrida + 1
     
     archivoFitness.close()
-    
-    print("------------------------------------------------------------------------------------------------------------")
-    # ---------------------------------------------------------------------------------------------------------------------------------------------------------------
-    datos = pd.read_csv(dirResultado+"/fitness_"+instancia[1]+'.csv')
-    figFitness, axFitness = plt.subplots()
-    axFitness = sns.boxplot(x='MH', y='FITNESS', data=datos)
-    axFitness.set_title(f'Fitness \n{instancia[1]}', loc="center", fontdict={'fontsize': 10, 'fontweight': 'bold', 'color': 'black'})
 
-    axFitness.set_title(f'Fitness \n{instancia[1]}', loc="center", fontdict={'fontsize': 10, 'fontweight': 'bold', 'color': 'black'})
-    axFitness.set_ylabel("Fitness")
-    axFitness.set_xlabel("Metaheuristics")
-    figFitness.savefig(dirResultado+"/boxplot/boxplot_fitness_"+instancia[1]+'.pdf')
-    plt.close('all')
-    print(f'Grafico de boxplot con fitness para la instancia {instancia[1]} realizado con exito')
-    
-    figFitness, axFitness = plt.subplots()
-    axFitness = sns.violinplot(x='MH', y='FITNESS', data=datos, gridsize=50)
-    axFitness.set_title(f'Fitness \n{instancia[1]}', loc="center", fontdict={'fontsize': 10, 'fontweight': 'bold', 'color': 'black'})
-    axFitness.set_ylabel("Fitness")
-    axFitness.set_xlabel("Metaheuristics")
-    figFitness.savefig(dirResultado+"/violinplot/violinplot_fitness_"+instancia[1]+'.pdf')
-    plt.close('all')
-    print(f'Grafico de violines con fitness para la instancia {instancia[1]} realizado con exito')
-    
-    # os.remove(dirResultado+"/fitness_"+instancia[1]+'.csv')
-    
-    print("------------------------------------------------------------------------------------------------------------")
+lista_instancias = '''"F1", "F2", "F3", "F4", "F5"'''
 
-archivoResumenFitness.close()
-archivoResumenTimes.close()
-archivoResumenPercentage.close()
+# Procesar cada instancia
+for instancia in bd.obtenerInstancias(lista_instancias):
+    print(f"Procesando instancia: {instancia[1]}")
+    blob = bd.obtenerArchivos(instancia[1])
 
+    # Validar si hay experimentos para la instancia
+    if not blob:
+        print(f"⚠️  Advertencia: La instancia '{instancia[1]}' no tiene experimentos asociados. Saltando esta instancia.")
+        continue
 
+    # Crear archivos
+    archivoResumenFitness = open(f'{DIR_RESULTADO}resumen_fitness_{instancia[1]}.csv', 'w')
+    archivoResumenTimes = open(f'{DIR_RESULTADO}resumen_times_{instancia[1]}.csv', 'w')
+    archivoResumenPercentage = open(f'{DIR_RESULTADO}resumen_percentage_{instancia[1]}.csv', 'w')
+    archivoFitness = open(f'{DIR_RESULTADO}fitness_{instancia[1]}.csv', 'w')
 
+    # Escribir encabezados
+    archivoResumenFitness.write("instance, best, avg. fitness, std fitness\n")
+    archivoResumenTimes.write("instance, min time (s), avg. time (s), std time (s)\n")
+    archivoResumenPercentage.write("instance, avg. XPL%, avg. XPT%\n")
+    archivoFitness.write("MH, FITNESS\n")
 
+    procesar_archivos(instancia[1], blob, archivoFitness)
+    escribir_resumenes(mhs_instances, archivoResumenFitness, archivoResumenTimes, archivoResumenPercentage)
 
+    graficar_mejores_resultados(instancia[1], mhs_instances)
+    graficar_boxplot_violin(instancia[1])
 
+    # Cerrar archivos
+    archivoResumenFitness.close()
+    archivoResumenTimes.close()
+    archivoResumenPercentage.close()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# problemas = bd.obtenerTiposProblemas()
-
-
-# print(problemas)
-
-# for problema in problemas:
-#     instancias = bd.obtenerInstanciasByProblema(problema[0])
-    
-#     print(instancias)
-    
-#     archivoResumenFitness = open(f'{dirResultado}resumen_fitness_{problema[0]}.csv', 'w')
-#     archivoResumenTiempos = open(f'{dirResultado}resumen_tiempos_{problema[0]}.csv', 'w')
-#     archivoResumenFitness.write(f'experimento, instancia, optimo')
-#     archivoResumenTiempos.write(f'experimento, instancia')
-#     experimentos = bd.obtenerNombreExperimentos(problema[0])
-#     for experimento in experimentos:
-#         archivoResumenFitness.write(f',Best, AVG, std-dev, RPD')
-#         archivoResumenTiempos.write(f',min, AVG, std-dev')
-#     archivoResumenFitness.write('\n')
-#     archivoResumenTiempos.write('\n')
-        
-        
-#     for instancia in instancias:    
-#         experimentos = bd.obtenerNombreExperimentos(instancia[0])
-#         optimo = bd.obtenerOptimoInstancia(instancia[0])[0][0]    
-#         archivoResumenFitness.write(f',{instancia[0]},{optimo},')
-#         archivoResumenTiempos.write(f',{instancia[0]},')
-#     archivoResumenFitness.write('\n')
-#     archivoResumenTiempos.write('\n')
-        
+print("Procesamiento completado con éxito.")

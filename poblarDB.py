@@ -5,10 +5,19 @@ bd = BD()
 
 ben = False
 scp = True
-# mhs = ['EOO','FOX','GOA','GWO','HBA','PSA','PSO','RSA','SCA','SHO','TDA','WOA']
-mhs = ['WOA']
+uscp = False
 
+mhs = ['SBOA']
 cantidad = 0
+
+# Mapeo de dimensiones según la función
+dimensiones_funciones = {
+    'F1': [30], 'F2': [30], 'F3': [30], 'F4': [30], 'F5': [30],
+    'F6': [30], 'F7': [30], 'F8': [30], 'F9': [30], 'F10': [30],
+    'F11': [30], 'F12': [30], 'F13': [30], 'F14': [2],
+    'F15': [4], 'F16': [2], 'F17': [2], 'F18': [2],
+    'F19': [3], 'F20': [6], 'F21': [4], 'F22': [4], 'F23': [4]
+}
 
 DS_actions = [
     'V1-STD', 'V1-COM', 'V1-PS', 'V1-ELIT',
@@ -21,70 +30,92 @@ DS_actions = [
     'S4-STD', 'S4-COM', 'S4-PS', 'S4-ELIT',
 ]
 
+def insertar_experimentos(instancias, dimensiones, mhs, experimentos, iteraciones, poblacion, extra_params = ""):
+    global cantidad
+    
+    for instancia in instancias:
+        for dim in dimensiones:
+            for mh in mhs:
+                data = {
+                    'experimento': f'{instancia[1]} {dim} {mh}',
+                    'MH': mh,
+                    'paramMH': f'iter:{iteraciones},pop:{poblacion}{extra_params}',
+                    'ML': '',
+                    'paramML': '',
+                    'ML_FS': '',
+                    'paramML_FS': '',
+                    'estado': 'pendiente'
+                }
+                
+                cantidad += experimentos
+                bd.insertarExperimentos(data, experimentos, instancia[0]) #
+
 if ben:
-    # funciones = ['F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12','F13','F14','F16','F17','F18','F19','F20','F15','F21','F22','F23']
-    funciones = ['F8']
-    for funcion in funciones:
-        # poblar ejecuciones Benchmark
-        instancias = bd.obtenerInstancias(f'''"{funcion}"''')
-        # Para funciones F1-F13
-        if funcion in ['F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12','F13']:
-            # dimensiones = [30, 100, 500, 1000]
-            dimensiones = [30]
-        # Para funciones F14, F16, F17, F18
-        if funcion in ['F14','F16','F17','F18']:
-            dimensiones = [2]
-        # Para funciones F19
-        if funcion in ['F19']:
-            dimensiones = [3]
-        # Para funciones F20
-        if funcion in ['F20']:
-            dimensiones = [6]
-        # Para funciones F15, F21, F22, F23
-        if funcion in ['F15','F21','F22','F23']:
-            dimensiones = [4]
-        iteraciones = 1000
-        experimentos = 3
-        poblacion = 10
-        for instancia in instancias:
-            for dim in dimensiones:
-                for mh in mhs:
-                    data = {}
-                    data['experimento'] = f'{instancia[1]} {dim} {mh}'
-                    data['MH']          = mh
-                    data['paramMH']     = f'iter:{str(iteraciones)},pop:{str(poblacion)}'
-                    data['ML']          = ''
-                    data['paramML']     = ''
-                    data['ML_FS']       = ''
-                    data['paramML_FS']  = ''
-                    data['estado']      = 'pendiente'
-                    cantidad +=experimentos
-                    bd.insertarExperimentos(data, experimentos, instancia[0])
-if scp:
-    # poblar ejecuciones SCP
-    instancias = bd.obtenerInstancias(f'''
-                                      "scp41"
-                                      ''')
+    funciones = ['F5', 'F6', 'F8']  # Ejemplo: 'F1', 'F2', 'F3', 'F4'
+    
     iteraciones = 100
-    experimentos = 1
-    poblacion = 10
+    experimentos = 2
+    poblacion = 50
+    
+    for funcion in funciones:
+        instancias = bd.obtenerInstancias(f'''"{funcion}"''')
+        dimensiones = dimensiones_funciones.get(funcion, [30])  # Default a [30] si no se encuentra la función
+        insertar_experimentos(instancias, dimensiones, mhs, experimentos, iteraciones, poblacion)
+
+if scp:
+    instancias = bd.obtenerInstancias(f'''"41", "42"''') # Ejemplo: "41", "42", "43", "44"
+    
+    binarizaciones = ['V3-STD']
+    iteraciones = 4
+    experimentos = 2
+    poblacion = 30
+
     for instancia in instancias:
         for mh in mhs:
-            binarizaciones = ['V3-ELIT']
             for binarizacion in binarizaciones:
-                data = {}
-                data['experimento'] = f'{mh} {binarizacion}'
-                data['MH']          = mh
-                data['paramMH']     = f'iter:{str(iteraciones)},pop:{str(poblacion)},DS:{binarizacion},repair:complex,cros:0.4;mut:0.50'
-                data['ML']          = ''
-                data['paramML']     = ''
-                data['ML_FS']       = ''
-                data['paramML_FS']  = ''
-                data['estado']      = 'pendiente'
-                cantidad +=experimentos
+                extra_params = f',DS:{binarizacion},repair:complex,cros:0.4;mut:0.50'
+                
+                data = {
+                    'experimento': f'{mh} {binarizacion}',
+                    'MH': mh,
+                    'paramMH': f'iter:{iteraciones},pop:{poblacion}{extra_params}',
+                    'ML': '',
+                    'paramML': '',
+                    'ML_FS': '',
+                    'paramML_FS': '',
+                    'estado': 'pendiente'
+                }
+                
+                cantidad += experimentos
+                bd.insertarExperimentos(data, experimentos, instancia[0])
+
+if uscp:
+    instancias = bd.obtenerInstancias(f'''"u43", "u44"''') # Ejemplo: "u43", "u44", "cyc06", "cyc11"
+    
+    binarizaciones = ['V3-STD']
+    iteraciones = 4
+    experimentos = 2
+    poblacion = 30
+
+    for instancia in instancias:
+        for mh in mhs:
+            for binarizacion in binarizaciones:
+                extra_params = f',DS:{binarizacion},repair:complex,cros:0.4;mut:0.50'
+                
+                data = {
+                    'experimento': f'{mh} {binarizacion}',
+                    'MH': mh,
+                    'paramMH': f'iter:{iteraciones},pop:{poblacion}{extra_params}',
+                    'ML': '',
+                    'paramML': '',
+                    'ML_FS': '',
+                    'paramML_FS': '',
+                    'estado': 'pendiente'
+                }
+                
+                cantidad += experimentos
                 bd.insertarExperimentos(data, experimentos, instancia[0])
 
 print("------------------------------------------------------------------")
 print(f'Se ingresaron {cantidad} experimentos a la base de datos')
 print("------------------------------------------------------------------")
-
