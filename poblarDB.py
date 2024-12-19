@@ -4,11 +4,11 @@ import os
 
 bd = BD()
 
-ben = True
+ben = False
 scp = True
 uscp = True
 
-mhs = ['SBOA']
+mhs = ['SBOA','GWO','PSO']
 cantidad = 0
 log_resumen = []  # Lista para almacenar el resumen de cada experimento
 
