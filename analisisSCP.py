@@ -37,6 +37,7 @@ def actualizar_datos(mhs_instances, mh, archivo_fitness, data):
     instancia_mh.time.append(np.round(np.sum(data['time']), 3))
     instancia_mh.xpl.append(np.round(np.mean(data['XPL']), 2))
     instancia_mh.xpt.append(np.round(np.mean(data['XPT']), 2))
+    
     archivo_fitness.write(f'{mh}, {np.min(data["fitness"])}\n')
 
 def graficar_datos(iteraciones, fitness, xpl, xpt, tiempo, mh, problem, corrida):

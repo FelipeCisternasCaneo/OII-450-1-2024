@@ -7,7 +7,6 @@ def matrix_dot_1(A, B, block_size):
     C = np.zeros(A.shape[0])
     # Multiplicación por bloques
     
-    
     for i in range(0, A.shape[0], block_size):
         # Seleccionar un bloque de filas de A
         A_block = A[i: i + block_size, :]
@@ -23,7 +22,6 @@ def matrix_dot_2(A, B, block_size):
     # Inicializamos el resultado como un escalar (producto punto)
     result = 0.0
     # Multiplicación por bloques
-    
     
     for i in range(0, A.shape[0], block_size):
         # Seleccionar un bloque de A y B
@@ -45,7 +43,6 @@ class SCP:
         self.__optimum = 0
         self.__block_size = 0
         
-
         if len(instance) == 5:
             if instance[3] == '4' or instance[3] == '5' or instance[3] == '6':
                 self.__block_size = 40

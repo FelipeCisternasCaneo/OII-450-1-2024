@@ -17,7 +17,6 @@ class BD:
     def setDataBase(self, dataBase):
         self.__dataBase = dataBase
         
-        
     def getConexion(self):
         return self.__conexion
     

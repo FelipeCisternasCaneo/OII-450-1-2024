@@ -88,8 +88,6 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
     
     results.write(f'0,{str(bestFitness)},{str(round(initializationTime2-initializationTime1, 3))},{str(XPL)},{str(XPT)},{maxDiversity}\n')
     
-    bestPop = np.copy(population)
-
     # Función objetivo para GOA, HBA, TDO, SHO y SBOA
     def fo(x):
         x = b.aplicarBinarizacion(x.tolist(), DS[0], DS[1], best, matrixBin[i].tolist())
@@ -116,7 +114,6 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
             
         if mh == 'WOA':
             population = iterarWOA(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist())
-            
             
         if mh == 'PSA':
             population = iterarPSA(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist())
