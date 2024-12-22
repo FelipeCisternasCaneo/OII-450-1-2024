@@ -1,80 +1,25 @@
 import numpy as np 
 import math
+import opfunu.cec_based
+
+from BD.sqlite import BD
 
 def fitness(problem, individual):
     fitness = 0
-    
-    if problem == 'F1':
-        #print(individual.shape)
-        #print(individual)
-        fitness = F1(individual)
+
+    def opfunu_cec_function(x):
+        func_class = getattr(opfunu.cec_based, f"{problem}")
+        return func_class().evaluate(x)
         
-    if problem == 'F2':
-        fitness = F2(individual)
-        
-    if problem == 'F3':
-        fitness = F3(individual)
-        
-    if problem == 'F4':
-        fitness = F4(individual)
-        
-    if problem == 'F5':
-        fitness = F5(individual)
-        
-    if problem == 'F6':
-        fitness = F6(individual)
-        
-    if problem == 'F7':
-        fitness = F7(individual)
-        
-    if problem == 'F8':
-        fitness = F8(individual)
-        
-    if problem == 'F9':
-        fitness = F9(individual)
-        
-    if problem == 'F10':
-        fitness = F10(individual)
-        
-    if problem == 'F11':
-        fitness = F11(individual)
-        
-    if problem == 'F12':
-        fitness = F12(individual)
-        
-    if problem == 'F13':
-        fitness = F13(individual)
-        
-    if problem == 'F14':
-        fitness = F14(individual)
-        
-    if problem == 'F15':
-        fitness = F15(individual)
-        
-    if problem == 'F16':
-        fitness = F16(individual)
-        
-    if problem == 'F17':
-        fitness = F17(individual)
-        
-    if problem == 'F18':
-        fitness = F18(individual)
-        
-    if problem == 'F19':
-        fitness = F19(individual)
-        
-    if problem == 'F20':
-        fitness = F20(individual)
-        
-    if problem == 'F21':
-        fitness = F21(individual)
-        
-    if problem == 'F22':
-        fitness = F22(individual)
-        
-    if problem == 'F23':
-        fitness = F23(individual)
-    
+    if problem in BD.data:
+        try:
+            fitness = globals()[problem](individual)
+        except:
+            raise ValueError(f"Advertencia: La función '{problem}' no está definida.")
+
+    if problem in BD.opfunu_cec_data:
+        fitness = opfunu_cec_function(individual)
+
     return fitness
 
 # define the function blocks
@@ -91,29 +36,30 @@ def Ufun(x, a, k, m):
     
     return y
 
-def F1(x):
+def F1(x):  #Sphere Function (CEC 2005 F1)
     s = np.sum(x ** 2)
     
     return s
 
-def F2(x):
+def F2(x):  #Schwefel's Problem 2.22
     return np.sum(np.abs(x)) + np.prod(np.abs(x))
 
-def F3(x):
+def F3(x):  #Schwefel's Function No.1.2 (Double-Sum or Rotated Hyper-Ellipsoid Function) (CEC 2005 F2)
     dim = len(x) + 1
     o = 0
     
     for i in range(1, dim):
         o = o + (np.sum(x[0:i])) ** 2
+
         
     return o
 
-def F4(x):
+def F4(x):  #Schwefel's Function No.2.21 (or MaxMod Function) (CEC 2008 F2)
     o = max(abs(x))
     
     return o
 
-def F5(x):
+def F5(x):  #Rosenbrock's Function (CEC 2005 F6)
     dim = len(x)
     o = np.sum(
         100 * (x[1:dim] - (x[0 : dim - 1] ** 2)) ** 2 + (x[0 : dim - 1] - 1) ** 2
@@ -121,12 +67,12 @@ def F5(x):
     
     return o
 
-def F6(x):
+def F6(x):  #Shifted Function (CEC 2005 F1)
     o = np.sum(abs((x + 0.5)) ** 2)
     
     return o
 
-def F7(x):
+def F7(x):  #Quartic (or Modified 4th De Jong's) Function With Noise 
     dim = len(x)
 
     w = [i for i in range(len(x))]
@@ -138,18 +84,18 @@ def F7(x):
     
     return o
 
-def F8(x):
+def F8(x): #Schwefel's Function No.2.26
     o = sum(-x * (np.sin(np.sqrt(abs(x)))))
     
     return o
 
-def F9(x):
+def F9(x):  #Rastrigin's Function (CEC 2005 F9)
     dim = len(x)
     o = np.sum(x ** 2 - 10 * np.cos(2 * math.pi * x)) + 10 * dim
     
     return o
 
-def F10(x):
+def F10(x): #Ackley's Function No.01 (or Ackley's Path Function) (CEC 2014 F5)
     dim = len(x)
     o = (
         -20 * np.exp(-0.2 * np.sqrt(np.sum(x ** 2) / dim))
@@ -160,7 +106,7 @@ def F10(x):
     
     return o
 
-def F11(x):
+def F11(x): #Griewank's Function (CEC 2014 F7)
     dim = len(x)
     w = [i for i in range(len(x))]
     w = [i + 1 for i in w]
@@ -168,7 +114,7 @@ def F11(x):
     
     return o
 
-def F12(x):
+def F12(x): #Generalized Penalized Function No.01
     dim = len(x)
     o = (math.pi / dim) * (
         10 * ((np.sin(math.pi * (1 + (x[0] + 1) / 4))) ** 2)
@@ -181,7 +127,7 @@ def F12(x):
     
     return o
 
-def F13(x):
+def F13(x): #Generalized Penalized Function No.02
     if x.ndim==1:
         x = x.reshape(1,-1)
 
@@ -196,7 +142,7 @@ def F13(x):
     
     return o
 
-def F14(x):
+def F14(x): #Shekel's Foxholes Function
     aS = [
         [
             -32, -16, 0, 16, 32,
@@ -231,7 +177,7 @@ def F14(x):
     
     return o
 
-def F15(L):
+def F15(L): #Kowalik Function
     aK = [
         0.1957, 0.1947, 0.1735, 0.16, 0.0844, 0.0627,
         0.0456, 0.0342, 0.0323, 0.0235, 0.0246,
@@ -249,7 +195,7 @@ def F15(L):
     
     return fit
 
-def F16(L):
+def F16(L): #Six-Hump Camel-Back Function
     o = (
         4 * (L[0] ** 2)
         - 2.1 * (L[0] ** 4)
@@ -261,7 +207,7 @@ def F16(L):
     
     return o
 
-def F17(L):
+def F17(L): #Branin's RCOS Function No.01
     o = (
         (L[1] - (L[0] ** 2) * 5.1 / (4 * (np.pi ** 2)) + 5 / np.pi * L[0] - 6)
         ** 2
@@ -271,7 +217,7 @@ def F17(L):
     
     return o
 
-def F18(L):
+def F18(L): #Goldstein-Price's Function
     o = (
         1
         + (L[0] + L[1] + 1) ** 2
@@ -299,7 +245,8 @@ def F18(L):
     return o
 
 # map the inputs to the function blocks
-def F19(L):
+
+def F19(L): #Hartman's Function No.01 (or Hartmann 3D Function)
     aH = [[3, 10, 30], [0.1, 10, 35], [3, 10, 30], [0.1, 10, 35]]
     aH = np.asarray(aH)
     cH = [1, 1.2, 3, 3.2]
@@ -320,7 +267,7 @@ def F19(L):
         
     return o
 
-def F20(L):
+def F20(L): #Hartman's Function No.02 (or Hartmann 6D Function)
     aH = [
         [10, 3, 17, 3.5, 1.7, 8],
         [0.05, 10, 17, 0.1, 8, 14],
@@ -347,7 +294,7 @@ def F20(L):
         
     return o
 
-def F21(L):
+def F21(L): #Shekel’s Function (Variant No. 5)
     aSH = [
         [4, 4, 4, 4],
         [1, 1, 1, 1],
@@ -375,7 +322,7 @@ def F21(L):
     
     return o
 
-def F22(L):
+def F22(L): #Shekel’s Function (Variant No. 7)
     aSH = [
         [4, 4, 4, 4],
         [1, 1, 1, 1],
@@ -402,7 +349,7 @@ def F22(L):
     
     return o
 
-def F23(L):
+def F23(L): #Shekel’s Function (Variant No. 10)
     aSH = [
         [4, 4, 4, 4],
         [1, 1, 1, 1],

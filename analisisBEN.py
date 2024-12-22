@@ -6,6 +6,7 @@ import seaborn as sns
 
 from util import util
 from BD.sqlite import BD
+from poblarDB import funciones, mhs
 
 # Configuración global
 DIR_RESULTADO = './Resultados/'
@@ -16,7 +17,7 @@ DIR_BOXPLOT = f'{DIR_RESULTADO}boxplot/'
 DIR_VIOLIN = f'{DIR_RESULTADO}violinplot/'
 
 GRAFICOS = True
-MHS_LIST = ['SBOA']
+MHS_LIST = mhs
 COLORS = ['r', 'g']
 
 # Clase para almacenar resultados
@@ -151,7 +152,7 @@ def procesar_archivos(instancia, blob, archivo_fitness):
     
     archivoFitness.close()
 
-lista_instancias = '''"F1", "F2", "F3", "F4", "F5"'''
+lista_instancias = ', '.join([f'"{elem}"' for elem in funciones])
 
 # Procesar cada instancia
 for instancia in bd.obtenerInstancias(lista_instancias):

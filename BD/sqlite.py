@@ -1,5 +1,7 @@
 import sqlite3
 import os
+import opfunu.cec_based
+
 from Problem.SCP.problem import obtenerOptimo
 from Problem.USCP.problem import obtenerOptimoUSCP
 from Problem.USCP.problem import obtenerOptimoUSCP
@@ -121,18 +123,39 @@ class BD:
         self.commit()
         self.desconectar()
         
+        
+    data = ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12', 'F13', 'F14', 'F15', 'F16', 'F17', 'F18', 'F19', 'F20', 'F21', 'F22', 'F23']
+
+    opfunu_cec_data = [
+        'F32005', 'F72005', 'F122005', 'F132005', 'F172005', 'F232005',  #Funciones del CEC 2005
+        'F22008', 'F32008', 'F52008', 'F62008', 'F42008', 'F72008',      #Funciones del CEC 2008
+        'F12010', 'F42010', 'F102010', 'F162010', 'F132010', 'F172010',  #Funciones del CEC 2010
+        'F32013', 'F52013', 'F72013', 'F262013', 'F132013', 'F242013',   #Funciones del CEC 2013
+        'F12014', 'F32014', 'F62014', 'F162014', 'F242014', 'F292014',   #Funciones del CEC 2014
+        'F12015', 'F22015', 'F62015', 'F72015', 'F102015', 'F112015',    #Funciones del CEC 2015
+        'F12017', 'F22017', 'F242017', 'F272017', 'F192017', 'F292017',  #Funciones del CEC 2017
+        'F42019', 'F52019', 'F92019', 'F12019', 'F22019', 'F32019',      #Funciones del CEC 2019
+        'F12020', 'F42020', 'F32020', 'F102020', 'F72020', 'F92020',     #Funciones del CEC 2020
+        'F12021', 'F42021', 'F22021', 'F102021', 'F52021', 'F62021',     #Funciones del CEC 2021
+        'F12022', 'F22022', 'F92022', 'F122022', 'F82022', 'F112022'     #Funciones del CEC 2022
+        ]
+
     def insertarInstanciasBEN(self):
         self.conectar()
+
+        tipoProblema = 'BEN'
         
-        data = ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12', 'F13', 'F14', 'F15', 'F16', 'F17', 'F18', 'F19', 'F20', 'F21', 'F22', 'F23']
+        def opfunu_cec_parametros(instancia):
+            func_class = getattr(opfunu.cec_based, f"{instancia}")
+            return func_class()
         
-        for instancia in data:
-            tipoProblema = 'BEN'
+        for instancia in self.data:
+            param = ''
             
             if instancia == 'F1':
                 param     = f'lb:-100,ub:100'
                 optimo = 0
-                
+            
             if instancia == 'F2':
                 param     = f'lb:-10,ub:10'
                 optimo = 0
@@ -220,9 +243,19 @@ class BD:
             if instancia == "F23":
                 param     = f'lb:0,ub:10'
                 optimo = -10.5363
-           
+
+            if param == '':
+                raise ValueError(f"Advertencia: La función '{instancia}' no está definida.")
+
             self.getCursor().execute(f'''  INSERT INTO instancias (tipo_problema, nombre, optimo, param) VALUES(?, ?, ?, ?) ''', (tipoProblema, instancia, optimo, param))
+
+        for instancia in self.opfunu_cec_data:
             
+            param = f'lb:{opfunu_cec_parametros(instancia).lb[0]},ub:{opfunu_cec_parametros(instancia).ub[0]}'
+            optimo = opfunu_cec_parametros(instancia).f_global
+
+            self.getCursor().execute(f'''  INSERT INTO instancias (tipo_problema, nombre, optimo, param) VALUES(?, ?, ?, ?) ''', (tipoProblema, instancia, optimo, param))
+        
         self.commit()
         self.desconectar()
         

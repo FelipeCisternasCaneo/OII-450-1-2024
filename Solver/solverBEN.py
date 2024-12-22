@@ -12,7 +12,7 @@ from Metaheuristics.imports import iterarTDO, iterarSHO, iterarSBOA, iterarEHO, 
 from Metaheuristics.imports import iterarFLO, iterarHLOABen, iterarLOA, iterarNO, iterarPOA
 from Metaheuristics.imports import IterarPO, iterarWOM, iterarQSO
 
-from Problem.Benchmark.problem import fitness as f
+from Problem.Benchmark.Problem import fitness as f
 from util import util
 from BD.sqlite import BD
 

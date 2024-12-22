@@ -1,6 +1,7 @@
 from collections import defaultdict
 from BD.sqlite import BD
 import os
+import opfunu.cec_based
 
 bd = BD()
 
@@ -8,11 +9,9 @@ ben = False
 scp = True
 uscp = True
 
-mhs = ['SBOA','GWO','PSO']
+mhs = ['SBOA']
 cantidad = 0
 log_resumen = []  # Lista para almacenar el resumen de cada experimento
-
-DIMENSIONES_VALIDAS = [30, 100, 500, 1000]  # BEN
 
 DS_lista = [
     'V1-STD', 'V1-COM', 'V1-PS', 'V1-ELIT',
@@ -29,7 +28,46 @@ DS_actions = ['V3-ELIT'] # Lista de binarizaciones a utilizar - SCP y USCP
 
 dimensiones_cache = {}
 
+def obtener_dimensiones_ben(funcion):
+   # if ben:
+        if funcion in BD.data:
+            try:
+                # Para funciones F1-F13
+                if funcion in ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12', 'F13']:
+                    # dimensiones = [30, 100, 500, 1000]
+                    dimensiones = [30]
+                    
+                # Para funciones F14, F16, F17, F18
+                if funcion in ['F14', 'F16', 'F17', 'F18']:
+                    dimensiones = [2]
+
+                # Para funciones F19
+                if funcion in ['F19']:
+                    dimensiones = [3]
+                    
+                # Para funciones F20
+                if funcion in ['F20']:
+                    dimensiones = [6]
+                    
+                # Para funciones F15, F21, F22, F23
+                if funcion in ['F15', 'F21', 'F22', 'F23']:
+                    dimensiones = [4]
+                
+                return dimensiones
+            
+            except:
+                raise ValueError(f"Advertencia: La función '{funcion}' no está definida.")
+        
+        elif funcion in BD.opfunu_cec_data:
+            func_class = getattr(opfunu.cec_based, f"{funcion}")
+            dimensiones = [func_class().dim_default]
+        else:
+            raise ValueError(f"Función {funcion} no encontrada en la base da datos.")
+        
+        return dimensiones
+
 def obtener_dimensiones(instance, problema):
+
     if (instance, problema) in dimensiones_cache:
         return dimensiones_cache[(instance, problema)]
     
@@ -57,11 +95,6 @@ def obtener_dimensiones(instance, problema):
         return dimensiones
 
     return "-"
-
-def validar_dimensiones(dimensiones):
-    for dim in dimensiones:
-        if dim not in DIMENSIONES_VALIDAS:
-            raise ValueError(f"Error: Dimensión {dim} no permitida. Las dimensiones válidas son: {DIMENSIONES_VALIDAS}.")
 
 def insertar_experimentos(instancias, dimensiones, mhs, experimentos, iteraciones, poblacion, problemaActual, extra_params = ""):
     global cantidad, log_resumen
@@ -104,20 +137,20 @@ if ben:
     iteraciones = 100
     experimentos = 10
     poblacion = 50
-    dimensiones_usuario = [30, 100]
 
-    validar_dimensiones(dimensiones_usuario)
+    #validar_dimensiones(dimensiones_usuario)
 
     for funcion in funciones:
         instancias = bd.obtenerInstancias(f'''"{funcion}"''')
-        insertar_experimentos(instancias, dimensiones_usuario, mhs, experimentos, iteraciones, poblacion, problemaActual = 'BEN')
+        dimensiones = obtener_dimensiones_ben(funcion)
+        insertar_experimentos(instancias, dimensiones, mhs, experimentos, iteraciones, poblacion, problemaActual = 'BEN')
 
 # Proceso SCP y USCP
 for problema, activar in [('SCP', scp), ('USCP', uscp)]:
     if activar:
         instancias = bd.obtenerInstancias(f'''"41", "nrh5"''') if problema == 'SCP' else bd.obtenerInstancias(f'''"u43", "uclr11"''')
         iteraciones = 4
-        experimentos = 2
+        experimentos = 3
         poblacion = 30
 
         for instancia in instancias:
