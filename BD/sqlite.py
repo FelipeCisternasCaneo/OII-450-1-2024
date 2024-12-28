@@ -692,3 +692,15 @@ class BD:
         self.desconectar()
         
         return data
+    
+    def reiniciarDB(self):
+        self.conectar()
+        
+        self.getCursor().execute(''' DROP TABLE instancias ''')
+        self.getCursor().execute(''' DROP TABLE experimentos ''')
+        self.getCursor().execute(''' DROP TABLE resultados ''')
+        self.getCursor().execute(''' DROP TABLE iteraciones ''')
+        
+        self.construirTablas()
+        
+        self.desconectar()

@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 from Problem.Benchmark.Problem import fitness as f
 
 ub = [100, 10, 100, 100, 20, 100, 1, 500, 5, 20, 600, 10, 5, 50, 5, 1, 15, 5, 5, 5, 5, 5, 5]
@@ -129,7 +128,5 @@ for funcion in funciones:
     
     
     plt.close('all')
-    
-    i += 1
     
     i += 1
