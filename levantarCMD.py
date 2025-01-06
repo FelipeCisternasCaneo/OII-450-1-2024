@@ -23,5 +23,5 @@ def abrir_cmds_ejecutar_main(num_cmds):
     
 if __name__ == "__main__":
     # Definir la cantidad de CMD a levantar
-    num_cmds = 3  # Cambia este valor según lo que necesites
+    num_cmds = 12  # Cambia este valor según lo que necesites
     abrir_cmds_ejecutar_main(num_cmds)

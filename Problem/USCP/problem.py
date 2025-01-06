@@ -44,10 +44,10 @@ class USCP:
             if instance[4] == '4' or instance[4] == '5' or instance[4] == '6':
                 self.__block_size = 40
             
-            elif instance[4] == 'a' or instance[3] == 'b':
+            elif instance[4] == 'a' or instance[4] == 'b':
                 self.__block_size = 30
             
-            elif instance[4] == 'c' or instance[3] == 'd':
+            elif instance[4] == 'c' or instance[4] == 'd':
                 self.__block_size = 20
             
         else:
