@@ -3,7 +3,7 @@ import numpy as np
 import os
 import random
 
-from traitlets import Instance
+# from traitlets import Instance
 from Diversity.imports import diversidadHussain, porcentajesXLPXPT
 
 from Metaheuristics.imports import iterarGWO, iterarPSA, iterarSCA, iterarWOA, iterarPSO
