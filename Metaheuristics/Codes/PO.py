@@ -174,6 +174,8 @@ class IterarPO:
 
     # Optimización con PO
     def optimizer(self, iter):
+        iter = iter - 1
+        
         if iter < 3:
             sol_explor = self._exploration()
             self._cost_explore.append(min([sol['Cost'] for sol in sol_explor]))
