@@ -1,64 +1,51 @@
-import random
 import numpy as np
-import math
 
 # Honey Badger Algorithm (HBA)
 # https://doi.org/10.1016/j.matcom.2021.08.013
 
-def iterarHBA(maxIter, it, dim, population, bestSolution, fitness, function, typeProblem): 
-  C = 2
-  beta = 6
-  epsilon = 0.00000000000000022204
-  pi = math.pi
-  
-  N = population.__len__()
-  Xnew = np.zeros([N,dim])
-  
-  alpha = C * math.exp(-it / maxIter)
-  
-  for i in range(N):    
-    r6 = random.uniform(0,1)
+def iterarHBA(maxIter, it, dim, population, bestSolution, fitness, function, typeProblem):
+    C = 2
+    beta = 6
+    epsilon = 1e-16  # Valor pequeño para evitar divisiones por cero
+    pi = np.pi
     
-    if r6 <= 0.5: F = 1
-    
-    else: F = -1
+    N = len(population)
+    alpha = C * np.exp(-it / maxIter)
+    Xnew = np.zeros_like(population)
 
-    r = random.uniform(0, 1)
-    
-    if r < 0.5:
-      r2 = random.uniform(0, 1)
-      r3 = random.uniform(0, 1)
-      r4 = random.uniform(0, 1)
-      r5 = random.uniform(0, 1)
-      
-    else:
-      r7 = random.uniform(0, 1)
-    
-    for j in range(dim):   
-      di = bestSolution[j] - population[i][j]
-      
-      if r < 0.5:
-        if i != N - 1: S = np.power((population[i][j] - population[i + 1][j]), 2)
-        
-        else: S = np.power((population[i][j] - population[0][j]), 2)
-        
-        I = r2 * S / (4 * pi * np.power(di + epsilon, 2))
+    r6 = np.random.uniform(0, 1, N)
+    F = np.where(r6 <= 0.5, 1, -1)
 
-        Xnew[i][j] = (bestSolution[j] + 
-                      F * beta * I * bestSolution[j] + 
-                      F * r3 * alpha * di * 
-                      np.abs( math.cos(2 * pi * r4) * (1 - math.cos(2 * pi * r5)))
-                      )
-        
-      else:
-        Xnew[i][j] = bestSolution[j] + F * r7 * alpha * di
-    
-    Xnew[i], newFitness = function(Xnew[i])
-    
-    if typeProblem == 'MIN': condition = newFitness < fitness[i]
-    
-    elif typeProblem == 'MAX': condition = newFitness > fitness[i]
-    
-    if condition: population[i] = Xnew[i]
+    r = np.random.uniform(0, 1, N)
 
-  return np.array(population)
+    for i in range(N):
+        di = bestSolution - population[i]
+        
+        if r[i] < 0.5:
+            r_vals = np.random.uniform(0, 1, 5)
+            
+            if i != N - 1:
+                S = np.power(population[i] - population[i + 1], 2)
+            else:
+                S = np.power(population[i] - population[0], 2)
+                
+            I = r_vals[0] * S / (4 * pi * np.power(np.abs(di) + epsilon, 2))
+
+            Xnew[i] = (
+                bestSolution
+                + F[i] * beta * I * bestSolution
+                + F[i] * r_vals[1] * alpha * di
+                * np.abs(np.cos(2 * pi * r_vals[2]) * (1 - np.cos(2 * pi * r_vals[3])))
+            )
+        else:
+            r7 = np.random.uniform(0, 1)
+            Xnew[i] = bestSolution + F[i] * r7 * alpha * di
+
+        # Evaluación del fitness de la nueva solución
+        Xnew[i], newFitness = function(Xnew[i])
+        condition = newFitness < fitness[i] if typeProblem == 'MIN' else newFitness > fitness[i]
+
+        if condition:
+            population[i] = Xnew[i]
+
+    return np.array(population)

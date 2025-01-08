@@ -1,98 +1,94 @@
-import cProfile
-import json
+import time
 
-from Solver.solverBEN import solverB
+from Solver.solverBEN import solverBEN
 from Solver.solverSCP import solverSCP
 from Solver.solverUSCP import solverUSCP
 
 from BD.sqlite import BD
 
-def main():
-    bd = BD()
+from Util.log import log_experimento, log_error, log_final, log_fecha_hora
+from Util.util import parse_parametros
+
+def ejecutar_ben(id, experimento, parametrosInstancia, parametros):
+    """Ejecuta el problema tipo BEN."""
+    dim = int(experimento.split(" ")[1])
+    lb = float(parametrosInstancia.split(",")[0].split(":")[1])
+    ub = float(parametrosInstancia.split(",")[1].split(":")[1])
     
+    solverBEN(
+        id, parametros["mh"], int(parametros["iter"]),
+        int(parametros["pop"]), parametros["instancia"], lb, ub, dim
+    )
+
+def ejecutar_problema_scp_uscp(id, instancia, ds, parametros, solver_func):
+    """Ejecuta problemas de tipo SCP o USCP."""
+    repair = parametros["repair"]
+    parMH = parametros.get("parMH", "")
+    
+    solver_func(
+        id, parametros["mh"], int(parametros["iter"]),
+        int(parametros["pop"]), instancia, ds, repair, parMH
+    )
+
+def procesar_experimento(data, bd):
+    """Procesa cada experimento según su tipo y maneja errores."""
+    id = int(data[0][0])
+    id_instancia = int(data[0][10])
+    datosInstancia = bd.obtenerInstancia(id_instancia)
+
+    parametros = parse_parametros(data[0][4])
+    parametros.update({
+        "mh": data[0][2],
+        "instancia": datosInstancia[0][2],})
+
+    problema = datosInstancia[0][1]
+
+    # Validación de iteraciones
+    if int(parametros["iter"]) < 4:
+        log_error(id, "El número de iteraciones (iter) debe ser al menos 4. Marcado como error.")
+        bd.actualizarExperimento(id, "error")
+        
+        return
+
+    try:
+        bd.actualizarExperimento(id, "ejecutando")
+
+        if problema == "BEN":
+            ejecutar_ben(id, data[0][1], datosInstancia[0][4], parametros)
+
+        elif problema == "SCP":
+            ejecutar_problema_scp_uscp(id, f"scp{datosInstancia[0][2]}", data[0][3], parametros, solverSCP)
+
+        elif problema == "USCP":
+            ejecutar_problema_scp_uscp(id, f"uscp{datosInstancia[0][2][1:]}", data[0][3], parametros, solverUSCP)
+
+    except ValueError as ve:
+        log_error(id, f"Error de valor: {str(ve)}")
+        bd.actualizarExperimento(id, "error")
+
+    except Exception as e:
+        log_error(id, f"Error general: {str(e)}")
+        bd.actualizarExperimento(id, "error")
+
+def main():
+    """Función principal que gestiona la ejecución de los experimentos."""
+    bd = BD()
     data = bd.obtenerExperimento()
     
-    id              = 0
-    experimento     = ''
-    instancia       = ''
-    problema        = ''
-    mh              = ''
-    parametrosMH    = ''
-    maxIter         = 0
-    pop             = 0
-    dim             = 0 
-    ds              = []
+    start_time = time.time()  # Registrar el tiempo inicial
     
-    while data != None:
-        print("-------------------------------------------------------------------------------------------------------")
-        print(data)
-        
-        id = int(data[0][0])
-        id_instancia = int(data[0][9])
-        datosInstancia = bd.obtenerInstancia(id_instancia)
-        
-        problema = datosInstancia[0][1]
-        instancia = datosInstancia[0][2]
-        parametrosInstancia = datosInstancia[0][4]
-        experimento = data[0][1]
-        mh = data[0][2]
-        parametrosMH = data[0][3]
-        ml = data[0][4]
-        
-        maxIter = int(parametrosMH.split(",")[0].split(":")[1])
-        pop = int(parametrosMH.split(",")[1].split(":")[1])
-        ds = []
-        
-        if problema == 'BEN':
-            bd.actualizarExperimento(id, 'ejecutando')
-            dim = int(experimento.split(" ")[1])
-            lb = float(parametrosInstancia.split(",")[0].split(":")[1])
-            ub = float(parametrosInstancia.split(",")[1].split(":")[1])
-            
-            solverB(id, mh, maxIter, pop, instancia, lb, ub, dim)
-        
-        if problema == 'SCP':
-            bd.actualizarExperimento(id, 'ejecutando')
-            
-            instancia = f'scp{datosInstancia[0][2]}'
-            
-            print("-------------------------------------------------------------------------------------------------------")
-            print(f"Ejecutando el experimento: {experimento} - id: {str(id)}")
-            print("-------------------------------------------------------------------------------------------------------")
-            
-            repair = parametrosMH.split(",")[3].split(":")[1]
-            ds.append(parametrosMH.split(",")[2].split(":")[1].split("-")[0])
-            ds.append(parametrosMH.split(",")[2].split(":")[1].split("-")[1])
-            
-            parMH = parametrosMH.split(",")[4]
-            
-            solverSCP(id, mh, maxIter, pop, instancia, ds, repair, parMH)
-            
-        if problema == 'USCP':
-            bd.actualizarExperimento(id, 'ejecutando')
-            
-            instancia = f'uscp{datosInstancia[0][2][1:]}'
-            
-            print("-------------------------------------------------------------------------------------------------------")
-            print(f"Ejecutando el experimento: {experimento} - id: {str(id)}")
-            print("-------------------------------------------------------------------------------------------------------")
-            
-            repair = parametrosMH.split(",")[3].split(":")[1]
-            ds.append(parametrosMH.split(",")[2].split(":")[1].split("-")[0])
-            ds.append(parametrosMH.split(",")[2].split(":")[1].split("-")[1])
-            
-            parMH = parametrosMH.split(",")[4]
-            
-            solverUSCP(id, mh, maxIter, pop, instancia, ds, repair, parMH)
-        
-        data = bd.obtenerExperimento()
-    
-    print("------------------------------------------------------------------------------------------------------")
-    print("------------------------------------------------------------------------------------------------------")
-    print("Se han ejecutado todos los experimentos pendientes.")
-    print("------------------------------------------------------------------------------------------------------")
-    print("------------------------------------------------------------------------------------------------------")
+    log_fecha_hora("Inicio de la ejecución")
 
+    while data is not None:
+        log_experimento(data)
+        procesar_experimento(data, bd)
+        data = bd.obtenerExperimento()
+
+    end_time = time.time()
+    total_time = end_time - start_time
+    
+    log_fecha_hora("Fin de la ejecución")
+    log_final(total_time)
+    
 if __name__ == "__main__":
     main()
-    # cProfile.run('main()')

@@ -1,80 +1,72 @@
-import random
-import copy
 import numpy as np
 
 # Wombat Optimization Algorithm (WOM)
 # https://doi.org/10.3390/math12071059
 
-def eq4(population, fitness, i):
-    CFP_i = []
-    for k in range(len(fitness)):
-        if fitness[k] < fitness[i] and i != k:
-            CFP_i.append(population[k])
-            
-    if len(CFP_i) == 0: # Para que la lista no quede vacía, se agrega a si mismo
-        CFP_i.append(population[i])
-    
-    return np.array(CFP_i)
+def eq4(population, fitness):
+    """
+    Identifica los candidatos para la fase de exploración.
+    """
+    N = len(population)
+    CFP_mask = np.zeros((N, N), dtype=bool)
+    for i in range(N):
+        CFP_mask[i] = (fitness < fitness[i]) & (np.arange(N) != i)
 
-def eq5(SFP, population, i, dim):
-    # Actualizar cada dimensión de la nueva posición
-    population_part1 = copy.deepcopy(population) # Copia profunda para lista de listas
-    
-    for j in range(dim):
-        r_ij = np.random.rand()  # Generar un número aleatorio entre 0 y 1
-        I_ij = np.random.choice([1, 2])  # Escoger entre 1 y 2
-        
-        # Actualizar la j-ésima dimensión de la nueva posición usando la fórmula
-        population_part1[i][j] = population[i][j] + r_ij * (SFP[j] - I_ij * population[i][j])
-        
-    # Devolver la nueva posición sin modificar la población original
-    
-    return np.array(population_part1)
+    # Asegurar al menos un candidato
+    for i in range(N):
+        if not CFP_mask[i].any():
+            CFP_mask[i, i] = True  # Incluye a sí mismo como candidato
 
-def eq6(new_population, population, fitness, function, i):
-    new_fitness = fitness.copy()
-    _, new_fitness[i] = function(new_population[i])
-    
-    if new_fitness[i] <= fitness[i]: # Si el fitness es mejor, se actualiza la población
-        population[i] = new_population[i]
-    
-    return population, new_fitness
+    return CFP_mask
 
-def eq7(population, i, t, dim, lb, ub):
-    population_part2 = copy.deepcopy(population) # Copia profunda para lista de listas
-    
-    for j in range(dim):
-        r_ij = np.random.rand()
-        population_part2[i][j] = population[i][j] + (1 - 2*r_ij) * ((ub[j] - lb[j])/(t+1)) # Actualizar la j-ésima dimensión
-    
-    return np.array(population_part2)
+def eq5(population, CFP_mask, dim):
+    """
+    Calcula nuevas posiciones en la fase de exploración.
+    """
+    N = len(population)
+    r_ij = np.random.rand(N, dim)
+    I_ij = np.random.choice([1, 2], size=(N, dim))
+    SFP_indices = [np.random.choice(np.flatnonzero(CFP_mask[i])) for i in range(N)]
+    SFP = population[SFP_indices]
+    return population + r_ij * (SFP - I_ij * population)
 
-def eq8(new_population, population, fitness, function, i): # Lo mismo que eq6
-    new_fitness = fitness.copy()
-    _, new_fitness[i] = function(new_population[i])
-    
-    if new_fitness[i] <= fitness[i]:
-        population[i] = new_population[i]
-        
-    return population, new_fitness
+def eq7(population, dim, lb, ub, t):
+    """
+    Calcula nuevas posiciones en la fase de explotación.
+    """
+    r_ij = np.random.rand(len(population), dim)
+    return population + (1 - 2 * r_ij) * ((ub - lb) / (t + 1))
 
-def xplr(population, fitness, function, dim, i): # Fase de forrajeo / Exploracion
-    CFP_i = eq4(population, fitness, i)
-    pop_p1 = eq5(random.choice(CFP_i), population, i, dim)
-    population, new_fitness = eq6(pop_p1, population, fitness, function, i)
-    
-    return population, new_fitness
+def iterarWOM(maxIter, t, dim, population, fitness, lb, ub, function):
+    """
+    WOM optimizado para evitar errores de formas inhomogéneas.
+    """
+    population = np.array(population, dtype=np.float64)
+    fitness = np.array(fitness, dtype=np.float64)
+    lb = np.array(lb, dtype=np.float64)
+    ub = np.array(ub, dtype=np.float64)
 
-def xplt(population, fitness, function, dim, lb, ub, i, t): # Fase de escape / Explotacion
-    pop_p2 = eq7(population, i, t, dim, lb, ub)
-    population, new_fitness = eq8(pop_p2, population, fitness, function, i)
-    
-    return population, new_fitness
+    # Fase de exploración
+    CFP_mask = eq4(population, fitness)
+    newPositionsP1 = eq5(population, CFP_mask, dim)
+    resultsP1 = [function(ind) for ind in newPositionsP1]
+    solutionsP1 = np.array([res[0] for res in resultsP1])
+    fitnessP1 = np.array([res[1] for res in resultsP1])
 
+    # Actualizar población y fitness
+    improvementP1 = fitnessP1 < fitness
+    population[improvementP1] = solutionsP1[improvementP1]
+    fitness[improvementP1] = fitnessP1[improvementP1]
 
-def iterarWOM(maxIter, t, dim, population, fitness, lb, ub, f):
-    for i in range(len(population)):
-        population, fitness = xplr(population,fitness, f, dim, i)
-        population, fitness = xplt(population, fitness, f, dim, lb, ub, i, t)
-        
-    return np.array(population)
+    # Fase de explotación
+    newPositionsP2 = eq7(population, dim, lb, ub, t)
+    resultsP2 = [function(ind) for ind in newPositionsP2]
+    solutionsP2 = np.array([res[0] for res in resultsP2])
+    fitnessP2 = np.array([res[1] for res in resultsP2])
+
+    # Actualizar población y fitness
+    improvementP2 = fitnessP2 < fitness
+    population[improvementP2] = solutionsP2[improvementP2]
+    fitness[improvementP2] = fitnessP2[improvementP2]
+
+    return population

@@ -6,6 +6,7 @@ import seaborn as sns
 
 from util import util
 from BD.sqlite import BD
+from poblarDB import mhs
 
 # Configuración global
 DIR_RESULTADO = './Resultados/'
@@ -16,7 +17,7 @@ DIR_BOXPLOT = f'{DIR_RESULTADO}boxplot/'
 DIR_VIOLIN = f'{DIR_RESULTADO}violinplot/'
 
 GRAFICOS = True
-MHS_LIST = ['SBOA']
+MHS_LIST = mhs
 COLORS = ['r', 'g']
 
 # Clase para almacenar resultados

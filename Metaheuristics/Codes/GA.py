@@ -1,6 +1,6 @@
 import random
 import numpy as np
-from util.util import selectionSort
+from Util.util import selectionSort
 
 # Genetic Algorithm
 

@@ -4,70 +4,64 @@ import math
 # Secretary Bird Optimization Algorithm (SBOA)
 # https://doi.org/10.1007/s10462-024-10729-y
 
-def levy(dim):
-    beta = 1.5
-    
-    sigma = (math.gamma(1 + beta) * np.sin(np.pi * beta / 2) / 
-            (math.gamma((1 + beta) / 2) * beta * 2 ** ((beta - 1) / 2))) ** (1 / beta)
-    
+def levy(dim, beta=1.5):
+    sigma = (np.math.gamma(1 + beta) * np.sin(np.pi * beta / 2) /
+             (np.math.gamma((1 + beta) / 2) * beta * 2 ** ((beta - 1) / 2))) ** (1 / beta)
     u = np.random.randn(dim) * sigma
     v = np.random.randn(dim)
-    
-    step = u / np.abs(v) ** (1 / beta)
-    
-    return step
+    return u / np.abs(v) ** (1 / beta)
 
 def iterarSBOA(maxIter, iterActual, dim, population, fitness, bestSolution, function):
-    if not isinstance(population, np.ndarray):
-        population = np.array(population)
-    
+    best_position = np.asarray(bestSolution)
     N = len(population)
-    fitness = np.array(fitness)
-    best_position = np.array(bestSolution)
 
     CF = (1 - iterActual / maxIter) ** (2 * iterActual / maxIter)
-    
-    for i in range(N):
-        if iterActual < maxIter / 3:  # Etapa de búsqueda de presas
-            X_random_1 = np.random.randint(N)
-            X_random_2 = np.random.randint(N)
-            R1 = np.random.rand(dim)
-            X1 = population[i] + (population[X_random_1] - population[X_random_2]) * R1
-            
-        elif maxIter / 3 <= iterActual < 2 * maxIter / 3:  # Etapa de aproximación
-            RB = np.random.randn(dim)
-            X1 = best_position + np.exp((iterActual / maxIter) ** 4) * (RB - 0.5) * (best_position - population[i])
-            
-        else:  # Etapa de ataque
-            RL = 0.5 * levy(dim)
-            X1 = best_position + CF * population[i] * RL
 
-        X1, f_newP1 = function(X1)
+    # Etapas: búsqueda de presas, aproximación, ataque
+    if iterActual < maxIter / 3:  # Etapa de búsqueda de presas
+        R1 = np.random.rand(N, dim)
+        indices = np.random.randint(N, size=(N, 2))
+        X1 = population + (population[indices[:, 0]] - population[indices[:, 1]]) * R1
+
+    elif maxIter / 3 <= iterActual < 2 * maxIter / 3:  # Etapa de aproximación
+        RB = np.random.randn(N, dim)
+        exp_term = np.exp((iterActual / maxIter) ** 4)
+        X1 = best_position + exp_term * (RB - 0.5) * (best_position - population)
+
+    else:  # Etapa de ataque
+        RL = 0.5 * levy(dim)
+        X1 = best_position + CF * population * RL
+
+    # Evaluación del fitness
+    for i in range(N):
+        X1[i], f_newP1 = function(X1[i])
         
         if f_newP1 <= fitness[i]:
-            population[i] = X1
+            population[i] = X1[i]
             fitness[i] = f_newP1
 
     # Estrategia de escape
     r = np.random.rand()
     k = np.random.randint(N)
-    
     Xrandom = population[k]
-    
-    for i in range(N):
-        if r < 0.5:
-            RB = np.random.rand(dim) 
-            X2 = best_position + (1 - iterActual / maxIter) ** 2 * (2 * RB - 1) * population[i]
-            
-        else:
-            K = np.round(1 + np.random.rand())
-            R2 = np.random.rand(dim) 
-            X2 = population[i] + R2 * (Xrandom - K * population[i])
 
-        X2, f_newP2 = function(X2)
+    RB = np.random.rand(N, dim)
+    R2 = np.random.rand(N, dim)
+    K = np.round(1 + np.random.rand(N))
+
+    if r < 0.5:
+        escape_term = (1 - iterActual / maxIter) ** 2 * (2 * RB - 1)
+        X2 = best_position + escape_term * population
+    
+    else:
+        X2 = population + R2 * (Xrandom - K[:, None] * population)
+
+    # Evaluación del fitness en la estrategia de escape
+    for i in range(N):
+        X2[i], f_newP2 = function(X2[i])
         
         if f_newP2 <= fitness[i]:
-            population[i] = X2
+            population[i] = X2[i]
             fitness[i] = f_newP2
 
     return population

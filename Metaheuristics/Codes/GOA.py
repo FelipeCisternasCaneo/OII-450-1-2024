@@ -1,103 +1,68 @@
 import numpy as np
-import random
 import math
 
 # Gannet optimization algorithm
 # https://doi.org/10.1016/j.matcom.2022.06.007
 
 def V(x):
-    if x <= math.pi: return (-(1 / math.pi) * x + 1) # (0,π)
-    elif x > math.pi: return ((1 / math.pi) * x - 1) # (π,2π)
+    return np.where(x <= np.pi, -(1 / np.pi) * x + 1, (1 / np.pi) * x - 1)
 
-def levy():
-    beta = 1.5
-    
-    mu = random.uniform(0, 1)
-    v = random.uniform(0, 1)
+def levy(size, beta=1.5):
+    u = np.random.uniform(0, 1, size)
+    v = np.random.uniform(0, 1, size)
 
     gamma1 = math.gamma(1 + beta)
-    gamma2 = math.gamma((1+beta)/2)
-    seno = math.sin(math.pi * beta / 2)
-    expo = 1 / beta
-    
-    sigma = ((gamma1 * seno) / (gamma2 * beta * 2 ** ((beta - 1) / 2))) ** expo
-        
-    return 0.01 * ((mu * sigma) / (abs(v) ** expo))
+    gamma2 = math.gamma((1 + beta) / 2)
+    sigma = ((gamma1 * np.sin(np.pi * beta / 2)) / (gamma2 * beta * 2 ** ((beta - 1) / 2))) ** (1 / beta)
+
+    return 0.01 * ((u * sigma) / (np.abs(v) ** (1 / beta)))
 
 def iterarGOA(maxIter, it, dim, population, bestSolution, fitness, function, typeProblem):
     population = np.array(population)
-
-    m = 2.5  # Peso en Kg del Gannet
-    vel = 1.5  # Velocidad en el agua en m/s del Gannet
-    c = 0.2  # Determina si se ejejuta movimiento levy o ajustes de trayectoria
-    
-    MX = population.copy()
+    m, vel, c = 2.5, 1.5, 0.2
     t = 1 - (it / maxIter)
     t2 = 1 + (it / maxIter)
-    Xr = population[random.randint(0, len(population) - 1)]
-    Xm = [np.mean(population[:, j]) for j in range(dim)]
 
-    # ========= Exploracion =========
+    Xr = population[np.random.randint(len(population))]
+    Xm = np.mean(population, axis=0)
+
+    MX = np.copy(population)
+    r = np.random.uniform(0, 1, len(population))
+
     for i in range(len(population)):
-        r = random.uniform(0, 1)
-        
-        if r > 0.5:
-                q = random.uniform(0, 1)
-                
-                if q >= 0.5:
-                    for j in range(dim):
-                        r2 = random.uniform(0, 1)
-                        r4 = random.uniform(0, 1)
+        if r[i] > 0.5:  # Exploración
+            q = np.random.uniform(0, 1)
+            r_vals = np.random.uniform(0, 1, size=(dim, 4))
 
-                        a = 2 * math.cos(2 * math.pi * r2) * t
-                        A = (2 * r4 - 1) * a
+            if q >= 0.5:
+                a = 2 * np.cos(2 * np.pi * r_vals[:, 0]) * t
+                A = (2 * r_vals[:, 1] - 1) * a
+                u1 = np.random.uniform(-a, a)
+                u2 = A * (population[i] - Xr)
+                MX[i] = population[i] + u1 + u2
+            else:
+                b = 2 * V(2 * np.pi * r_vals[:, 2]) * t
+                B = (2 * r_vals[:, 3] - 1) * b
+                v1 = np.random.uniform(-b, b)
+                v2 = B * (population[i] - Xm)
+                MX[i] = population[i] + v1 + v2
+        else:  # Explotación
+            r6 = np.random.uniform(0, 1)
+            L = 0.2 + (2 - 0.2) * r6
+            R = (m * vel ** 2) / L
+            capturability = 1 / (R * t2)
 
-                        u1 = random.uniform(-a, a)
-                        u2 = A * (population[i,j] - Xr[j])
+            if capturability >= c:
+                delta = capturability * np.abs(population[i] - bestSolution)
+                MX[i] = t * delta * (population[i] - bestSolution) + population[i]
+            else:
+                p = levy(dim)
+                MX[i] = bestSolution - (population[i] - bestSolution) * p * t
 
-                        # Ecuacion 7a
-                        MX[i][j] = population[i,j] + u1 + u2
-                
-                else:
-                    for j in range(dim):
-                        r3 = random.uniform(0, 1)
-                        r5 = random.uniform(0, 1)
+        MX[i], mxFitness = function(MX[i])
+        condition = mxFitness < fitness[i] if typeProblem == 'MIN' else mxFitness > fitness[i]
 
-                        b = 2 * V(2 * math.pi * r3) * t
-                        B = (2 * r5 - 1) * b
-
-                        v1 = random.uniform(-b, b)
-                        v2 = B * (population[i,j] - Xm[j])
-                        # Ecuacion 7b
-                        MX[i][j] = population[i,j] + v1 + v2
-
-        # ========= Explotacion =========
-        else:
-                r6 = random.uniform(0, 1)
-                L = 0.2 + (2 - 0.2) * r6
-                R = (m * vel**2) / L
-                capturability = 1 / (R * t2)
-                
-                # Caso ajustes exitosos
-                if capturability >= c:
-                    for j in range(dim):
-                        delta = capturability * abs(population[i,j] - bestSolution[j])
-                        # Ecuacion 17a
-                        MX[i][j] = t * delta * (population[i,j] - bestSolution[j]) + population[i,j]
-
-                # Caso movimiento Levy
-                else:
-                    for j in range(dim):
-                        p = levy()
-                        # Ecuacion 17b
-                        MX[i][j] = bestSolution[j] - (population[i,j] - bestSolution[j]) * p * t
-        
-        MX[i],mxFitness = function(MX[i])
-        
-        if typeProblem == 'MIN': condition = mxFitness < fitness[i]
-        
-        elif typeProblem == 'MAX': condition = mxFitness > fitness[i]
-        
-        if condition: population[i] = MX[i]
+        if condition:
+            population[i] = MX[i]
 
     return population

@@ -3,22 +3,34 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import os
 import seaborn as sns
+import json
 
-from util import util
+from Util.util import writeTofile
+from Util.log import escribir_resumenes
 from BD.sqlite import BD
-from poblarDB import funciones, mhs
+
+# Cargar configuración desde el JSON
+CONFIG_FILE = './util/json/dir.json'
+EXPERIMENTS_FILE = './util/json/experiments_config.json'
+
+with open(CONFIG_FILE, 'r') as config_file:
+    CONFIG = json.load(config_file)
+
+with open(EXPERIMENTS_FILE, 'r') as experiments_file:
+    EXPERIMENTS = json.load(experiments_file)
+
+# Directorios
+DIRS = CONFIG["dirs"]
+DIR_RESULTADO = DIRS["base"]
+DIR_TRANSITORIO = DIRS["transitorio"]
+DIR_GRAFICOS = DIRS["graficos"]
+DIR_BEST = DIRS["best"]
+DIR_BOXPLOT = DIRS["boxplot"]
+DIR_VIOLIN = DIRS["violinplot"]
 
 # Configuración global
-DIR_RESULTADO = './Resultados/'
-DIR_TRANSITORIO = f'{DIR_RESULTADO}Transitorio/'
-DIR_GRAFICOS = f'{DIR_RESULTADO}Graficos/'
-DIR_BEST = f'{DIR_RESULTADO}Best/'
-DIR_BOXPLOT = f'{DIR_RESULTADO}boxplot/'
-DIR_VIOLIN = f'{DIR_RESULTADO}violinplot/'
-
 GRAFICOS = True
-MHS_LIST = mhs
-COLORS = ['r', 'g']
+MHS_LIST = EXPERIMENTS["mhs"]
 
 # Clase para almacenar resultados
 class InstancesMhs:
@@ -62,7 +74,7 @@ def graficar_datos(iteraciones, fitness, xpl, xpt, tiempo, mh, problem, corrida)
     plt.close('all')
     
     # Gráfico de tiempo por iteración
-    figTime, axTime = plt.subplots()
+    _, axTime = plt.subplots()
     axTime.plot(iteraciones, tiempo, color='g', label='Time per Iteration')
     axTime.set_title(f'Time per Iteration {mh} \n {problem} run {corrida}')
     axTime.set_ylabel("Time (s)")
@@ -117,21 +129,13 @@ def graficar_boxplot_violin(instancia):
     figFitness.savefig(DIR_RESULTADO + "/violinplot/violinplot_fitness_" + instancia + '.pdf')
     
     plt.close('all')
-    
-# Escribir estadísticas resumidas
-def escribir_resumenes(mhs_instances, archivoResumenFitness, archivoResumenTimes, archivoResumenPercentage):
-    for name in MHS_LIST:
-        mh = mhs_instances[name]
-        archivoResumenFitness.write(f"{name}, {np.min(mh.fitness)}, {np.round(np.mean(mh.fitness), 3)}, {np.round(np.std(mh.fitness), 3)}\n")
-        archivoResumenTimes.write(f"{name}, {np.min(mh.time)}, {np.round(np.mean(mh.time), 3)}, {np.round(np.std(mh.time), 3)}\n")
-        archivoResumenPercentage.write(f"{name}, {np.round(np.mean(mh.xpl), 3)}, {np.round(np.mean(mh.xpt), 3)}\n")
 
 # Procesar archivos de resultados
 def procesar_archivos(instancia, blob, archivo_fitness):
     corrida = 1
     for nombre_archivo, contenido in blob:
         direccion_destino = f'{DIR_TRANSITORIO}{nombre_archivo}.csv'
-        util.writeTofile(contenido, direccion_destino)
+        writeTofile(contenido, direccion_destino)
 
         # Leer el archivo
         data = pd.read_csv(direccion_destino)
@@ -152,7 +156,7 @@ def procesar_archivos(instancia, blob, archivo_fitness):
     
     archivoFitness.close()
 
-lista_instancias = ', '.join([f'"{elem}"' for elem in funciones])
+lista_instancias = ', '.join([f'"{func}"' for func in EXPERIMENTS["instancias"]["BEN"]])
 
 # Procesar cada instancia
 for instancia in bd.obtenerInstancias(lista_instancias):
@@ -178,7 +182,7 @@ for instancia in bd.obtenerInstancias(lista_instancias):
     archivoFitness.write("MH, FITNESS\n")
 
     procesar_archivos(instancia[1], blob, archivoFitness)
-    escribir_resumenes(mhs_instances, archivoResumenFitness, archivoResumenTimes, archivoResumenPercentage)
+    escribir_resumenes(mhs_instances, archivoResumenFitness, archivoResumenTimes, archivoResumenPercentage, MHS_LIST)
 
     graficar_mejores_resultados(instancia[1], mhs_instances)
     graficar_boxplot_violin(instancia[1])

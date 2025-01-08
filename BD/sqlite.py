@@ -5,7 +5,6 @@ import opfunu.cec_based
 from Problem.SCP.problem import obtenerOptimo
 from Problem.USCP.problem import obtenerOptimoUSCP
 from Problem.USCP.problem import obtenerOptimoUSCP
-from util import util
 
 class BD:
     def __init__(self):
@@ -62,6 +61,7 @@ class BD:
                 id_experimento INTEGER PRIMARY KEY AUTOINCREMENT,
                 experimento TEXT,
                 MH TEXT,
+                binarizacion TEXT,
                 paramMH TEXT,
                 ML TEXT,
                 paramML TEXT,
@@ -111,6 +111,7 @@ class BD:
                     NULL,
                     '{str(data["experimento"])}',
                     '{str(data["MH"])}',
+                    '{str(data["binarizacion"])}',
                     '{str(data["paramMH"])}',
                     '{str(data["ML"])}',
                     '{str(data["paramML"])}',
@@ -122,7 +123,6 @@ class BD:
         
         self.commit()
         self.desconectar()
-        
         
     data = ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12', 'F13', 'F14', 'F15', 'F16', 'F17', 'F18', 'F19', 'F20', 'F21', 'F22', 'F23']
 
@@ -380,20 +380,20 @@ class BD:
         
         cursor = self.getCursor()
         cursor.execute(f''' 
-            select i.nombre, i.archivo 
-            from experimentos e 
-            inner join iteraciones i on e.id_experimento  = i.fk_id_experimento 
-            inner join instancias i2 on e.fk_id_instancia = i2.id_instancia 
-            where i2.nombre  = '{instancia}' 
-            order by i2.nombre desc , e.MH desc   
+            SELECT i.nombre, i.archivo, e.binarizacion 
+            FROM experimentos e 
+            INNER JOIN iteraciones i ON e.id_experimento = i.fk_id_experimento 
+            INNER JOIN instancias i2 ON e.fk_id_instancia = i2.id_instancia 
+            WHERE i2.nombre = '{instancia}' 
+            ORDER BY i2.nombre DESC, e.MH DESC
         ''')
         
         data = cursor.fetchall()
         
+        #print(f"[DEBUG] Datos de blob para instancia {instancia}: {data}")
         self.desconectar()
-        
         return data
-    
+
     def obtenerMejoresArchivos(self, instancia, ml):
         self.conectar()
         

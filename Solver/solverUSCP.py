@@ -10,7 +10,7 @@ from Metaheuristics.imports import iterarEBWOA, iterarFLO, iterarHLOAScp, iterar
 from Metaheuristics.imports import iterarPOA, IterarPO, iterarWOM
 from Diversity.imports import diversidadHussain, porcentajesXLPXPT
 from Discretization import discretization as b
-from util import util
+from Util import util
 from BD.sqlite import BD
 
 def solverUSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
@@ -84,6 +84,7 @@ def solverUSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
             ", XPT: " + str(XPT) +
             ", XPL: " + str(XPL) +
             ", DIV: " + str(maxDiversity))
+    
     results.write(
         f'0,{str(bestFitness)},{str(round(initializationTime2 - initializationTime1, 3))},{str(XPL)},{str(XPT)},{maxDiversity}\n')
 
@@ -128,22 +129,22 @@ def solverUSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
             population = iterarGA(population.tolist(), fitness, cross, muta)
             
         if mh == 'PSO':
-            population, vel = iterarPSO(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist(), pBest.tolist(), vel, 1)
+            population, vel = iterarPSO(maxIter, iter, instance.getColumns(), population, best, pBest, vel, 1)
             
         if mh == 'FOX':
-            population = iterarFOX(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist())
+            population = iterarFOX(maxIter, iter, instance.getColumns(), population, best)
             
         if mh == 'EOO':
-            population = iterarEOO(maxIter, iter, population.tolist(), best.tolist())
+            population = iterarEOO(maxIter, iter, population.tolist(), best)
             
         if mh == 'RSA':
-            population = iterarRSA(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist(), 0, 1)
+            population = iterarRSA(maxIter, iter, instance.getColumns(), population, best, 0, 1)
             
         if mh == 'GOA':
-            population = iterarGOA(maxIter, iter, instance.getColumns(), population, best.tolist(), fitness.tolist(), fo, 'MIN')
+            population = iterarGOA(maxIter, iter, instance.getColumns(), population, best, fitness, fo, 'MIN')
             
         if mh == 'HBA':
-            population = iterarHBA(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist(), fitness.tolist(), fo, 'MIN')
+            population = iterarHBA(maxIter, iter, instance.getColumns(), population, best, fitness, fo, 'MIN')
             
         if mh == 'TDO':
             population = iterarTDO(maxIter, iter, instance.getColumns(), population.tolist(), fitness.tolist(), fo, 'MIN')

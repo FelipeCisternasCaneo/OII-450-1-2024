@@ -15,11 +15,39 @@ from Metaheuristics.Codes.SBOA import iterarSBOA
 from Metaheuristics.Codes.EBWOA import iterarEBWOA
 from Metaheuristics.Codes.EHO import iterarEHO
 from Metaheuristics.Codes.FLO import iterarFLO
-from Metaheuristics.Codes.HLOA import iterarHLOAScp
-from Metaheuristics.Codes.HLOA import iterarHLOABen
+from Metaheuristics.Codes.HLOA import iterarHLOAScp, iterarHLOABen
 from Metaheuristics.Codes.LOA import iterarLOA
 from Metaheuristics.Codes.NO import iterarNO
 from Metaheuristics.Codes.PO import IterarPO
 from Metaheuristics.Codes.POA import iterarPOA
 from Metaheuristics.Codes.QSO import iterarQSO
 from Metaheuristics.Codes.WOM import iterarWOM
+
+# Diccionario central de metaheurísticas
+metaheuristics = {
+    "GA": iterarGA,
+    "GWO": iterarGWO,
+    "PSA": iterarPSA,
+    "SCA": iterarSCA,
+    "WOA": iterarWOA,
+    "PSO": iterarPSO,
+    "FOX": iterarFOX,
+    "EOO": iterarEOO,
+    "RSA": iterarRSA,
+    "GOA": iterarGOA,
+    "HBA": iterarHBA,
+    "TDO": iterarTDO,
+    "SHO": iterarSHO,
+    "SBOA": iterarSBOA,
+    "EBWOA": iterarEBWOA,
+    "EHO": iterarEHO,
+    "FLO": iterarFLO,
+    "HLOA": iterarHLOAScp,
+    "HLOA": iterarHLOABen,
+    "LOA": iterarLOA,
+    "NO": iterarNO,
+    "PO": IterarPO,
+    "POA": iterarPOA,
+    "QSO": iterarQSO,
+    "WOM": iterarWOM
+}

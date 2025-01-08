@@ -1,0 +1,14 @@
+{
+    "dirs": {
+        "BD": "./BD/",
+        "base": "./Resultados/",
+        "transitorio": "./Resultados/Transitorio/",
+        "graficos": "./Resultados/Graficos/",
+        "best": "./Resultados/Best/",
+        "boxplot": "./Resultados/Boxplot/",
+        "violinplot": "./Resultados/Violinplot/",
+        "scp_instances": "./Problem/SCP/Instances/",
+        "uscp_instances": "./Problem/USCP/Instances/",
+        "graficos_benchmark": "./Graficos_Benchmark/"
+    }
+}

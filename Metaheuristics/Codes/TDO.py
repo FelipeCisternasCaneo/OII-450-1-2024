@@ -2,75 +2,66 @@ import numpy as np
 import random
 
 # Tasmanian Devil Optimization (TDO)
-# https://doi.org/10.1109/ACCESS.2022.3151641
-# https://doi.org/10.1109/ACCESS.2022.3151641
+# Referencia: https://doi.org/10.1109/ACCESS.2022.3151641
 
 def iterarTDO(maxIter, it, dim, population, fitness, function, typeProblem):
+    """
+    Implementación del algoritmo Tasmanian Devil Optimization (TDO).
+    
+    Args:
+        maxIter (int): Número máximo de iteraciones.
+        it (int): Iteración actual.
+        dim (int): Dimensión del espacio de búsqueda.
+        population (np.ndarray): Población actual.
+        fitness (np.ndarray): Valores de fitness para la población actual.
+        function (callable): Función objetivo que evalúa cada individuo.
+        typeProblem (str): Tipo de problema ('MIN' o 'MAX').
+
+    Returns:
+        np.ndarray: Población actualizada.
+    """
     N = len(population)
     population = np.array(population)
 
     for i in range(N):
         r = random.uniform(0.0, 1.0)
 
-        # se escoge un demonio de Tasmania aleatorio de entre la población
-        # se escoge un demonio de Tasmania aleatorio de entre la población
+        # Selección de un demonio de Tasmania aleatorio de la población
         k = np.random.choice(np.delete(np.arange(N), i))
         CPi = population[k]
         xNew = np.copy(population[i])
 
-        if typeProblem == 'MIN': condition = function(CPi)[1] < fitness[i]
-        
-        
-        elif typeProblem == 'MAX': condition = function(CPi)[1] > fitness[i]
-        
-        
+        # Determinar si acercarse o alejarse en función del tipo de problema
+        if typeProblem == 'MIN':
+            condition = function(CPi)[1] < fitness[i]
+        elif typeProblem == 'MAX':
+            condition = function(CPi)[1] > fitness[i]
+        else:
+            raise ValueError("typeProblem debe ser 'MIN' o 'MAX'")
+
         for j in range(dim):
-            # definimos si este se debe alejar o acercar, en función de su evaluación según la FO
-            # si el demonio escogido evaluado resulta ser mejor, se acerca
-            # definimos si este se debe alejar o acercar, en función de su evaluación según la FO
-            # si el demonio escogido evaluado resulta ser mejor, se acerca
             if condition:
+                # Si el demonio elegido es mejor, se acerca
                 I = random.randint(1, 2)
                 xNew[j] = population[i][j] + random.uniform(0.0, 1.0) * (CPi[j] - I * population[i][j])
-                
-            # si el demonio escogido evaluado resulta ser peor, se aleja
-            
-                
-            # si el demonio escogido evaluado resulta ser peor, se aleja
-            
             else:
+                # Si el demonio elegido es peor, se aleja
                 xNew[j] = population[i][j] + random.uniform(0.0, 1.0) * (population[i][j] - CPi[j])
 
+        # Evaluar nueva posición
         xNew, fitnessNew = function(xNew)
-        
-        if typeProblem == 'MIN': condition = fitnessNew < fitness[i]
-        
-        
-        elif typeProblem == 'MAX': condition = fitnessNew > fitness[i]
-        
-        
-        if condition: population[i] = np.copy(xNew)
+        if (typeProblem == 'MIN' and fitnessNew < fitness[i]) or (typeProblem == 'MAX' and fitnessNew > fitness[i]):
+            population[i] = np.copy(xNew)
 
+        # Explotación: búsqueda local si r >= 0.5
         if r >= 0.5:
-            # explotación
-            # explotación
-            R = 0.01 * (1 - (it / maxIter))
-
-            # se realiza la búsqueda local (nueva posición)
-            # se realiza la búsqueda local (nueva posición)
+            R = 0.01 * (1 - (it / maxIter))  # Factor de explotación
             for j in range(dim):
                 xNew[j] = population[i][j] + (2 * random.uniform(0.0, 1.0) - 1) * R * xNew[j]
 
+            # Evaluar nueva posición tras explotación
             xNew, fitnessNew = function(xNew)
-            
-            xNew, fitnessNew = function(xNew)
-            
-            if typeProblem == 'MIN': condition = fitnessNew < fitness[i]
-            
-            
-            elif typeProblem == 'MAX': condition = fitnessNew > fitness[i]
-            
-            
-            if condition: population[i] = np.copy(xNew)
+            if (typeProblem == 'MIN' and fitnessNew < fitness[i]) or (typeProblem == 'MAX' and fitnessNew > fitness[i]):
+                population[i] = np.copy(xNew)
 
     return population

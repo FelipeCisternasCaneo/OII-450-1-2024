@@ -1,29 +1,19 @@
 import os
+import json
 import opfunu.cec_based
 
 from BD.sqlite import BD
+from Util.log import resumen_experimentos
+from Util.util import cargar_configuracion
+
+from crearBD import crear_BD
+
+config = cargar_configuracion('util/json/experiments_config.json')
 
 bd = BD()
-
-ben = True
-scp = False
-uscp = False
+dimensiones_cache = {}
 
 '''
-mhs = [
-    "SCA", "GWO", "WOA", "PSA", "PSO",
-    "FOX", "EOO", "RSA", "GOA", "HBA",
-    "TDO", "SHO", "SBOA", "EHO",
-    "FLO", "HLOA", "LOA",
-    "NO", "POA", "PO", "WOM", "QSO"
-]
-'''
-
-mhs = ["POA"]
-
-cantidad = 0
-log_resumen = []  # Lista para almacenar el resumen de cada experimento
-
 DS_lista = [
     'V1-STD', 'V1-COM', 'V1-PS', 'V1-ELIT',
     'V2-STD', 'V2-COM', 'V2-PS', 'V2-ELIT',
@@ -34,77 +24,23 @@ DS_lista = [
     'S3-STD', 'S3-COM', 'S3-PS', 'S3-ELIT',
     'S4-STD', 'S4-COM', 'S4-PS', 'S4-ELIT',
 ]
-
-DS_actions = ['V3-ELIT'] # Lista de binarizaciones a utilizar - SCP y USCP
-
-dimensiones_cache = {}
+'''
 
 if __name__ == '__main__':
-    if not os.path.exists('./BD/resultados.db'):
-        print("La base de datos no existe, se procederá a crearla.")
-        bd.construirTablas()
-        print("Base de datos creada exitosamente.")
-
-def resumen_experimentos():
-    print("\n" + "-" * 100)
-    print(f"{'RESUMEN DETALLADO DE EXPERIMENTOS':^100}")
-    print("-" * 100)
-
-    print(f"{'Problema':<10} {'Instancia':<12} {'Dimensión':<15} {'MH':<10} "
-        f"{'Iteraciones':<12} {'Población':<10} {'DS':<10} {'# Experimentos':<15}")
-    print("-" * 100)
-
-    for log in log_resumen:
-        ds_value = "-"
-        if "DS:" in log['Extra Params']:
-            ds_value = log['Extra Params'].split("DS:")[1].split(",")[0]
-
-        print(f"{log['Problema']:<10} {log['Instancia']:<12} {log['Dimensión']:<15} {log['MH']:<10} "
-            f"{log['Iteraciones']:<12} {log['Población']:<10} {ds_value:<10} {log['Total Experimentos']:<15}")
-
-    print("-" * 100)
-    print(f"TOTAL EXPERIMENTOS INGRESADOS: {cantidad}")
-    print("-" * 100)
+    crear_BD()
 
 def obtener_dimensiones_ben(funcion):
-    if funcion in BD.data:
-        try:
-            # Para funciones F1-F13
-            if funcion in ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12', 'F13']:
-                # dimensiones = [30, 100, 500, 1000]
-                dimensiones = [30]
-                
-            # Para funciones F14, F16, F17, F18
-            if funcion in ['F14', 'F16', 'F17', 'F18']:
-                dimensiones = [2]
-
-            # Para funciones F19
-            if funcion in ['F19']:
-                dimensiones = [3]
-                
-            # Para funciones F20
-            if funcion in ['F20']:
-                dimensiones = [6]
-                
-            # Para funciones F15, F21, F22, F23
-            if funcion in ['F15', 'F21', 'F22', 'F23']:
-                dimensiones = [4]
-            
-            return dimensiones
+    for key, dims in config['dimensiones']['BEN'].items():
+        if funcion in key.split("-"):
+            return dims
         
-        except:
-            raise ValueError(f"Advertencia: La función '{funcion}' no está definida.")
-    
-    elif funcion in BD.opfunu_cec_data:
+    if funcion in bd.opfunu_cec_data:
         func_class = getattr(opfunu.cec_based, f"{funcion}")
-        dimensiones = [func_class().dim_default]
-    else:
-        raise ValueError(f"Función {funcion} no encontrada en la base da datos.")
+        return [func_class().dim_default]
     
-    return dimensiones
+    raise ValueError(f"La función '{funcion}' no está definida en la configuración de dimensiones ni en opfunu.")
 
 def obtener_dimensiones(instance, problema):
-
     if (instance, problema) in dimensiones_cache:
         return dimensiones_cache[(instance, problema)]
     
@@ -129,75 +65,86 @@ def obtener_dimensiones(instance, problema):
 
         dimensiones = f"{filas} x {columnas}"
         dimensiones_cache[(instance, problema)] = dimensiones
+        
         return dimensiones
 
     return "-"
 
-def insertar_experimentos(instancias, dimensiones, mhs, experimentos, iteraciones, poblacion, problemaActual, extra_params = ""):
+def crear_data_experimento(instancia, dim, mh, binarizacion, iteraciones, poblacion, extra_params, problemaActual):
+    return {
+        'experimento': f'{instancia[1]} {dim}' if problemaActual == 'BEN' else f'{instancia[1]}',
+        'MH': mh,
+        'binarizacion': binarizacion if binarizacion else 'N/A',  # Agregar binarización solo si existe
+        'paramMH': f'iter:{iteraciones},pop:{poblacion}{extra_params}',
+        'ML': '',
+        'paramML': '',
+        'ML_FS': '',
+        'paramML_FS': '',
+        'estado': 'pendiente'
+    }
+
+def crear_resumen_log(instancia, dim, mh, binarizacion, iteraciones, poblacion, extra_params, problemaActual, num_experimentos=1):
+    dimensiones_instancia = obtener_dimensiones(instancia[1], problemaActual)
+    return {
+        "Problema": problemaActual,
+        "Instancia": instancia[1],
+        "Dimensión": dimensiones_instancia if problemaActual != 'BEN' else dim,
+        "MH": mh,
+        "Iteraciones": iteraciones,
+        "Población": poblacion,
+        "Binarización": binarizacion if binarizacion else 'N/A',
+        "Extra Params": extra_params,
+        "Total Experimentos": num_experimentos
+    }
+
+def insertar_experimentos(instancias, dimensiones, mhs, num_experimentos, iteraciones, poblacion, problemaActual, extra_params=""):
     global cantidad, log_resumen
 
     for instancia in instancias:
-        dimensiones_instancia = obtener_dimensiones(instancia[1], problemaActual)
-
         for dim in dimensiones:
             for mh in mhs:
-                experimento = f'{instancia[1]} {dim}' if problemaActual == 'BEN' else f'{instancia[1]}'
-
-                data = {
-                    'experimento': experimento,
-                    'MH': mh,
-                    'paramMH': f'iter:{iteraciones},pop:{poblacion}{extra_params}',
-                    'ML': '',
-                    'paramML': '',
-                    'ML_FS': '',
-                    'paramML_FS': '',
-                    'estado': 'pendiente'
-                }
-
-                cantidad += experimentos
-                bd.insertarExperimentos(data, experimentos, instancia[0])
-
-                log_resumen.append({
-                    "Problema": problemaActual,
-                    "Instancia": instancia[1],
-                    "Dimensión": dimensiones_instancia if problemaActual != 'BEN' else dim,
-                    "MH": mh,
-                    "Iteraciones": iteraciones,
-                    "Población": poblacion,
-                    "Extra Params": extra_params,
-                    "Total Experimentos": experimentos
-                })
-
-# Proceso BEN
-if ben:
-    funciones = ['F5', 'F6', 'F8', 'F32005']
+                # Verifica si el problema actual requiere binarización
+                if problemaActual in ['SCP', 'USCP']:
+                    for binarizacion in config['DS_actions']:  # Solo iterar si el problema es discreto
+                        data = crear_data_experimento(instancia, dim, mh, binarizacion, iteraciones, poblacion, extra_params, problemaActual)
+                        bd.insertarExperimentos(data, num_experimentos, instancia[0])
+                        cantidad += num_experimentos
+                        log_resumen.append(crear_resumen_log(instancia, dim, mh, binarizacion, iteraciones, poblacion, extra_params, problemaActual, num_experimentos))
+                else:
+                    # No aplicar binarización a problemas BEN
+                    data = crear_data_experimento(instancia, dim, mh, None, iteraciones, poblacion, extra_params, problemaActual)
+                    bd.insertarExperimentos(data, num_experimentos, instancia[0])
+                    cantidad += num_experimentos
+                    log_resumen.append(crear_resumen_log(instancia, dim, mh, None, iteraciones, poblacion, extra_params, problemaActual, num_experimentos))
 
 def agregar_experimentos():
-    if ben:
-        iteraciones = 100
-        experimentos = 1
-        poblacion = 50
+    if config.get('ben', False):
+        iteraciones = config['experimentos']['BEN']['iteraciones']
+        poblacion = config['experimentos']['BEN']['poblacion']
+        num_experimentos = config['experimentos']['BEN']['num_experimentos']
 
-        for funcion in funciones:
+        for funcion in config['instancias']['BEN']:
             instancias = bd.obtenerInstancias(f'''"{funcion}"''')
             dimensiones = obtener_dimensiones_ben(funcion)
-            insertar_experimentos(instancias, dimensiones, mhs, experimentos, iteraciones, poblacion, problemaActual = 'BEN')
+            insertar_experimentos(instancias, dimensiones, config['mhs'], num_experimentos, iteraciones, poblacion, problemaActual='BEN')
 
-    # Proceso SCP y USCP
-    for problema, activar in [('SCP', scp), ('USCP', uscp)]:
+    for problema, activar in [('SCP', config.get('scp', False)), ('USCP', config.get('uscp', False))]:
         if activar:
-            instancias = bd.obtenerInstancias(f'''"41", "nrh5"''') if problema == 'SCP' else bd.obtenerInstancias(f'''"u43", "uclr11"''')
-            iteraciones = 4
-            experimentos = 1
-            poblacion = 30
+            instancias_clave = config['instancias'][problema]
+            instancias = bd.obtenerInstancias(",".join(f'"{i}"' for i in instancias_clave))
+            iteraciones = config['experimentos'][problema]['iteraciones']
+            poblacion = config['experimentos'][problema]['poblacion']
+            num_experimentos = config['experimentos'][problema]['num_experimentos']
 
             for instancia in instancias:
-                for mh in mhs:
-                    for binarizacion in DS_actions:
-                        extra_params = f',DS:{binarizacion},repair:complex,cros:0.4;mut:0.50'
-                        insertar_experimentos([instancia], [1], [mh], experimentos, iteraciones, poblacion, problemaActual = problema, extra_params = extra_params)
-                        
+                for mh in config['mhs']:
+                    extra_params = f',repair:complex,cros:0.4;mut:0.50'
+                    insertar_experimentos([instancia], [1], [mh], num_experimentos, iteraciones, poblacion, problemaActual=problema, extra_params=extra_params)
+
 # Resumen final
 if __name__ == '__main__':
+    log_resumen = []
+    cantidad = 0
+    
     agregar_experimentos()
-    resumen_experimentos()
+    resumen_experimentos(log_resumen, cantidad)

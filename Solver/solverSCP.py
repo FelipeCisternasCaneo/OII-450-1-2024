@@ -2,7 +2,6 @@ import numpy as np
 import os
 import time
 
-
 from Problem.SCP.problem import SCP
 
 from Metaheuristics.imports import iterarGWO, iterarSCA, iterarWOA, iterarPSA, iterarGA
@@ -11,13 +10,19 @@ from Metaheuristics.imports import iterarHBA, iterarTDO, iterarSHO, iterarSBOA, 
 from Metaheuristics.imports import iterarEBWOA, iterarFLO, iterarHLOAScp, iterarLOA, iterarNO
 from Metaheuristics.imports import iterarPOA, IterarPO, iterarWOM, iterarQSO
 
-from Diversity.imports import diversidadHussain, porcentajesXLPXPT
+from Diversity.Codes.diversity import initialize_diversity, calculate_diversity
 from Discretization import discretization as b
-from util import util
+
+from Util import util
+from Util.poblacion_SCP import (initialize_population, evaluate_population, binarize_and_evaluate, 
+                                update_best_solution)
+
 from BD.sqlite import BD
 
+from Util.log import initial_log_scp_uscp, log_progress, final_log
+
 def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
-    dirResult = './Resultados/'
+    dirResult = './Resultados/Transitorio/'
     
     instance = SCP(instances)
     
@@ -28,69 +33,32 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
     results = open(dirResult + mh + "_" + instances.split(".")[0] + "_" + str(id) + ".csv", "w")
     results.write(f'iter,fitness,time,XPL,XPT,DIV\n')
     
-    vel = None
-    pBestScore = None
-    pBest = None
+    # Inicializo la población
+    population, vel, pBestScore, pBest = initialize_population(mh, pop, instance)
     
-    if mh == 'PSO':
-        vel = np.zeros((pop, instance.getColumns()))
-        pBestScore = np.zeros(pop)
-        pBestScore.fill(float("inf"))
-        pBest = np.zeros((pop, instance.getColumns()))
-    
-    # Genero una población inicial binaria, esto ya que nuestro problema es binario
-    population = np.random.randint(low = 0, high = 2, size = (pop, instance.getColumns()))
-
-    maxDiversity = diversidadHussain(population)
-    XPL, XPT, state = porcentajesXLPXPT(maxDiversity, maxDiversity)
+    maxDiversity, XPL, XPT = initialize_diversity(population)
     
     # Genero un vector donde almacenaré los fitness de cada individuo
     fitness = np.zeros(pop)
 
-    # Genero un vector dedonde tendré mis soluciones rankeadas
-    solutionsRanking = np.zeros(pop)
-    
-    # Calculo de factibilidad de cada individuo y calculo del fitness inicial
-    for i in range(population.__len__()):
-        flag, aux = instance.factibilityTest(population[i])
-        
-        if not flag: #solucion infactible
-            population[i] = instance.repair(population[i], repairType)
-            
-        fitness[i] = instance.fitness(population[i])
-        
-        if mh == 'PSO':
-            if pBestScore[i] > fitness[i]:
-                pBestScore[i] = fitness[i]
-                pBest[i, :] = population[i, :].copy()
-        
-    solutionsRanking = np.argsort(fitness) # rankings de los mejores fitnes
-    bestRowAux = solutionsRanking[0] # DETERMINO MI MEJOR SOLUCION Y LA GUARDO 
-    best = population[bestRowAux].copy()
-    bestFitness = fitness[bestRowAux]
+    # Evaluo la población inicial
+    fitness, best, bestFitness, pBest, pBestScore = evaluate_population(
+        mh, population, fitness, instance, pBest, pBestScore, repairType)
     
     matrixBin = population.copy()
     
+    i = population.__len__() - 1
+    
     initializationTime2 = time.time()
     
-    # mostramos nuestro fitness iniciales
-    print("------------------------------------------------------------------------------------------------------")
-    print(f"{instances} - {DS} - {instance.getBlockSizes()} - best fitness inicial: {str(bestFitness)}")
-    print("------------------------------------------------------------------------------------------------------")
-    print("iteracion: " +
-            str(0) +
-            ", best: " + str(bestFitness) +
-            ", optimo: " + str(instance.getOptimum()) +
-            ", time (s): " + str(round(initializationTime2-initializationTime1,3)) +
-            ", XPT: " + str(XPT) +
-            ", XPL: " + str(XPL) +
-            ", DIV: " + str(maxDiversity))
+    initial_log_scp_uscp(instance, DS, bestFitness, instances, initializationTime1, initializationTime2, XPT, XPL, maxDiversity, results)
+    #results.write(f'0,{str(bestFitness)},{str(round(initializationTime2-initializationTime1, 3))},{str(XPL)},{str(XPT)},{maxDiversity}\n')
     
-    results.write(f'0,{str(bestFitness)},{str(round(initializationTime2-initializationTime1, 3))},{str(XPL)},{str(XPT)},{maxDiversity}\n')
+    posibles_mejoras = None
     
     # Función objetivo para GOA, HBA, TDO, SHO y SBOA
     def fo(x):
-        x = b.aplicarBinarizacion(x.tolist(), DS[0], DS[1], best, matrixBin[i].tolist())
+        x = b.aplicarBinarizacion(x, DS, best, matrixBin[i])
         x = instance.repair(x, repairType) # Reparación de soluciones
         
         return x, instance.fitness(x) # Return de la solución reparada y valor de función objetivo
@@ -98,19 +66,18 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
     if mh == 'PO':
         iterarPO = IterarPO(fo, instance.getColumns(), pop, maxIter, 0, 1)
     
-    for iter in range(0, maxIter):
+    for iter in range(1, maxIter + 1):
         # obtengo mi tiempo inicial
         timerStart = time.time()
 
         # perturbo la poblacion con la metaheuristica, pueden usar SCA y GWO
         # en las funciones internas tenemos los otros dos for, for de individuos y for de dimensiones
-        # print(population)
         
         if mh == "SCA":
-            population = iterarSCA(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist())
+            population = iterarSCA(maxIter, iter, instance.getColumns(), population, best)
             
         if mh == "GWO":
-            population = iterarGWO(maxIter, iter, instance.getColumns(), population.tolist(), fitness.tolist(), 'MIN')
+            population = iterarGWO(maxIter, iter, instance.getColumns(), population, fitness, 'MIN')
             
         if mh == 'WOA':
             population = iterarWOA(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist())
@@ -124,7 +91,7 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
             population = iterarGA(population.tolist(), fitness, cross, muta)
             
         if mh == 'PSO':
-            population, vel = iterarPSO(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist(), pBest.tolist(), vel, 1)
+            population, vel = iterarPSO(maxIter, iter, instance.getColumns(), population, best, pBest, vel, 1)
             
         if mh == 'FOX':
             population = iterarFOX(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist())
@@ -139,7 +106,7 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
             population = iterarGOA(maxIter, iter, instance.getColumns(), population, best.tolist(), fitness.tolist(), fo, 'MIN')
             
         if mh == 'HBA':
-            population = iterarHBA(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist(), fitness.tolist(), fo, 'MIN')
+            population = iterarHBA(maxIter, iter, instance.getColumns(), population, best, fitness, fo, 'MIN')
             
         if mh == 'TDO':
             population = iterarTDO(maxIter, iter, instance.getColumns(), population.tolist(), fitness.tolist(), fo, 'MIN')
@@ -147,8 +114,8 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
         if mh == 'SHO':
             population = iterarSHO(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist(), fo, 'MIN')
             
-        if mh == 'SBOA': 
-            population = iterarSBOA(maxIter, iter, instance.getColumns(), population.tolist(), fitness.tolist(), best.tolist(), fo)
+        if mh == 'SBOA':
+            population = iterarSBOA(maxIter, iter, instance.getColumns(), population, fitness, best, fo)
             
         if mh == 'EHO':
             lb = [0] * instance.getColumns()
@@ -166,7 +133,7 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
             population = iterarHLOAScp(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist(), 0, 1)
             
         if mh == "LOA":
-            population, posibles_mejoras = iterarLOA(maxIter, population, best.tolist(), 0, 1, iter, instance.getColumns())
+            population, posibles_mejoras = iterarLOA(maxIter, population, best, 0, 1, iter, instance.getColumns())
             
         if mh == 'NO':
             population = iterarNO(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist())
@@ -175,7 +142,7 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
             population = iterarPOA(maxIter, iter, instance.getColumns(), population.tolist(), fitness.tolist(), fo, 0, 1, 'MIN')
             
         if mh == 'PO':
-            iterarPO.pob(population.tolist(), iter)
+            iterarPO.pob(population, iter)
             population = iterarPO.optimizer(iter)
             
         if mh == 'WOM':
@@ -188,67 +155,28 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
             population = iterarQSO(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist(), 0, 1)
         
         # Binarizo, calculo de factibilidad de cada individuo y calculo del fitness
-        for i in range(population.__len__()):
+        population, fitness, pBest = binarize_and_evaluate(
+            mh, population, fitness, DS, best, matrixBin, instance, 
+            repairType, pBest, pBestScore, posibles_mejoras, fo)
 
-            if mh != "GA":
-                population[i] = b.aplicarBinarizacion(population[i].tolist(), DS[0], DS[1], best, matrixBin[i])
-
-            flag, aux = instance.factibilityTest(population[i])
-            # print(aux)
-            if not flag: #solucion infactible
-                population[i] = instance.repair(population[i], repairType)
-                
-            fitness[i] = instance.fitness(population[i])
-
-            if mh == 'PSO':
-                if fitness[i] < pBestScore[i]:
-                    pBest[i] = np.copy(population[i])
-                    
-            if mh == 'LOA':
-                func, fitn = fo(posibles_mejoras[i])
-                if fitn < fitness[i]:
-                    population[i] = posibles_mejoras[i]
-
-        solutionsRanking = np.argsort(fitness) # rankings de los mejores fitness
-        
-        # conservo el best
-        if fitness[solutionsRanking[0]] < bestFitness:
-            bestFitness = fitness[solutionsRanking[0]]
-            best = population[solutionsRanking[0]]
+        # Actualizo mi mejor solucion
+        best, bestFitness = update_best_solution(population, fitness, best, bestFitness)
         
         matrixBin = population.copy()
 
-        div_t = diversidadHussain(population)
-
-        if maxDiversity < div_t: maxDiversity = div_t
-            
-        XPL, XPT, state = porcentajesXLPXPT(div_t, maxDiversity)
+        # Calculo de diversidad
+        div_t, maxDiversity, XPL, XPT = calculate_diversity(population, maxDiversity)
 
         timerFinal = time.time()
+        
         # calculo mi tiempo para la iteracion t
-        timeEjecuted = timerFinal - timerStart
-        if (iter + 1) % (maxIter // 4) == 0:
-        # if (iter+1) % 10 == 0:
-            print("iteracion: " +
-                str(iter + 1) +
-                ", best: " + str(bestFitness) +
-                ", optimo: " + str(instance.getOptimum()) +
-                ", time (s): " + str(round(timeEjecuted, 3)) +
-                ", XPT: " + str(XPT) +
-                ", XPL: " + str(XPL) +
-                ", DIV: " + str(div_t))
+        timeExecuted = timerFinal - timerStart
         
-        results.write(f'{iter + 1},{str(bestFitness)},{str(round(timeEjecuted, 3))},{str(XPL)},{str(XPT)},{str(div_t)}\n')
+        log_progress(iter, maxIter, bestFitness, instance.getOptimum(), timeExecuted, XPT, XPL, div_t, results)
         
-    print("------------------------------------------------------------------------------------------------------")
-    print("best fitness: " + str(bestFitness))
-    print("Cantidad de columnas seleccionadas: " + str(sum(best)))
-    print("------------------------------------------------------------------------------------------------------")
-    
     finalTime = time.time()
-    timeExecution = finalTime - initialTime
     
-    print("Tiempo de ejecucion (s): " + str(timeExecution))
+    final_log(bestFitness, initialTime, finalTime)
     
     results.close()
     
@@ -258,7 +186,7 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
 
     bd = BD()
     bd.insertarIteraciones(fileName, binary, id)
-    bd.insertarResultados(bestFitness, timeExecution, best, id)
+    bd.insertarResultados(bestFitness, finalTime - initialTime, best, id)
     bd.actualizarExperimento(id, 'terminado')
     
     os.remove(dirResult + mh + "_" + instances.split(".")[0] + "_" + str(id) + ".csv")

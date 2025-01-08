@@ -271,24 +271,3 @@ class IterarPO:
             self._score_exploit = (self._mega_exploit * f1_exploit) + (self._mega_exploit * f2_exploit) + ((1 - self._mega_exploit) * min(self._pf_f3) * self._f3_exploit)
 
             return self._convert()
-
-    # Graficar convergencia de exploracion y explotacion
-    def grafics(self):
-        iteraciones = np.arange(self._max_iter)
-        fig, ax = plt.subplots()
-
-        explore_per = sum(self._use_explore) / self._max_iter
-        exploit_per = sum(self._use_exploit) / self._max_iter
-
-        ax.plot(iteraciones, self._use_explore, label=f'Exploración {explore_per}%')
-        ax.plot(iteraciones, self._use_exploit, label=f'Explotación {exploit_per}%')
-
-        ax.set(xlabel='Iteraciones', ylabel='Utilizado',
-            title='Convergencia de Exploración y Explotación')
-        
-        ax.legend()
-        plt.show()
-        
-    # Getters
-    use_exploit = property(lambda self: self._use_exploit)
-    use_explore = property(lambda self: self._use_explore)

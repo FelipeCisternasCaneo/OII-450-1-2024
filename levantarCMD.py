@@ -14,7 +14,7 @@ def abrir_cmds_ejecutar_main(num_cmds):
         return
     
     # Comando para abrir una nueva ventana de cmd y ejecutar main.py
-    for i in range(num_cmds):
+    for _ in range(num_cmds):
         # Comando para abrir cmd, cambiar a la ruta actual y ejecutar main.py
         cmd_command = f'start cmd /K "cd /d {ruta_actual} && python {programa}"'
         subprocess.Popen(cmd_command, shell = True)

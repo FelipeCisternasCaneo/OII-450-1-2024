@@ -13,7 +13,6 @@ lb = [-100, -10, -100, -100, -20, -100, -1, -500, -5, -20, -600, -10, -5, -50, -
 funciones = ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12', 'F13', 'F14', 'F15', 'F16', 'F17', 'F18', 'F19', 'F20', 'F21', 'F22', 'F23']
 i = 0
 
-
 for funcion in funciones:
     # Crear una malla de puntos en el espacio de entrada
     x1 = np.linspace(lb[i], ub[i], 100)
@@ -40,7 +39,6 @@ for funcion in funciones:
         x5 = 0
         x6 = 0
         Z = np.array([f(funcion,np.array([x1, x2, x3, x4, x5, x6])) for x1, x2 in zip(X1.flatten(), X2.flatten())]).reshape(X1.shape)   
-    
     
     elif funcion == 'F21' or funcion == 'F22' or funcion == 'F23':
         x3 = 0
@@ -125,7 +123,6 @@ for funcion in funciones:
     plt.savefig(f'./Graficos_Benchmark/{funcion}.pdf')
     
     print(f'Grafico para la funcion {funcion} ha sido creado')
-    
     
     plt.close('all')
     

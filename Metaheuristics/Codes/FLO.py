@@ -1,6 +1,9 @@
 import numpy as np
 import random
 
+# FLO: Flilled Lizard Optimization
+# https://doi.org/10.1016/j.cie.2021.107224
+
 def iterarFLO(maxIter, iter, dim, population, fitness, bestSolution, fo, typeProblem, lowerBound, upperBound):    
     # Fase 1: Exploración (Hunting Strategy)
     for i in range(population.__len__()):
@@ -15,7 +18,7 @@ def iterarFLO(maxIter, iter, dim, population, fitness, bestSolution, fo, typePro
             prey = population[np.random.randint(population.__len__())]
             
         I = np.random.choice([1, 2])
-        r = np.random.normal(0,1)
+        r = np.random.normal(0, 1)
         
         # Nueva posición basada en la presa (fase de exploración)
         newPositionFL = population[i] + r * (prey - I * population[i])
@@ -29,9 +32,9 @@ def iterarFLO(maxIter, iter, dim, population, fitness, bestSolution, fo, typePro
             population[i] = newPositionFL
             fitness[i] = newFitnessFL
 
-    # Fase 2: Explotación (Moving up the tree)
+        # Fase 2: Explotación (Moving up the tree)
 
-        r2 = np.random.normal(0,1)
+        r2 = np.random.normal(0, 1)
         
         # Nueva posición para la fase de explotación (subida al árbol)
         newPositionTree = population[i] + (1 - r2) * ((upperBound - lowerBound) / (iter + 1))

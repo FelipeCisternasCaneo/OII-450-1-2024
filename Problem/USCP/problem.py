@@ -1,6 +1,6 @@
 import random
 import numpy as np
-from scipy.sparse import csr_matrix, coo_matrix
+from scipy.sparse import csr_matrix
 
 def matrix_dot_1(A, B, block_size):
     # Inicializar el resultado con ceros (es un vector de tamaño n)

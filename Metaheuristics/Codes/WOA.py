@@ -3,48 +3,54 @@ import random
 import numpy as np
 
 # Whale Optimization Algorithm (WOA)
-# doi.org/10.1016/j.advengsoft.2016.01.008
+# https://doi.org/10.1016/j.advengsoft.2016.01.008
 
 def iterarWOA(maxIter, t, dimension, population, bestSolution):
-    a = 2 - ((2 * t) / maxIter)
-    a = 2 - ((2 * t) / maxIter)
-    b = 1
+    """
+    Whale Optimization Algorithm (WOA)
+    Args:
+        maxIter (int): Maximum number of iterations.
+        t (int): Current iteration.
+        dimension (int): Number of dimensions.
+        population (list of lists): Current population of solutions.
+        bestSolution (list): Best solution found so far.
+
+    Returns:
+        list of lists: Updated population after one iteration of WOA.
+    """
     
-    
-    for i in range(population.__len__()):
-        #  p is a random number into [0,1]
-        p = random.uniform(0.0, 1.0)
-        # aplicacion de ecuacion 2.3
-        r = random.uniform(0.0, 1.0)
-        A = 2 * a * (r - a) 
-        # aplicacion de ecuacion 2.4
-        r = random.uniform(0.0, 1.0)
-        C =  2 * r
-        # l is a random number into [-1,1]
-        l = random.uniform(-1.0, 1.0)
-        # aplicacion de ecuacion 2.6
-        
-        if p < 0.5:
-            if abs(A) < 1: 
-                # aplicacion ecuacion de movimiento 2.1
-                for j in range(dimension):
-                    D = abs((C * bestSolution[j]) - population[i][j])
-                    # aplicacion ecuacion de movimiento 2.2
-                    population[i][j] = bestSolution[j] - ( A * D )
-            
-            else:
-                randomPos = random.randint(0, population.__len__() - 1) # seleccionar un individuo al azar
-                for j in range(dimension):
-                    # aplicacion de ecuacion 2.7
-                    D = abs((C * population[randomPos][j]) - population[i][j])
-                    D = abs((C * population[randomPos][j]) - population[i][j])
-                    # aplicacion de ecuacion 2.8
-                    population[i][j] = population[randomPos][j] - (A * D)
-        
-        else:
-            for j in range(dimension):
-                # aplicacion de ecuacion de movimiento 2.5
-                DPrima = bestSolution[j] - population[i][j]
-                population[i][j] = (DPrima * math.exp(b * l) * math.cos(2 * math.pi * l) ) + bestSolution[j]
-    
-    return np.array(population)
+    a = 2 - (2 * t / maxIter)
+    b = 1  # Constant for logarithmic spiral
+
+    new_population = []
+
+    for individual in population:
+        # Random numbers for conditions
+        p = random.uniform(0, 1)
+        r = random.uniform(0, 1)
+        l = random.uniform(-1, 1)
+
+        # Calculate A and C (Equations 2.3 and 2.4)
+        A = 2 * a * r - a
+        C = 2 * random.uniform(0, 1)
+
+        if p < 0.5:  # Exploitation phase
+            if abs(A) < 1:  # Encircling prey (Equation 2.1)
+                D = [abs(C * bestSolution[j] - individual[j]) for j in range(dimension)]
+                new_individual = [bestSolution[j] - A * D[j] for j in range(dimension)]
+            else:  # Search for prey (Equation 2.7)
+                random_index = random.randint(0, len(population) - 1)
+                random_individual = population[random_index]
+                D = [abs(C * random_individual[j] - individual[j]) for j in range(dimension)]
+                new_individual = [random_individual[j] - A * D[j] for j in range(dimension)]
+        else:  # Spiral updating (Equation 2.5)
+            D_prime = [bestSolution[j] - individual[j] for j in range(dimension)]
+            spiral_component = math.exp(b * l) * math.cos(2 * math.pi * l)
+            new_individual = [
+                D_prime[j] * spiral_component + bestSolution[j]
+                for j in range(dimension)
+            ]
+
+        new_population.append(new_individual)
+
+    return np.array(new_population)

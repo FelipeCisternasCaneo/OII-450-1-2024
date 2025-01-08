@@ -5,22 +5,34 @@ import opfunu.cec_based
 from BD.sqlite import BD
 
 def fitness(problem, individual):
-    fitness = 0
+    """
+    Evalúa la función de fitness para un individuo o una población.
+    """
+    # Asegurarnos de que estamos trabajando con un individuo
+    if isinstance(individual, np.ndarray) and len(individual.shape) == 2:
+        raise ValueError("La función 'fitness' solo admite un individuo, no una población completa. Asegúrate de aplicar correctamente.")
+    
+    fitness_value = 0
 
     def opfunu_cec_function(x):
         func_class = getattr(opfunu.cec_based, f"{problem}")
         return func_class().evaluate(x)
-        
-    if problem in BD.data:
-        try:
-            fitness = globals()[problem](individual)
-        except:
-            raise ValueError(f"Advertencia: La función '{problem}' no está definida.")
 
-    if problem in BD.opfunu_cec_data:
-        fitness = opfunu_cec_function(individual)
+    # Asegurar que `problem` sea un string válido
+    if isinstance(problem, str):
+        if problem in BD.data:
+            try:
+                fitness_value = globals()[problem](individual)
+            except KeyError:
+                raise ValueError(f"La función '{problem}' no está definida en el contexto global.")
+        elif problem in BD.opfunu_cec_data:
+            fitness_value = opfunu_cec_function(individual)
+        else:
+            raise ValueError(f"El problema '{problem}' no es reconocido.")
+    else:
+        raise TypeError("El parámetro 'problem' debe ser un string que identifique la función objetivo.")
 
-    return fitness
+    return fitness_value
 
 # define the function blocks
 def prod(it):
@@ -51,7 +63,6 @@ def F3(x):  #Schwefel's Function No.1.2 (Double-Sum or Rotated Hyper-Ellipsoid F
     for i in range(1, dim):
         o = o + (np.sum(x[0:i])) ** 2
 
-        
     return o
 
 def F4(x):  #Schwefel's Function No.2.21 (or MaxMod Function) (CEC 2008 F2)
@@ -107,7 +118,6 @@ def F10(x): #Ackley's Function No.01 (or Ackley's Path Function) (CEC 2014 F5)
     return o
 
 def F11(x): #Griewank's Function (CEC 2014 F7)
-    dim = len(x)
     w = [i for i in range(len(x))]
     w = [i + 1 for i in w]
     o = np.sum(x ** 2) / 4000 - prod(np.cos(x / np.sqrt(w))) + 1
