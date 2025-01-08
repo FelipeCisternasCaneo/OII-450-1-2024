@@ -7,7 +7,7 @@ from Solver.solverUSCP import solverUSCP
 from BD.sqlite import BD
 
 from Util.log import log_experimento, log_error, log_final, log_fecha_hora
-from Util.util import parse_parametros
+from Util.util import parse_parametros, verificar_y_crear_carpetas
 
 def ejecutar_ben(id, experimento, parametrosInstancia, parametros):
     """Ejecuta el problema tipo BEN."""
@@ -23,7 +23,8 @@ def ejecutar_ben(id, experimento, parametrosInstancia, parametros):
 def ejecutar_problema_scp_uscp(id, instancia, ds, parametros, solver_func):
     """Ejecuta problemas de tipo SCP o USCP."""
     repair = parametros["repair"]
-    parMH = parametros.get("parMH", "")
+    
+    parMH = parametros["cros"]
     
     solver_func(
         id, parametros["mh"], int(parametros["iter"]),
@@ -37,10 +38,11 @@ def procesar_experimento(data, bd):
     datosInstancia = bd.obtenerInstancia(id_instancia)
 
     parametros = parse_parametros(data[0][4])
+    
     parametros.update({
         "mh": data[0][2],
         "instancia": datosInstancia[0][2],})
-
+    
     problema = datosInstancia[0][1]
 
     # Validación de iteraciones
@@ -50,28 +52,31 @@ def procesar_experimento(data, bd):
         
         return
 
-    try:
-        bd.actualizarExperimento(id, "ejecutando")
+    #try:
+    bd.actualizarExperimento(id, "ejecutando")
 
-        if problema == "BEN":
-            ejecutar_ben(id, data[0][1], datosInstancia[0][4], parametros)
+    if problema == "BEN":
+        ejecutar_ben(id, data[0][1], datosInstancia[0][4], parametros)
 
-        elif problema == "SCP":
-            ejecutar_problema_scp_uscp(id, f"scp{datosInstancia[0][2]}", data[0][3], parametros, solverSCP)
+    elif problema == "SCP":
+        ejecutar_problema_scp_uscp(id, f"scp{datosInstancia[0][2]}", data[0][3], parametros, solverSCP)
 
-        elif problema == "USCP":
-            ejecutar_problema_scp_uscp(id, f"uscp{datosInstancia[0][2][1:]}", data[0][3], parametros, solverUSCP)
+    elif problema == "USCP":
+        ejecutar_problema_scp_uscp(id, f"uscp{datosInstancia[0][2][1:]}", data[0][3], parametros, solverUSCP)
 
-    except ValueError as ve:
+    '''except ValueError as ve:
         log_error(id, f"Error de valor: {str(ve)}")
-        bd.actualizarExperimento(id, "error")
+        bd.actualizarExperimento(id, "error")'''
 
-    except Exception as e:
+    '''except Exception as e:
         log_error(id, f"Error general: {str(e)}")
-        bd.actualizarExperimento(id, "error")
+        bd.actualizarExperimento(id, "error")'''
 
 def main():
     """Función principal que gestiona la ejecución de los experimentos."""
+    
+    verificar_y_crear_carpetas()
+    
     bd = BD()
     data = bd.obtenerExperimento()
     

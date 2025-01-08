@@ -218,6 +218,29 @@ def parse_parametros(parametrosMH):
     
     return params
 
+def verificar_y_crear_carpetas():
+    """
+    Verifica que las carpetas y subcarpetas dentro de 'Resultados' estén creadas.
+    Si no existen, las crea automáticamente.
+    """
+    
+    base_dir = "./Resultados"
+    
+    # Definir las subcarpetas necesarias
+    subcarpetas = [
+        "Transitorio",
+        "Graficos",
+        "Best",
+        "boxplot",
+        "violinplot"
+    ]
+
+    # Crear las carpetas si no existen
+    for subcarpeta in subcarpetas:
+        ruta_completa = os.path.join(base_dir, subcarpeta)
+        if not os.path.exists(ruta_completa):
+            os.makedirs(ruta_completa)
+
 def invertirArray(vector):
     return vector[::-1]
 

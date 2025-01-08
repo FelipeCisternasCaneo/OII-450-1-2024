@@ -52,7 +52,6 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
     initializationTime2 = time.time()
     
     initial_log_scp_uscp(instance, DS, bestFitness, instances, initializationTime1, initializationTime2, XPT, XPL, maxDiversity, results)
-    #results.write(f'0,{str(bestFitness)},{str(round(initializationTime2-initializationTime1, 3))},{str(XPL)},{str(XPT)},{maxDiversity}\n')
     
     posibles_mejoras = None
     
@@ -65,7 +64,7 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
     
     if mh == 'PO':
         iterarPO = IterarPO(fo, instance.getColumns(), pop, maxIter, 0, 1)
-    
+        
     for iter in range(1, maxIter + 1):
         # obtengo mi tiempo inicial
         timerStart = time.time()
@@ -80,39 +79,42 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
             population = iterarGWO(maxIter, iter, instance.getColumns(), population, fitness, 'MIN')
             
         if mh == 'WOA':
-            population = iterarWOA(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist())
+            population = iterarWOA(maxIter, iter, instance.getColumns(), population, best)
             
         if mh == 'PSA':
-            population = iterarPSA(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist())
+            population = iterarPSA(maxIter, iter, instance.getColumns(), population, best)
             
         if mh == "GA":
-            cross = float(param.split(";")[0].split(":")[1])
-            muta = float(param.split(";")[1].split(":")[1])
-            population = iterarGA(population.tolist(), fitness, cross, muta)
+            partes = param.split(";")
+            
+            cross = float(partes[0])
+            muta = float(partes[1].split(":")[1])
+            
+            population = iterarGA(population, fitness, cross, muta)
             
         if mh == 'PSO':
             population, vel = iterarPSO(maxIter, iter, instance.getColumns(), population, best, pBest, vel, 1)
             
         if mh == 'FOX':
-            population = iterarFOX(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist())
+            population = iterarFOX(maxIter, iter, instance.getColumns(), population, best)
             
         if mh == 'EOO':
             population = iterarEOO(maxIter, iter, population.tolist(), best.tolist())
             
         if mh == 'RSA':
-            population = iterarRSA(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist(), 0, 1)
+            population = iterarRSA(maxIter, iter, instance.getColumns(), population, best, 0, 1)
             
         if mh == 'GOA':
-            population = iterarGOA(maxIter, iter, instance.getColumns(), population, best.tolist(), fitness.tolist(), fo, 'MIN')
+            population = iterarGOA(maxIter, iter, instance.getColumns(), population, best, fitness, fo, 'MIN')
             
         if mh == 'HBA':
             population = iterarHBA(maxIter, iter, instance.getColumns(), population, best, fitness, fo, 'MIN')
             
         if mh == 'TDO':
-            population = iterarTDO(maxIter, iter, instance.getColumns(), population.tolist(), fitness.tolist(), fo, 'MIN')
+            population = iterarTDO(maxIter, iter, instance.getColumns(), population, fitness, fo, 'MIN')
             
         if mh == 'SHO':
-            population = iterarSHO(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist(), fo, 'MIN')
+            population = iterarSHO(maxIter, iter, instance.getColumns(), population, best, fo, 'MIN')
             
         if mh == 'SBOA':
             population = iterarSBOA(maxIter, iter, instance.getColumns(), population, fitness, best, fo)
@@ -121,25 +123,25 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
             lb = [0] * instance.getColumns()
             ub = [1] * instance.getColumns()
             
-            population = iterarEHO(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist(), lb, ub, fitness)
+            population = iterarEHO(maxIter, iter, instance.getColumns(), population, best, lb, ub, fitness)
             
         if mh == 'EBWOA':
-            population = iterarEBWOA(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist(), 0, 1)
+            population = iterarEBWOA(maxIter, iter, instance.getColumns(), population, best, 0, 1)
             
         if mh == 'FLO': 
             population = iterarFLO(maxIter, iter, instance.getColumns(), population, fitness, best, fo, 'MIN', 0, 1)
             
         if mh == 'HLOA':
-            population = iterarHLOAScp(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist(), 0, 1)
+            population = iterarHLOAScp(maxIter, iter, instance.getColumns(), population, best, 0, 1)
             
         if mh == "LOA":
             population, posibles_mejoras = iterarLOA(maxIter, population, best, 0, 1, iter, instance.getColumns())
             
         if mh == 'NO':
-            population = iterarNO(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist())
+            population = iterarNO(maxIter, iter, instance.getColumns(), population, best)
             
         if mh == 'POA':
-            population = iterarPOA(maxIter, iter, instance.getColumns(), population.tolist(), fitness.tolist(), fo, 0, 1, 'MIN')
+            population = iterarPOA(maxIter, iter, instance.getColumns(), population, fitness, fo, 0, 1, 'MIN')
             
         if mh == 'PO':
             iterarPO.pob(population, iter)
@@ -149,10 +151,10 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
             lb = [0] * instance.getColumns()
             ub = [1] * instance.getColumns()
             
-            population = iterarWOM(maxIter, iter, instance.getColumns(), population.tolist(), fitness.tolist(), lb, ub, fo)
+            population = iterarWOM(maxIter, iter, instance.getColumns(), population, fitness, lb, ub, fo)
         
         if mh == 'QSO':
-            population = iterarQSO(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist(), 0, 1)
+            population = iterarQSO(maxIter, iter, instance.getColumns(), population, best, 0, 1)
         
         # Binarizo, calculo de factibilidad de cada individuo y calculo del fitness
         population, fitness, pBest = binarize_and_evaluate(
