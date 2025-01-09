@@ -1,5 +1,7 @@
 import numpy as np
+
 from scipy import special as scyesp
+from .get_top_k import get_top_k
 
 # === Funciones de Transferencia ===
 TRANSFER_FUNCTIONS = {
@@ -25,17 +27,20 @@ TRANSFER_FUNCTIONS = {
 }
 
 # === Funciones de Binarización ===
-def gvp_binarization(continuous_values, top_k=0.06):
+'''def gvp_binarization(continuous_values):
     """
     Implementa el enfoque de Great Value Priority (GVP) con optimización.
     
     Args:
         continuous_values (np.ndarray): Valores continuos a transformar.
-        top_k (float): Porcentaje de elementos que serán binarizados como 1.
+        top_k (float): Porcentaje de elementos que serán binarizados como 1 (depende de la metaheurística, default = 0.06).
     
     Returns:
         np.ndarray: Representación binaria.
     """
+    
+    top_k = get_top_k(mh = "SBOA")
+    
     continuous_values = np.array(continuous_values)
     num_top = int(top_k * len(continuous_values))
     
@@ -45,7 +50,14 @@ def gvp_binarization(continuous_values, top_k=0.06):
     # Binariza según el umbral
     binary_values = (continuous_values >= -threshold).astype(int)
     
-    return binary_values
+    return binary_values'''
+
+def gvp_binarization_numba(X, num_activated):
+    partition_indices = np.argpartition(-X, num_activated)[:num_activated]
+    B = np.zeros_like(X, dtype=np.int32)
+    B[partition_indices] = 1
+    
+    return B
 
 BINARIZATION_FUNCTIONS = {
     "STD": lambda step1, bestBin, indBin: np.where(step1 >= np.random.rand(len(step1)), 1, 0),
@@ -56,7 +68,7 @@ BINARIZATION_FUNCTIONS = {
         1,
         np.where((step1 > 1 / 3) & (step1 <= (1 / 2) * (1 + 1 / 3)), indBin, 0),
     ),
-    "GVP": lambda step1: gvp_binarization(step1, top_k=0.06)  # Asume el 6% superior
+    "GVP": lambda step1: gvp_binarization_numba(step1, num_activated=int(0.035 * len(step1))),
 }
 
 def aplicarBinarizacion(ind, ds, bestSolutionBin, indBin):
@@ -83,14 +95,17 @@ def aplicarBinarizacion(ind, ds, bestSolutionBin, indBin):
     
     try:
         step1 = TRANSFER_FUNCTIONS[transferFunction](ind)
+    
     except Exception as e:
         raise ValueError(f"Error en la función de transferencia '{transferFunction}': {e}")
 
     try:
         if binarizationFunction == "GVP":
             individuoBin = BINARIZATION_FUNCTIONS[binarizationFunction](step1)
+        
         else:
             individuoBin = BINARIZATION_FUNCTIONS[binarizationFunction](step1, bestSolutionBin, indBin)
+        
     except Exception as e:
         raise ValueError(f"Error en la función de binarización '{binarizationFunction}': {e}")
 

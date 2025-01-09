@@ -92,14 +92,14 @@ def solverUSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
 
     # Función objetivo para GOA, HBA, TDO y SHO
     def fo(x):
-        x = b.aplicarBinarizacion(population[i].tolist(), DS[0], DS[1], best, matrixBin[i])
+        x = b.aplicarBinarizacion(population[i], DS, best, matrixBin[i])
         x = instance.repair(x, repairType) # Reparación de soluciones
         return x, instance.fitness(x) # Return de la solución reparada y valor de función objetivo
     
     if mh == 'PO':
         iterarPO = IterarPO(fo, instance.getColumns(), pop, maxIter, 0, 1)
     
-    for iter in range(0, maxIter):
+    for iter in range(1, maxIter + 1):
         # obtengo mi tiempo inicial
         timerStart = time.time()
         
@@ -153,7 +153,7 @@ def solverUSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
             population = iterarSHO(maxIter, iter, instance.getColumns(), population.tolist(), best.tolist(), fo, 'MIN')
             
         if mh == 'SBOA': 
-            population = iterarSBOA(maxIter, iter, instance.getColumns(), population.tolist(), fitness.tolist(), best.tolist(), fo)
+            population = iterarSBOA(maxIter, iter, instance.getColumns(), population, fitness, best, fo)
             
         if mh == 'EHO':
             lb = [0] * instance.getColumns()
@@ -192,7 +192,7 @@ def solverUSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
         for i in range(population.__len__()):
 
             if mh != "GA":
-                population[i] = b.aplicarBinarizacion(population[i].tolist(), DS[0], DS[1], best, matrixBin[i])
+                population[i] = b.aplicarBinarizacion(population[i], DS, best, matrixBin[i])
 
             flag, aux = instance.factibilityTest(population[i])
             # print(aux)

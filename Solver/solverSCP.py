@@ -8,7 +8,7 @@ from Metaheuristics.imports import iterarGWO, iterarSCA, iterarWOA, iterarPSA, i
 from Metaheuristics.imports import iterarPSO, iterarFOX, iterarEOO, iterarRSA, iterarGOA
 from Metaheuristics.imports import iterarHBA, iterarTDO, iterarSHO, iterarSBOA, iterarEHO
 from Metaheuristics.imports import iterarEBWOA, iterarFLO, iterarHLOAScp, iterarLOA, iterarNO
-from Metaheuristics.imports import iterarPOA, IterarPO, iterarWOM, iterarQSO
+from Metaheuristics.imports import iterarPOA, IterarPO, iterarWOM, iterarQSO, iterarAOA
 
 from Diversity.Codes.diversity import initialize_diversity, calculate_diversity
 from Discretization import discretization as b
@@ -155,6 +155,9 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
         
         if mh == 'QSO':
             population = iterarQSO(maxIter, iter, instance.getColumns(), population, best, 0, 1)
+            
+        if mh == 'AOA':
+            population = iterarAOA(maxIter, iter, instance.getColumns(), population, best)
         
         # Binarizo, calculo de factibilidad de cada individuo y calculo del fitness
         population, fitness, pBest = binarize_and_evaluate(

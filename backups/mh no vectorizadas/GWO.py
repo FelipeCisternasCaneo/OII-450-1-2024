@@ -1,7 +1,7 @@
 import numpy as np
 import random
 
-from util import util
+from Util import util
 
 # Grey Wolf Optimizer (GWO)
 # https://doi.org/10.1016/j.advengsoft.2013.12.007

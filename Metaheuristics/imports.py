@@ -22,6 +22,7 @@ from Metaheuristics.Codes.PO import IterarPO
 from Metaheuristics.Codes.POA import iterarPOA
 from Metaheuristics.Codes.QSO import iterarQSO
 from Metaheuristics.Codes.WOM import iterarWOM
+from Metaheuristics.Codes.AOA import iterarAOA
 
 # Diccionario central de metaheurísticas
 metaheuristics = {
@@ -49,5 +50,6 @@ metaheuristics = {
     "PO": IterarPO,
     "POA": iterarPOA,
     "QSO": iterarQSO,
-    "WOM": iterarWOM
+    "WOM": iterarWOM,
+    "AOA": iterarAOA
 }
