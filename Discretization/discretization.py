@@ -52,11 +52,29 @@ TRANSFER_FUNCTIONS = {
     
     return binary_values'''
 
-def gvp_binarization_numba(X, num_activated):
+'''def gvp_binarization_numba(X, num_activated):
     partition_indices = np.argpartition(-X, num_activated)[:num_activated]
     B = np.zeros_like(X, dtype=np.int32)
     B[partition_indices] = 1
     
+    return B'''
+
+def gvp_binarization(X):
+
+    X = np.array(X)
+
+    indices_sorted = np.argsort(-X) + 1 
+
+    I = np.zeros_like(indices_sorted)
+    
+    for rank, original_index in enumerate(indices_sorted):
+        I[original_index - 1] = rank + 1  
+
+    B = np.array([
+        1 if I[j] > I[(j + 1) % len(I)] else 0
+        for j in range(len(I))
+    ])
+
     return B
 
 BINARIZATION_FUNCTIONS = {
@@ -68,7 +86,7 @@ BINARIZATION_FUNCTIONS = {
         1,
         np.where((step1 > 1 / 3) & (step1 <= (1 / 2) * (1 + 1 / 3)), indBin, 0),
     ),
-    "GVP": lambda step1: gvp_binarization_numba(step1, num_activated=int(0.035 * len(step1))),
+    "GVP": lambda step1,  bestBin, indBin: gvp_binarization(step1)
 }
 
 def aplicarBinarizacion(ind, ds, bestSolutionBin, indBin):
@@ -100,11 +118,7 @@ def aplicarBinarizacion(ind, ds, bestSolutionBin, indBin):
         raise ValueError(f"Error en la función de transferencia '{transferFunction}': {e}")
 
     try:
-        if binarizationFunction == "GVP":
-            individuoBin = BINARIZATION_FUNCTIONS[binarizationFunction](step1)
-        
-        else:
-            individuoBin = BINARIZATION_FUNCTIONS[binarizationFunction](step1, bestSolutionBin, indBin)
+        individuoBin = BINARIZATION_FUNCTIONS[binarizationFunction](step1, bestSolutionBin, indBin)
         
     except Exception as e:
         raise ValueError(f"Error en la función de binarización '{binarizationFunction}': {e}")
