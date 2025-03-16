@@ -1,8 +1,8 @@
 import numpy as np
 import random
 
-# Flilled Lizard Optimization (FLO)
-# https://doi.org/10.1016/j.cie.2021.107224
+# Frilled Lizard Optimization (FLO)
+# https://doi.org/10.32604/cmc.2024.053189
 
 def iterarFLO(maxIter, iter, dim, population, fitness, bestSolution, fo, typeProblem, lowerBound, upperBound):    
     # Fase 1: Exploración (Hunting Strategy)

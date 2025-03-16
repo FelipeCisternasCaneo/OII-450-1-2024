@@ -2,7 +2,7 @@ import numpy as np
 import random
 
 # Tasmanian Devil Optimization (TDO)
-# Referencia: https://doi.org/10.1109/ACCESS.2022.3151641
+# https://doi.org/10.1109/ACCESS.2022.3151641
 
 def iterarTDO(maxIter, it, dim, population, fitness, function, typeProblem):
     """
