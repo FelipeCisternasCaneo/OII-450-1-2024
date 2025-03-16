@@ -2,7 +2,7 @@ import random
 import numpy as np
 from Util.util import selectionSort
 
-# Genetic Algorithm
+# Genetic Algorithm (GA)
 
 def selectParent(population, fitness):
     """

@@ -1,7 +1,7 @@
 import numpy as np
 import random
 
-# FLO: Flilled Lizard Optimization
+# Flilled Lizard Optimization (FLO)
 # https://doi.org/10.1016/j.cie.2021.107224
 
 def iterarFLO(maxIter, iter, dim, population, fitness, bestSolution, fo, typeProblem, lowerBound, upperBound):    

@@ -1,6 +1,9 @@
 import numpy as np
 from scipy.special import gamma
 
+# Enhanced Beluga Whale Optimization Algorithm (EBWOA)
+# https://doi.org/10.1007/s11518-024-5608-x
+
 def iterarEBWOA(maxIter, t, dimension, population, bestSolution, lb, ub):
     population = np.array(population)
     WF = 0.1 - 0.05 * (t / maxIter)  # Whale fall probability

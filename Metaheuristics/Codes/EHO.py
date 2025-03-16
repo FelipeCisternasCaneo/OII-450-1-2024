@@ -1,6 +1,8 @@
 import numpy as np
 
-# Elk Herd Optimization (EHO)
+# Elk Herd Optimizer (EHO)
+# https://doi.org/10.1007/s10462-023-10680-4
+
 def iterarEHO(maxIter, it, dim, population, bestSolution, lb, ub, fitness):
     N = len(population)
     MalesRate = 0.2  # Percentage of males in the population

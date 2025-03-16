@@ -1,7 +1,7 @@
 import numpy as np
 import math
 
-# Gannet optimization algorithm
+# Gannet Optimization Algorithm (GOA)
 # https://doi.org/10.1016/j.matcom.2022.06.007
 
 def V(x):

@@ -1,7 +1,7 @@
 import random
 import numpy as np
 
-# Pendulum Search Algorithm
+# Pendulum Search Algorithm (PSA)
 # https://doi.org/10.3390/a15060214
 
 def iterarPSA(maxIter, t, dimension, population, bestSolution):

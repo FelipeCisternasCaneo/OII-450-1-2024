@@ -1,5 +1,8 @@
 import numpy as np
 
+# Arithmetic Optimization Algorithm (AOA)
+# https://doi.org/10.1016/j.cma.2020.113609
+
 def iterarAOA(max_iterations, current_iteration, dim, solutions, bestSolution):
     solutions = np.array(solutions)
     bestSolution = np.array(bestSolution)

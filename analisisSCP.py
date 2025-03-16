@@ -5,10 +5,11 @@ import os
 import seaborn as sns
 import json
 
-from Util import util
-from BD.sqlite import BD
+from Util.util import writeTofile
 from Util.log import escribir_resumenes
+from BD.sqlite import BD
 
+# Cargar configuración desde el JSON
 CONFIG_FILE = './util/json/dir.json'
 EXPERIMENTS_FILE = './util/json/experiments_config.json'
 
@@ -26,15 +27,17 @@ DIR_GRAFICOS = DIRS["graficos"]
 DIR_BEST = DIRS["best"]
 DIR_BOXPLOT = DIRS["boxplot"]
 DIR_VIOLIN = DIRS["violinplot"]
+DIR_FITNESS = DIRS["fitness"]
+DIR_RESUMEN = DIRS["resumen"]
 
-GRAFICOS = True
+# Configuración global
+GRAFICOS = False
 MHS_LIST = EXPERIMENTS["mhs"]
-COLORS = ['r', 'g']
 
 # Clase para almacenar resultados
 class InstancesMhs:
     def __init__(self):
-        self.div, self.fitness, self.time = [], [], []
+        self.div, self.fitness, self.rawfitness, self.time = [], [], [], []
         self.xpl, self.xpt = [], []
         self.bestFitness, self.bestTime = [], []
 
@@ -45,106 +48,43 @@ bd = BD()
 
 def actualizar_datos(mhs_instances, mh, archivo_fitness, data):
     instancia_mh = mhs_instances[mh]
+    instancia_mh.rawfitness.append(data['fitness'])
     instancia_mh.fitness.append(np.min(data['fitness']))
     instancia_mh.time.append(np.round(np.sum(data['time']), 3))
     instancia_mh.xpl.append(np.round(np.mean(data['XPL']), 2))
     instancia_mh.xpt.append(np.round(np.mean(data['XPT']), 2))
-    
     archivo_fitness.write(f'{mh}, {np.min(data["fitness"])}\n')
 
-def graficar_datos(iteraciones, fitness, xpl, xpt, tiempo, mh, problem, corrida, binarizacion):
+def graficar_datos(iteraciones, fitness, xpl, xpt, tiempo, mh, problem, corrida):
     # Gráfico de convergencia
     _, ax = plt.subplots()
-    ax.plot(iteraciones, fitness, marker='o')  # Usa un marcador para visualizar cada iteración
-    ax.set_title(f'Convergence {mh} \n scp{problem} - Run {corrida} - ({binarizacion})')
+    ax.plot(iteraciones, fitness)
+    ax.set_title(f'Convergence {mh} \n {problem} run {corrida}')
     ax.set_ylabel("Fitness")
     ax.set_xlabel("Iteration")
-    plt.savefig(f'{DIR_GRAFICOS}Convergence_{mh}_SCP_{problem}_{corrida}_{binarizacion}.pdf')
+    plt.savefig(f'{DIR_GRAFICOS}Convergence_{mh}_{problem}_{corrida}.pdf')
     plt.close('all')
 
     # Gráfico XPL vs XPT
     _, axPER = plt.subplots()
     axPER.plot(iteraciones, xpl, color="r", label=r"$\overline{XPL}$" + ": " + str(np.round(np.mean(xpl), decimals=2)) + "%")
     axPER.plot(iteraciones, xpt, color="b", label=r"$\overline{XPT}$" + ": " + str(np.round(np.mean(xpt), decimals=2)) + "%")
-    axPER.set_title(f'XPL% - XPT% {mh} \n scp{problem} Run {corrida} - ({binarizacion})')
+    axPER.set_title(f'XPL% - XPT% {mh} \n {problem} run {corrida}')
     axPER.set_ylabel("Percentage")
     axPER.set_xlabel("Iteration")
     axPER.legend(loc='upper right')
-    plt.savefig(f'{DIR_GRAFICOS}Percentage_{mh}_SCP_{problem}_{corrida}_{binarizacion}.pdf')
+    plt.savefig(f'{DIR_GRAFICOS}Percentage_{mh}_{problem}_{corrida}.pdf')
     plt.close('all')
     
     # Gráfico de tiempo por iteración
     _, axTime = plt.subplots()
     axTime.plot(iteraciones, tiempo, color='g', label='Time per Iteration')
-    axTime.set_title(f'Time per Iteration {mh} \n scp{problem} Run {corrida} - ({binarizacion})')
+    axTime.set_title(f'Time per Iteration {mh} \n {problem} run {corrida}')
     axTime.set_ylabel("Time (s)")
     axTime.set_xlabel("Iteration")
     axTime.legend(loc='upper right')
-    plt.savefig(f'{DIR_GRAFICOS}Time_{mh}_SCP_{problem}_{corrida}_{binarizacion}.pdf')
+    plt.savefig(f'{DIR_GRAFICOS}Time_{mh}_{problem}_{corrida}.pdf')
     plt.close('all')
-
-
-def graficar_boxplot_violin(instancia, binarizacion):
-    direccion_datos = f'{DIR_RESULTADO}fitness_SCP_{instancia}_{binarizacion}.csv'
-    datos = pd.read_csv(direccion_datos)
-    
-    # Boxplot
-    plt.figure(figsize=(10, 6))
-    sns.boxplot(x='MH', y=' FITNESS', data=datos)
-    plt.title(f'Boxplot Fitness \n scp{instancia} - {binarizacion}')
-    plt.savefig(f'{DIR_BOXPLOT}boxplot_fitness_SCP_{instancia}_{binarizacion}.pdf')
-    plt.close()
-    
-    # Violinplot
-    plt.figure(figsize=(10, 6))
-    sns.violinplot(x='MH', y=' FITNESS', data=datos)
-    plt.title(f'Violinplot Fitness \n scp{instancia} - {binarizacion}')
-    plt.savefig(f'{DIR_VIOLIN}violinplot_fitness_SCP_{instancia}_{binarizacion}.pdf')
-    plt.close()
-    
-# Procesar archivos de resultados
-def procesar_archivos(instancia, blob, archivo_fitness, bin_actual):
-    corrida = 1
-    
-    for nombre_archivo, contenido, binarizacion in blob:
-        # Extraer la metaheurística y la instancia desde el nombre del archivo
-        try:
-            mh, _ = nombre_archivo.split('_')[:2] # Confirmar que el nombre del archivo tiene el formato esperado
-        except ValueError:
-            print(f"[ADVERTENCIA] El archivo '{nombre_archivo}' no tiene el formato esperado. Se omite.")
-            continue
-
-        # Filtrar por la binarización actual
-        if binarizacion.strip() != bin_actual:
-            #print(f"[DEBUG] Saltando archivo: {nombre_archivo}, binarización esperada: {bin_actual}, binarización encontrada: {binarizacion}")
-            continue
-
-        # Procesar el archivo
-        direccion_destino = f'{DIR_TRANSITORIO}{nombre_archivo}.csv'
-        util.writeTofile(contenido, direccion_destino)
-
-        try:
-            data = pd.read_csv(direccion_destino)
-        except Exception as e:
-            print(f"[ERROR] No se pudo leer el archivo '{direccion_destino}': {e}")
-            os.remove(direccion_destino)
-            continue
-
-        if mh in MHS_LIST:
-            # Actualizar datos para la metaheurística
-            actualizar_datos(mhs_instances, mh, archivo_fitness, data)
-            mhs_instances[mh].bestFitness = data['fitness']
-            mhs_instances[mh].bestTime = data['time']
-
-        # Generar gráficos
-        if GRAFICOS:
-            graficar_datos(data['iter'], data['fitness'], data['XPL'], data['XPT'], data['time'], mh, instancia, corrida, binarizacion)
-        
-        os.remove(direccion_destino)
-        
-        corrida += 1
-
-    archivo_fitness.close()
 
 def graficar_mejores_resultados(instancia, mhs_instances, binarizacion):
     mejor_fitness = float('inf')
@@ -187,53 +127,114 @@ def graficar_mejores_resultados(instancia, mhs_instances, binarizacion):
         plt.legend()
         plt.savefig(f'{DIR_BEST}time_SCP_{instancia}_{binarizacion}.pdf')
         plt.close()
+        
+def graficar_boxplot_violin(instancia):
+    direccion_datos = f'{DIR_RESULTADO}fitness_{instancia}.csv'
+    
+    datos = pd.read_csv(direccion_datos)
+    
+    figFitness, axFitness = plt.subplots()
+    axFitness = sns.boxplot(x = 'MH', y = ' FITNESS', data=datos)
+    axFitness.set_title(f'Fitness \n{instancia}', loc = "center", fontdict = {'fontsize': 10, 'fontweight': 'bold', 'color': 'black'})
+
+    axFitness.set_title(f'Fitness \n{instancia}', loc = "center", fontdict = {'fontsize': 10, 'fontweight': 'bold', 'color': 'black'})
+    axFitness.set_ylabel("Fitness")
+    axFitness.set_xlabel("Metaheuristics")
+    figFitness.savefig(DIR_RESULTADO + "/boxplot/boxplot_fitness_" + instancia + '.pdf')
+    
+    plt.close('all')
+    
+    figFitness, axFitness = plt.subplots()
+    axFitness = sns.violinplot(x = 'MH', y = ' FITNESS', data = datos, gridsize= 50)
+    axFitness.set_title(f'Fitness \n{instancia}', loc = "center", fontdict = {'fontsize': 10, 'fontweight': 'bold', 'color': 'black'})
+    axFitness.set_ylabel("Fitness")
+    axFitness.set_xlabel("Metaheuristics")
+    figFitness.savefig(DIR_RESULTADO + "/violinplot/violinplot_fitness_" + instancia + '.pdf')
+    
+    plt.close('all')
+
+# Procesar archivos de resultados
+def procesar_archivos(instancia, blob, archivo_fitness, bin_actual = ""):
+    corrida = 1
+    
+    for nombre_archivo, contenido in blob:
+        # Extraer la metaheurística y la instancia desde el nombre del archivo
+        try:
+            mh, _ = nombre_archivo.split('_')[:2] # Confirmar que el nombre del archivo tiene el formato esperado
+        except ValueError:
+            print(f"[ADVERTENCIA] El archivo '{nombre_archivo}' no tiene el formato esperado. Se omite.")
+            continue
+
+        # Procesar el archivo
+        direccion_destino = f'{DIR_TRANSITORIO}{nombre_archivo}.csv'
+        writeTofile(contenido, direccion_destino)
+
+        try:
+            data = pd.read_csv(direccion_destino)
+        except Exception as e:
+            print(f"[ERROR] No se pudo leer el archivo '{direccion_destino}': {e}")
+            os.remove(direccion_destino)
+            continue
+
+        if mh in MHS_LIST:
+            # Actualizar datos para la metaheurística
+            actualizar_datos(mhs_instances, mh, archivo_fitness, data)
+            mhs_instances[mh].bestFitness = data['fitness']
+            mhs_instances[mh].bestTime = data['time']
+
+        # Generar gráficos
+        if GRAFICOS:
+            graficar_datos(data['iter'], data['fitness'], data['XPL'], data['XPT'], data['time'], mh, instancia, corrida)
+        
+        os.remove(direccion_destino)
+        
+        corrida += 1
+
+    archivo_fitness.close()
+
+
+lista_instancias = [func for func in EXPERIMENTS["instancias"]["SCP"]]
+lista_optimos = bd.obtenerOptimosBenConNombres(lista_instancias)
+
+print("lista_instancias: ", lista_instancias)
+print("lista_optimos: ", lista_optimos)
 
 # Procesar cada instancia
-lista_instancias = ', '.join([f'"{func}"' for func in EXPERIMENTS["instancias"]["SCP"]])
-lista_bin = EXPERIMENTS["DS_actions"]
-
-instancias = bd.obtenerInstancias(lista_instancias)
-
-for instancia in instancias:
-    print(f"Procesando instancia: scp{instancia[1]}")
-    blob = bd.obtenerArchivos(instancia[1])
+for instancia in bd.obtenerInstancias(lista_instancias):
+    print(f"Procesando instancia: {instancia[1]}")
     
-    #print (blob)
+    blob = bd.obtenerArchivos(instancia[1])
 
+    # Validar si hay experimentos para la instancia
     if not blob:
-        print(f"Advertencia: La instancia scp'{instancia[1]}' no tiene experimentos asociados. Saltando esta instancia...")
+        print(f"Advertencia: La instancia '{instancia[1]}' no tiene experimentos asociados. Saltando esta instancia.")
+        
         continue
 
-    for binarizacion in lista_bin:
-        print(f"Procesando binarización: {binarizacion}")
+    # Crear archivos
+    archivoResumenFitness = open(f'{DIR_RESUMEN}SCP/Fitness/resumen_fitness_{instancia[1]}.csv', 'w')
+    archivoResumenTimes = open(f'{DIR_RESUMEN}SCP/Times/resumen_times_{instancia[1]}.csv', 'w')
+    archivoResumenPercentage = open(f'{DIR_RESUMEN}SCP/Percentage (XPL, XPT)/resumen_percentage_{instancia[1]}.csv', 'w')
+    archivoFitness = open(f'{DIR_FITNESS}fitness_{instancia[1]}.csv', 'w')
 
-        # Crear archivos de salida
-        archivoResumenFitness = open(f'{DIR_RESULTADO}resumen_fitness_SCP_{instancia[1]}_{binarizacion}.csv', 'w')
-        archivoResumenTimes = open(f'{DIR_RESULTADO}resumen_times_SCP_{instancia[1]}_{binarizacion}.csv', 'w')
-        archivoResumenPercentage = open(f'{DIR_RESULTADO}resumen_percentage_SCP_{instancia[1]}_{binarizacion}.csv', 'w')
-        archivoFitness = open(f'{DIR_RESULTADO}fitness_SCP_{instancia[1]}_{binarizacion}.csv', 'w')
+    # Escribir encabezados
+    archivoResumenFitness.write("instance, best, worst, avg. fitness, std fitness, avg. iterations to best, avg. convergence rate, avg. optimum distance\n")
+    archivoResumenTimes.write("instance, min time (s), max time (s), avg. time (s), std time (s)\n")
+    archivoResumenPercentage.write("instance, avg. XPL%, avg. XPT%\n")
+    archivoFitness.write("MH, FITNESS\n")
 
-        # Escribir encabezados
-        archivoResumenFitness.write("instance, best, avg. fitness, std fitness\n")
-        archivoResumenTimes.write("instance, min time (s), avg. time (s), std time (s)\n")
-        archivoResumenPercentage.write("instance, avg. XPL%, avg. XPT%\n")
-        archivoFitness.write("MH, FITNESS\n")
+    procesar_archivos(instancia[1], blob, archivoFitness)
+    escribir_resumenes(mhs_instances, archivoResumenFitness, archivoResumenTimes, archivoResumenPercentage, MHS_LIST, lista_optimos, instancia[1], extraer_dimensiones = None, calcular_optimo_f8 = None)
 
-        # Procesar archivos
-        procesar_archivos(instancia[1], blob, archivoFitness, binarizacion)
+    if GRAFICOS:
+        graficar_mejores_resultados(instancia[1], mhs_instances)
+        graficar_boxplot_violin(instancia[1])
 
-        # Resumen
-        escribir_resumenes(mhs_instances, archivoResumenFitness, archivoResumenTimes, archivoResumenPercentage, MHS_LIST)
-
-        # Gráficos finales
-        graficar_mejores_resultados(instancia[1], mhs_instances, binarizacion)
-        graficar_boxplot_violin(instancia[1], binarizacion)
-
-        # Cerrar archivos
-        archivoResumenFitness.close()
-        archivoResumenTimes.close()
-        archivoResumenPercentage.close()
-    
-    print("")
+    # Cerrar archivos
+    archivoResumenFitness.close()
+    archivoResumenTimes.close()
+    archivoResumenPercentage.close()
+    archivoFitness.close()
 
 print("Procesamiento completado con éxito.")
+
