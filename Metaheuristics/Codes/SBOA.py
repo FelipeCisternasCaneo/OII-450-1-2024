@@ -5,8 +5,8 @@ import math
 # https://doi.org/10.1007/s10462-024-10729-y
 
 def levy(dim, beta=1.5):
-    sigma = (np.math.gamma(1 + beta) * np.sin(np.pi * beta / 2) /
-             (np.math.gamma((1 + beta) / 2) * beta * 2 ** ((beta - 1) / 2))) ** (1 / beta)
+    sigma = (math.gamma(1 + beta) * np.sin(np.pi * beta / 2) /
+             (math.gamma((1 + beta) / 2) * beta * 2 ** ((beta - 1) / 2))) ** (1 / beta)
     u = np.random.randn(dim) * sigma
     v = np.random.randn(dim)
     return u / np.abs(v) ** (1 / beta)
