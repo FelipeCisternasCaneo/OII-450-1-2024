@@ -1,10 +1,10 @@
-import time
-import analisisBEN 
+from Util.util import cargar_configuracion
+
+import analisisBEN
 import analisisSCP
 import analisisUSCP
 
-from Util.util import cargar_configuracion
-
+import time
 CONFIG_PATH = './util/json/analysis.json'  # Ruta al archivo JSON
 
 def main():
