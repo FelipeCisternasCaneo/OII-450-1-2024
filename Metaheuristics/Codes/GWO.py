@@ -3,7 +3,7 @@ import numpy as np
 # Grey Wolf Optimizer (GWO)
 # https://doi.org/10.1016/j.advengsoft.2013.12.007
 
-def iterarGWO(maxIter, t, dimension, population, fitness, typeProblem):
+def iterarGWO(maxIter, iter, dim, population, fitness, objective_type):
     """
     Grey Wolf Optimizer (GWO).
     Optimized to work with numpy arrays.
@@ -11,12 +11,12 @@ def iterarGWO(maxIter, t, dimension, population, fitness, typeProblem):
     population = np.array(population)
     fitness = np.array(fitness)
 
-    a = 2 - t * ((2) / maxIter)  # 'a' decreases linearly from 2 to 0
+    a = 2 - iter * ((2) / maxIter)  # 'a' decreases linearly from 2 to 0
 
     # Sort positions based on fitness
-    if typeProblem == "MIN":
+    if objective_type == "MIN":
         sorted_indices = np.argsort(fitness)
-    elif typeProblem == "MAX":
+    elif objective_type == "MAX":
         sorted_indices = np.argsort(fitness)[::-1]
     else:
         raise ValueError("typeProblem must be 'MIN' or 'MAX'.")
@@ -27,8 +27,8 @@ def iterarGWO(maxIter, t, dimension, population, fitness, typeProblem):
     Xdelta = population[sorted_indices[2]]
 
     # Generate random values for all calculations
-    r1 = np.random.uniform(0.0, 1.0, (population.shape[0], dimension, 3))  # 3 sets of r1
-    r2 = np.random.uniform(0.0, 1.0, (population.shape[0], dimension, 3))  # 3 sets of r2
+    r1 = np.random.uniform(0.0, 1.0, (population.shape[0], dim, 3))  # 3 sets of r1
+    r2 = np.random.uniform(0.0, 1.0, (population.shape[0], dim, 3))  # 3 sets of r2
 
     # Calculate A and C for all wolves
     A = 2 * a * r1 - a  # Shape: (pop, dim, 3)

@@ -37,7 +37,7 @@ def eq7(population, dim, lb, ub, t):
     r_ij = np.random.rand(len(population), dim)
     return population + (1 - 2 * r_ij) * ((ub - lb) / (t + 1))
 
-def iterarWOM(maxIter, t, dim, population, fitness, lb, ub, function):
+def iterarWOM(iter, dim, population, fitness, fo, lb, ub):
     """
     WOM optimizado para evitar errores de formas inhomogéneas.
     """
@@ -49,7 +49,7 @@ def iterarWOM(maxIter, t, dim, population, fitness, lb, ub, function):
     # Fase de exploración
     CFP_mask = eq4(population, fitness)
     newPositionsP1 = eq5(population, CFP_mask, dim)
-    resultsP1 = [function(ind) for ind in newPositionsP1]
+    resultsP1 = [fo(ind) for ind in newPositionsP1]
     solutionsP1 = np.array([res[0] for res in resultsP1])
     fitnessP1 = np.array([res[1] for res in resultsP1])
 
@@ -59,8 +59,8 @@ def iterarWOM(maxIter, t, dim, population, fitness, lb, ub, function):
     fitness[improvementP1] = fitnessP1[improvementP1]
 
     # Fase de explotación
-    newPositionsP2 = eq7(population, dim, lb, ub, t)
-    resultsP2 = [function(ind) for ind in newPositionsP2]
+    newPositionsP2 = eq7(population, dim, lb, ub, iter)
+    resultsP2 = [fo(ind) for ind in newPositionsP2]
     solutionsP2 = np.array([res[0] for res in resultsP2])
     fitnessP2 = np.array([res[1] for res in resultsP2])
 

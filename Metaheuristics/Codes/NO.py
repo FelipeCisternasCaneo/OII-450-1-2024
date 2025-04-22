@@ -3,17 +3,17 @@ import numpy as np
 # Narwhal Optimization (NO)
 # https://doi.org/10.34028/iajit/21/3/6
 
-def iterarNO(maxIter, it, dim, population, bestSolution):
+def iterarNO(maxIter, iter, dim, population, best):
     population = np.array(population)
-    bestSolution = np.array(bestSolution)
+    best = np.array(best)
     
     alpha_inicial = 0.5  # Controla la intensidad de la señal
     beta_inicial = 0.1   # Regula el ajuste de la posición
-    alpha = alpha_inicial * (1 - it / maxIter)  # alpha disminuye con las iteraciones
-    beta = beta_inicial * (it / maxIter)  # beta aumenta con las iteraciones
+    alpha = alpha_inicial * (1 - iter / maxIter)  # alpha disminuye con las iteraciones
+    beta = beta_inicial * (iter / maxIter)  # beta aumenta con las iteraciones
     sigma_inicial = 1.0
     delta_t = 0.01
-    sigma_t = sigma_inicial * (1 - it / maxIter)  # Decae con el tiempo
+    sigma_t = sigma_inicial * (1 - iter / maxIter)  # Decae con el tiempo
 
     # Función de distancia de Hamming
     def distancia_hamming(X_i, X_presa):
@@ -25,7 +25,7 @@ def iterarNO(maxIter, it, dim, population, bestSolution):
     
     for i in range(population.shape[0]):
         # Emisión de la señal (ajustada para distancia de Hamming)
-        dist_hamming = distancia_hamming(population[i], bestSolution)
+        dist_hamming = distancia_hamming(population[i], best)
         SE = 0.1 / (1 + alpha * dist_hamming)
         
         # Propagación de la señal (función gaussiana basada en distancia de Hamming)

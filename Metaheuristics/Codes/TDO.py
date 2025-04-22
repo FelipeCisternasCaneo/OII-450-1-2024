@@ -4,7 +4,7 @@ import random
 # Tasmanian Devil Optimization (TDO)
 # https://doi.org/10.1109/ACCESS.2022.3151641
 
-def iterarTDO(maxIter, it, dim, population, fitness, function, typeProblem):
+def iterarTDO(maxIter, iter, dim, population, fitness, fo, objective_type):
     """
     Implementación del algoritmo Tasmanian Devil Optimization (TDO).
     
@@ -32,10 +32,10 @@ def iterarTDO(maxIter, it, dim, population, fitness, function, typeProblem):
         xNew = np.copy(population[i])
 
         # Determinar si acercarse o alejarse en función del tipo de problema
-        if typeProblem == 'MIN':
-            condition = function(CPi)[1] < fitness[i]
-        elif typeProblem == 'MAX':
-            condition = function(CPi)[1] > fitness[i]
+        if objective_type == 'MIN':
+            condition = fo(CPi)[1] < fitness[i]
+        elif objective_type == 'MAX':
+            condition = fo(CPi)[1] > fitness[i]
         else:
             raise ValueError("typeProblem debe ser 'MIN' o 'MAX'")
 
@@ -49,19 +49,19 @@ def iterarTDO(maxIter, it, dim, population, fitness, function, typeProblem):
                 xNew[j] = population[i][j] + random.uniform(0.0, 1.0) * (population[i][j] - CPi[j])
 
         # Evaluar nueva posición
-        xNew, fitnessNew = function(xNew)
-        if (typeProblem == 'MIN' and fitnessNew < fitness[i]) or (typeProblem == 'MAX' and fitnessNew > fitness[i]):
+        xNew, fitnessNew = fo(xNew)
+        if (objective_type == 'MIN' and fitnessNew < fitness[i]) or (objective_type == 'MAX' and fitnessNew > fitness[i]):
             population[i] = np.copy(xNew)
 
         # Explotación: búsqueda local si r >= 0.5
         if r >= 0.5:
-            R = 0.01 * (1 - (it / maxIter))  # Factor de explotación
+            R = 0.01 * (1 - (iter / maxIter))  # Factor de explotación
             for j in range(dim):
                 xNew[j] = population[i][j] + (2 * random.uniform(0.0, 1.0) - 1) * R * xNew[j]
 
             # Evaluar nueva posición tras explotación
-            xNew, fitnessNew = function(xNew)
-            if (typeProblem == 'MIN' and fitnessNew < fitness[i]) or (typeProblem == 'MAX' and fitnessNew > fitness[i]):
+            xNew, fitnessNew = fo(xNew)
+            if (objective_type == 'MIN' and fitnessNew < fitness[i]) or (objective_type == 'MAX' and fitnessNew > fitness[i]):
                 population[i] = np.copy(xNew)
 
     return population

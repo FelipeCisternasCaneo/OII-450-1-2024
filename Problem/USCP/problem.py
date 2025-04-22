@@ -29,6 +29,24 @@ def matrix_dot_2(A, B, block_size):
     
     return result
 
+orden = {
+    'uscp41': [0, 429], 'uscp42': [1, 512], 'uscp43': [2, 516], 'uscp44': [3, 494], 'uscp45': [4, 512],
+    'uscp46': [5, 560], 'uscp47': [6, 430], 'uscp48': [7, 492], 'uscp49': [8, 641], 'uscp410': [9, 514],
+    'uscp51': [10, 253], 'uscp52': [11, 302], 'uscp53': [12, 226], 'uscp54': [13, 242], 'uscp55': [14, 211],
+    'uscp56': [15, 213], 'uscp57': [16, 293], 'uscp58': [17, 288], 'uscp59': [18, 279], 'uscp510': [19, 265],
+    'uscp61': [20, 138], 'uscp62': [21, 146], 'uscp63': [22, 145], 'uscp64': [23, 131], 'uscp65': [24, 161],
+    'uscpa1': [25, 253], 'uscpa2': [26, 252], 'uscpa3': [27, 232], 'uscpa4': [28, 234], 'uscpa5': [29, 236],
+    'uscpb1': [30, 69], 'uscpb2': [31, 76], 'uscpb3': [32, 80], 'uscpb4': [33, 79], 'uscpb5': [34, 72],
+    'uscpc1': [35, 227], 'uscpc2': [36, 219], 'uscpc3': [37, 243], 'uscpc4': [38, 219], 'uscpc5': [39, 215],
+    'uscpd1': [40, 60], 'uscpd2': [41, 66], 'uscpd3': [42, 72], 'uscpd4': [43, 62], 'uscpd5': [44, 61],
+    'uscpnre1': [45, 29], 'uscpnre2': [46, 30], 'uscpnre3': [47, 27], 'uscpnre4': [48, 28], 'uscpnre5': [49, 28],
+    'uscpnrf1': [50, 14], 'uscpnrf2': [51, 15], 'uscpnrf3': [52, 14], 'uscpnrf4': [53, 14], 'uscpnrf5': [54, 13],
+    'uscpnrg1': [55, 176], 'uscpnrg2': [56, 154], 'uscpnrg3': [57, 166], 'uscpnrg4': [58, 168], 'uscpnrg5': [59, 168],
+    'uscpnrh1': [60, 63], 'uscpnrh2': [61, 63], 'uscpnrh3': [62, 59], 'uscpnrh4': [63, 58], 'uscpnrh5': [64, 55],
+    'uscpcyc06': [65, 60], 'uscpcyc07': [66, 144], 'uscpcyc08': [67, 342], 'uscpcyc09': [68, 772], 'uscpcyc10': [69, 1794],
+    'uscpcyc11': [70, 3968], 'uscpclr10': [71, 25], 'uscpclr11': [72, 23], 'uscpclr12': [73, 23], 'uscpclr13': [74, 23]
+}
+
 class USCP:
     def __init__(self, instance):
         self.__rows = 0
@@ -37,8 +55,6 @@ class USCP:
         self.__cost = []
         self.__optimum = 0
         self.__block_size = 0
-        
-        print("largo de la instancia: "+str(len(instance)))
         
         if len(instance) == 6:
             if instance[4] == '4' or instance[4] == '5' or instance[4] == '6':
@@ -59,6 +75,9 @@ class USCP:
             
             elif 'cyc' in instance or 'clr' in instance:
                 self.__block_size = 20
+        
+            else:
+                self.__block_size = 1
         
         self.readInstance(instance)
 
@@ -156,93 +175,19 @@ class USCP:
 
         self.setCoverange(np.array(constrains))
         self.setCost(np.array(costos))
-        # print("Chequeo de cobertura: "+str(constrains[0][90]))  
-     
+        # print("Chequeo de cobertura: "+str(constrains[0][90]))
+    
+    
+    def obtenerInstancia(self, archivoInstancia):
+    # Extraemos el nombre de la instancia, eliminando la extensión .txt
+        instancia = archivoInstancia.split('/')[-1].replace('.txt', '')
+        return instancia
+
     def obtenerOptimoUSCP(self, archivoInstancia):
-        orden = {
-            'uscp41':[0, 38]
-            ,'uscp42':[1, 37]
-            ,'uscp43':[2, 38]
-            ,'uscp44':[3, 38]
-            ,'uscp45':[4, 38]
-            ,'uscp46':[5, 37]
-            ,'uscp47':[6, 38]
-            ,'uscp48':[7, 37]
-            ,'uscp49':[8, 38]
-            ,'uscp410':[9, 38]
-            ,'uscp51':[10, 34]
-            ,'uscp52':[11, 34]
-            ,'uscp53':[12, 34]
-            ,'uscp54':[13, 34]
-            ,'uscp55':[14, 34]
-            ,'uscp56':[15, 34]
-            ,'uscp57':[16, 34]
-            ,'uscp58':[17, 34]
-            ,'uscp59':[18, 35]
-            ,'uscp510':[19, 34]
-            ,'uscp61':[20, 21]
-            ,'uscp62':[21, 20]
-            ,'uscp63':[22, 21]
-            ,'uscp64':[23, 20]
-            ,'uscp65':[24, 21]
-            ,'uscpa1':[25, 38]
-            ,'uscpa2':[26, 38]
-            ,'uscpa3':[27, 38]
-            ,'uscpa4':[28, 37]
-            ,'uscpa5':[29, 38]
-            ,'uscpb1':[30, 22]
-            ,'uscpb2':[31, 22]
-            ,'uscpb3':[32, 22]
-            ,'uscpb4':[33, 22]
-            ,'uscpb5':[34, 22]
-            ,'uscpc1':[35, 43]
-            ,'uscpc2':[36, 43]
-            ,'uscpc3':[37, 43]
-            ,'uscpc4':[38, 43]
-            ,'uscpc5':[39, 43]
-            ,'uscpd1':[40, 24]
-            ,'uscpd2':[41, 24]
-            ,'uscpd3':[42, 24]
-            ,'uscpd4':[43, 24]
-            ,'uscpd5':[44, 24]
-            ,'uscpnre1':[45, 16]
-            ,'uscpnre2':[46, 16]
-            ,'uscpnre3':[47, 16]
-            ,'uscpnre4':[48, 16]
-            ,'uscpnre5':[49, 16]
-            ,'uscpnrf1':[50, 10]
-            ,'uscpnrf2':[51, 10]
-            ,'uscpnrf3':[52, 10]
-            ,'uscpnrf4':[53, 10]
-            ,'uscpnrf5':[54, 10]
-            ,'uscpnrg1':[55, 60]
-            ,'uscpnrg2':[56, 60]
-            ,'uscpnrg3':[57, 60]
-            ,'uscpnrg4':[58, 60]
-            ,'uscpnrg5':[59, 60]
-            ,'uscpnrh1':[60, 33]
-            ,'uscpnrh2':[61, 33]
-            ,'uscpnrh3':[62, 33]
-            ,'uscpnrh4':[63, 33]
-            ,'uscpnrh5':[64, 33]
-            ,'uscpcyc06':[65, 60]
-            ,'uscpcyc07':[66, 144]
-            ,'uscpcyc08':[67, 342]
-            ,'uscpcyc09':[68, 772]
-            ,'uscpcyc10':[69, 1794]
-            ,'uscpcyc11':[70, 3968]
-            ,'uscpclr10':[71, 25]
-            ,'uscpclr11':[72, 23]
-            ,'uscpclr12':[73, 23]
-            ,'uscpclr13':[74, 23]
-        }
-
-        for nomInstancia in orden:
-            if nomInstancia in archivoInstancia:
-                #print(f"instancia {nomInstancia}")
-                return orden[nomInstancia][1]
-
-        return None
+        instancia = self.obtenerInstancia(archivoInstancia)
+        clave_instancia = f"{instancia}"
+        
+        return orden.get(clave_instancia, [None])[1]  # Devuelve el óptimo si existe, sino None
 
     def factibilityTest(self, solution):
         check = True        
@@ -313,87 +258,8 @@ class USCP:
         return matrix_dot_2(solution, self.getCost(), self.__block_size)
             
 def obtenerOptimoUSCP(archivoInstancia):
-    orden = {
-             'uscp41':[0, 38]
-            ,'uscp42':[1, 37]
-            ,'uscp43':[2, 38]
-            ,'uscp44':[3, 38]
-            ,'uscp45':[4, 38]
-            ,'uscp46':[5, 37]
-            ,'uscp47':[6, 38]
-            ,'uscp48':[7, 37]
-            ,'uscp49':[8, 38]
-            ,'uscp410':[9, 38]
-            ,'uscp51':[10, 34]
-            ,'uscp52':[11, 34]
-            ,'uscp53':[12, 34]
-            ,'uscp54':[13, 34]
-            ,'uscp55':[14, 34]
-            ,'uscp56':[15, 34]
-            ,'uscp57':[16, 34]
-            ,'uscp58':[17, 34]
-            ,'uscp59':[18, 35]
-            ,'uscp510':[19, 34]
-            ,'uscp61':[20, 21]
-            ,'uscp62':[21, 20]
-            ,'uscp63':[22, 21]
-            ,'uscp64':[23, 20]
-            ,'uscp65':[24, 21]
-            ,'uscpa1':[25, 38]
-            ,'uscpa2':[26, 38]
-            ,'uscpa3':[27, 38]
-            ,'uscpa4':[28, 37]
-            ,'uscpa5':[29, 38]
-            ,'uscpb1':[30, 69]
-            ,'uscpb2':[31, 22]
-            ,'uscpb3':[32, 22]
-            ,'uscpb4':[33, 22]
-            ,'uscpb5':[34, 22]
-            ,'uscpc1':[35, 43]
-            ,'uscpc2':[36, 43]
-            ,'uscpc3':[37, 43]
-            ,'uscpc4':[38, 43]
-            ,'uscpc5':[39, 43]
-            ,'uscpd1':[40, 24]
-            ,'uscpd2':[41, 24]
-            ,'uscpd3':[42, 24]
-            ,'uscpd4':[43, 24]
-            ,'uscpd5':[44, 24]
-            ,'uscpnre1':[45, 16]
-            ,'uscpnre2':[46, 16]
-            ,'uscpnre3':[47, 16]
-            ,'uscpnre4':[48, 16]
-            ,'uscpnre5':[49, 16]
-            ,'uscpnrf1':[50, 10]
-            ,'uscpnrf2':[51, 10]
-            ,'uscpnrf3':[52, 10]
-            ,'uscpnrf4':[53, 10]
-            ,'uscpnrf5':[54, 10]
-            ,'uscpnrg1':[55, 60]
-            ,'uscpnrg2':[56, 60]
-            ,'uscpnrg3':[57, 60]
-            ,'uscpnrg4':[58, 60]
-            ,'uscpnrg5':[59, 60]
-            ,'uscpnrh1':[60, 33]
-            ,'uscpnrh2':[61, 33]
-            ,'uscpnrh3':[62, 33]
-            ,'uscpnrh4':[63, 33]
-            ,'uscpnrh5':[64, 33]
-            ,'uscpcyc06':[65, 60]
-            ,'uscpcyc07':[66, 144]
-            ,'uscpcyc08':[67, 342]
-            ,'uscpcyc09':[68, 772]
-            ,'uscpcyc10':[69, 1794]
-            ,'uscpcyc11':[70, 3968]
-            ,'uscpclr10':[71, 25]
-            ,'uscpclr11':[72, 23]
-            ,'uscpclr12':[73, 23]
-            ,'uscpclr13':[74, 23]
-        }
-
-    for nomInstancia in orden:
-        if nomInstancia in archivoInstancia:
-            #print(f"instancia {nomInstancia}")
-            return orden[nomInstancia][1]
-
-    return None
+    instancia = archivoInstancia.split('/')[-1].replace('.txt', '')
+    
+    clave_instancia = f"{instancia}"
+    
+    return orden.get(clave_instancia, [None])[1]

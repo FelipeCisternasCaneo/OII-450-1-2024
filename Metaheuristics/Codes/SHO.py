@@ -19,9 +19,9 @@ def levyFunction():
 
     return s * ((w * sigma) / abs(pow(k, (1 / lambd))))
 
-def iterarSHO(maxIter, it, dim, population, bestSolution, function, typeProblem):
+def iterarSHO(maxIter, iter, dim, population, best, fo, objective_type):
     population = np.array(population)
-    bestSolution = np.array(bestSolution)
+    best = np.array(best)
     N = population.shape[0]
     
     u = 0.05
@@ -41,19 +41,19 @@ def iterarSHO(maxIter, it, dim, population, bestSolution, function, typeProblem)
                 y = p * math.sin(theta)
                 z = p * theta
                 population[i, j] = (population[i, j] +
-                                    levy * (bestSolution[j] - population[i, j]) *
+                                    levy * (best[j] - population[i, j]) *
                                     x * y * z +
-                                    bestSolution[j])
+                                    best[j])
             
             else:
                 rand = random.uniform(0, 1)
                 population[i, j] = (population[i, j] +
                                     rand * l * beta[i, j] *
-                                    (population[i, j] - beta[i, j] * bestSolution[j]))
+                                    (population[i, j] - beta[i, j] * best[j]))
         
-        population[i], _ = function(population[i])
+        population[i], _ = fo(population[i])
         
-    alpha = (1 - it / maxIter) ** ((2 * it) / maxIter)
+    alpha = (1 - iter / maxIter) ** ((2 * iter) / maxIter)
     fitness = np.zeros(N)
     
     for i in range(N):
@@ -62,19 +62,19 @@ def iterarSHO(maxIter, it, dim, population, bestSolution, function, typeProblem)
             rand = random.uniform(0, 1)             
 
             if r2 > 0.1:
-                population[i, j] = alpha * (bestSolution[j] - rand * population[i, j])
+                population[i, j] = alpha * (best[j] - rand * population[i, j])
                 
             else:
                 population[i, j] = ((1 - alpha) * (population[i, j] -
-                                    rand * bestSolution[j]) +
+                                    rand * best[j]) +
                                     alpha * population[i, j])
         
-        population[i], fitness[i] = function(population[i])
+        population[i], fitness[i] = fo(population[i])
         
-    if typeProblem == 'MIN':
+    if objective_type == 'MIN':
         sortIndex = np.argsort(fitness)
         
-    elif typeProblem == 'MAX':
+    elif objective_type == 'MAX':
         sortIndex = np.argsort(fitness)[::-1]
 
     father = population[sortIndex[:N // 2]]
@@ -89,15 +89,15 @@ def iterarSHO(maxIter, it, dim, population, bestSolution, function, typeProblem)
         for j in range(dim):
             offspring[k, j] = r3 * father[k, j] + (1 - r3) * mother[k, j]
         
-        offspring[k], fitnessOffspring[k] = function(offspring[k])
+        offspring[k], fitnessOffspring[k] = fo(offspring[k])
 
     newFitness = np.concatenate((fitness, fitnessOffspring))
     newPopulation = np.concatenate((population, offspring))
         
-    if typeProblem == 'MIN':
+    if objective_type == 'MIN':
         sortIndex = np.argsort(newFitness)
         
-    elif typeProblem == 'MAX':
+    elif objective_type == 'MAX':
         sortIndex = np.argsort(newFitness)[::-1]
 
     population = newPopulation[sortIndex[:N]]

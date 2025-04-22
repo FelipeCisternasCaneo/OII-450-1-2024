@@ -2,11 +2,13 @@
     "dirs": {
         "BD": "./BD/",
         "base": "./Resultados/",
-        "transitorio": "./Resultados/Transitorio/",
-        "graficos": "./Resultados/Graficos/",
-        "best": "./Resultados/Best/",
-        "boxplot": "./Resultados/Boxplot/",
-        "violinplot": "./Resultados/Violinplot/",
+        "transitorio": "./Resultados/transitorio/",
+        "fitness": "./Resultados/fitness/",
+        "resumen": "./Resultados/resumen/",
+        "graficos": "./Resultados/graficos/",
+        "best": "./Resultados/best/",
+        "boxplot": "./Resultados/boxplot/",
+        "violinplot": "./Resultados/violinplot/",
         "scp_instances": "./Problem/SCP/Instances/",
         "uscp_instances": "./Problem/USCP/Instances/",
         "graficos_benchmark": "./Graficos_Benchmark/"

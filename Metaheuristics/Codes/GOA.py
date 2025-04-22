@@ -17,11 +17,12 @@ def levy(size, beta=1.5):
 
     return 0.01 * ((u * sigma) / (np.abs(v) ** (1 / beta)))
 
-def iterarGOA(maxIter, it, dim, population, bestSolution, fitness, function, typeProblem):
+def iterarGOA(maxIter, iter, dim, population, best, fitness, fo, objective_type):
     population = np.array(population)
+    
     m, vel, c = 2.5, 1.5, 0.2
-    t = 1 - (it / maxIter)
-    t2 = 1 + (it / maxIter)
+    t = 1 - (iter / maxIter)
+    t2 = 1 + (iter / maxIter)
 
     Xr = population[np.random.randint(len(population))]
     Xm = np.mean(population, axis=0)
@@ -53,14 +54,14 @@ def iterarGOA(maxIter, it, dim, population, bestSolution, fitness, function, typ
             capturability = 1 / (R * t2)
 
             if capturability >= c:
-                delta = capturability * np.abs(population[i] - bestSolution)
-                MX[i] = t * delta * (population[i] - bestSolution) + population[i]
+                delta = capturability * np.abs(population[i] - best)
+                MX[i] = t * delta * (population[i] - best) + population[i]
             else:
                 p = levy(dim)
-                MX[i] = bestSolution - (population[i] - bestSolution) * p * t
+                MX[i] = best - (population[i] - best) * p * t
 
-        MX[i], mxFitness = function(MX[i])
-        condition = mxFitness < fitness[i] if typeProblem == 'MIN' else mxFitness > fitness[i]
+        MX[i], mxFitness = fo(MX[i])
+        condition = mxFitness < fitness[i] if objective_type == 'MIN' else mxFitness > fitness[i]
 
         if condition:
             population[i] = MX[i]

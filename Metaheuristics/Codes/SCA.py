@@ -3,7 +3,7 @@ import numpy as np
 # Sine Cosine Algorithm (SCA)
 # https://doi.org/10.1016/j.knosys.2015.12.022
 
-def iterarSCA(maxIter, t, dimension, population, bestSolution):
+def iterarSCA(maxIter, iter, population, best):
     """
     Optimized Sine Cosine Algorithm (SCA) using vectorized operations.
     Args:
@@ -18,12 +18,12 @@ def iterarSCA(maxIter, t, dimension, population, bestSolution):
     """
 
     population = np.array(population)
-    bestSolution = np.array(bestSolution)
+    best = np.array(best)
 
     # a is a constant number, recommended value is 2
     a = 2
     # Compute r1 using equation 3.4
-    r1 = a - (t * (a / maxIter))
+    r1 = a - (iter * (a / maxIter))
     
     # Vectorized random values
     rand1 = np.random.uniform(0.0, 1.0, population.shape)
@@ -33,8 +33,8 @@ def iterarSCA(maxIter, t, dimension, population, bestSolution):
     r4 = np.random.uniform(0.0, 1.0, population.shape)
     
     # Compute the sine and cosine components
-    sin_component = r1 * np.sin(r2) * np.abs(r3 * bestSolution - population)
-    cos_component = r1 * np.cos(r2) * np.abs(r3 * bestSolution - population)
+    sin_component = r1 * np.sin(r2) * np.abs(r3 * best - population)
+    cos_component = r1 * np.cos(r2) * np.abs(r3 * best - population)
     
     # Update population based on r4
     population = np.where(r4 < 0.5, population + sin_component, population + cos_component)

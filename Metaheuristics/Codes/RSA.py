@@ -3,15 +3,15 @@ import numpy as np
 # Reptile Search Algorithm (RSA)
 # https://doi.org/10.1007/s11831-023-09990-1
 
-def iterarRSA(maxIter, it, dim, population, bestSolution, LB, UB):
+def iterarRSA(maxIter, iter, dim, population, best, lb0, ub0):
     '''
     maxIter: Máximo de iteraciones 
     it: iteración actual
     dim: Dimensión de las soluciones
     population: población actual de soluciones
-    bestSolution: Mejor individuo obtenido hasta ahora
-    LB: Margen inferior
-    UB: Margen superior
+    best: Mejor individuo obtenido hasta ahora
+    lb: Margen inferior
+    ub: Margen superior
     '''
     # Parámetros
     alfa = 0.1
@@ -21,26 +21,26 @@ def iterarRSA(maxIter, it, dim, population, bestSolution, LB, UB):
     ES = 2 * r3 * (1 - (1 / maxIter))
 
     population = np.array(population)
-    bestSolution = np.array(bestSolution)
+    best = np.array(best)
 
     N = len(population)
-    R = (bestSolution - population[np.random.randint(N, size=N)]) / (bestSolution + eps)
-    P = alfa + (population - np.mean(population, axis=1, keepdims=True)) / (UB - LB + eps)
-    Eta = bestSolution * P
+    R = (best - population[np.random.randint(N, size=N)]) / (best + eps)
+    P = alfa + (population - np.mean(population, axis=1, keepdims=True)) / (ub0 - lb0 + eps)
+    Eta = best * P
     rand = np.random.random((N, dim))
 
-    if it < maxIter / 4:
+    if iter < maxIter / 4:
         # Ecuación 1
-        population = bestSolution - Eta * beta - R * rand
-    elif it < (2 * maxIter) / 4:
+        population = best - Eta * beta - R * rand
+    elif iter < (2 * maxIter) / 4:
         # Ecuación 2
         r1_indices = np.random.randint(N, size=N)
-        population = bestSolution * population[r1_indices] * ES * rand
-    elif it < (3 * maxIter) / 4:
+        population = best * population[r1_indices] * ES * rand
+    elif iter < (3 * maxIter) / 4:
         # Ecuación 3
-        population = bestSolution * P * rand
+        population = best * P * rand
     else:
         # Ecuación 4
-        population = bestSolution - Eta * eps - R * rand
+        population = best - Eta * eps - R * rand
 
-    return np.clip(population, LB, UB)
+    return np.clip(population, lb0, ub0)

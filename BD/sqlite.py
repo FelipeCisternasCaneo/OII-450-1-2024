@@ -375,160 +375,32 @@ class BD:
         self.commit()
         self.desconectar()
         
-    def obtenerArchivos(self, instancia):
+    def obtenerArchivos(self, instancia, incluir_binarizacion=True):
         self.conectar()
-        
         cursor = self.getCursor()
-        cursor.execute(f''' 
-            SELECT i.nombre, i.archivo, e.binarizacion 
-            FROM experimentos e 
-            INNER JOIN iteraciones i ON e.id_experimento = i.fk_id_experimento 
-            INNER JOIN instancias i2 ON e.fk_id_instancia = i2.id_instancia 
-            WHERE i2.nombre = '{instancia}' 
-            ORDER BY i2.nombre DESC, e.MH DESC
-        ''')
-        
-        data = cursor.fetchall()
-        
-        #print(f"[DEBUG] Datos de blob para instancia {instancia}: {data}")
-        self.desconectar()
-        return data
 
-    def obtenerMejoresArchivos(self, instancia, ml):
-        self.conectar()
-        
-        cursor = self.getCursor()
-        cursor.execute(f'''             
-            select e.id_experimento , e.MH , E.ML, i2.nombre  , i.nombre , i.archivo , MIN(r.fitness)  
-            from resultados r 
-            inner join experimentos e on r.fk_id_experimento = e.id_experimento
-            inner join iteraciones i on i.fk_id_experimento = e.id_experimento
-            inner join instancias i2 on e.fk_id_instancia = i2.id_instancia 
-            where i2.nombre  = '{instancia}' and e.ML = '{ml}'
-            group by e.MH , i2.nombre
-        ''')
-        
+        if incluir_binarizacion:
+            query = '''
+                SELECT i.nombre, i.archivo, e.binarizacion 
+                FROM experimentos e 
+                INNER JOIN iteraciones i ON e.id_experimento = i.fk_id_experimento 
+                INNER JOIN instancias i2 ON e.fk_id_instancia = i2.id_instancia 
+                WHERE i2.nombre = ? 
+                ORDER BY i2.nombre DESC, e.MH DESC
+            '''
+        else:
+            query = '''
+                SELECT i.nombre, i.archivo 
+                FROM experimentos e 
+                INNER JOIN iteraciones i ON e.id_experimento = i.fk_id_experimento 
+                INNER JOIN instancias i2 ON e.fk_id_instancia = i2.id_instancia 
+                WHERE i2.nombre = ? 
+                ORDER BY i2.nombre DESC, e.MH DESC
+            '''
+
+        cursor.execute(query, (instancia,))
         data = cursor.fetchall()
-        
-        self.desconectar()
-        
-        return data
-    
-    def obtenerMejoresArchivosconClasificador(self, instancia, ml, ml_fs):
-        self.conectar()
-        
-        cursor = self.getCursor()
-        cursor.execute(f'''             
-            select e.id_experimento , e.MH , E.ML, e.ML_FS, i2.nombre  , i.nombre , i.archivo , MIN(r.fitness) 
-            from resultados r 
-            inner join experimentos e on r.fk_id_experimento = e.id_experimento
-            inner join iteraciones i on i.fk_id_experimento = e.id_experimento
-            inner join instancias i2 on e.fk_id_instancia = i2.id_instancia 
-            where i2.nombre  = '{instancia}' and e.ML = '{ml}' and e.ML_FS = '{ml_fs}'
-            group by e.MH , i2.nombre  
-            group by e.MH , i2.nombre  
-        ''')
-        
-        data = cursor.fetchall()
-        
-        self.desconectar()
-        
-        return data
-    
-    def obtenerMejoresArchivosconClasificadorBSS(self, instancia, ml, ml_fs,bss):
-        self.conectar()
-        
-        cursor = self.getCursor()
-        cursor.execute(f'''             
-            select e.id_experimento , e.MH , E.ML, e.ML_FS, e.paramMH, i2.nombre  , i.nombre , i.archivo , MIN(r.fitness), r.solucion   
-            from resultados r 
-            inner join experimentos e on r.fk_id_experimento = e.id_experimento
-            inner join iteraciones i on i.fk_id_experimento = e.id_experimento
-            inner join instancias i2 on e.fk_id_instancia = i2.id_instancia 
-            where i2.nombre  = '{instancia}' and e.ML = '{ml}' and e.paramMH = 'iter:100,pop:10,DS:V4-STD,cros:0.9;mut:0.20' and e.ML_FS = '{ml_fs}' and e.MH = '{bss}'
-            group by e.MH , i2.nombre, e.paramMH
-        ''')
-        
-        data = cursor.fetchall()
-        
-        self.desconectar()
-        
-        return data
-    
-    def obtenerMejoresArchivosconBSS(self, instancia, ml, bss):
-        self.conectar()
-        
-        cursor = self.getCursor()
-        cursor.execute(f'''             
-            select e.id_experimento , e.MH , E.ML, e.ML_FS, i2.nombre  , i.nombre , i.archivo , MIN(r.fitness) 
-            from resultados r 
-            inner join experimentos e on r.fk_id_experimento = e.id_experimento
-            inner join iteraciones i on i.fk_id_experimento = e.id_experimento
-            inner join instancias i2 on e.fk_id_instancia = i2.id_instancia 
-            where i2.nombre  = '{instancia}' and e.ML = '{ml}' and e.paramMH like '%{bss}%' 
-            group by e.MH , i2.nombre     
-        ''')
-        
-        data = cursor.fetchall()
-        
-        self.desconectar()
-        
-        return data
-    
-    def obtenerMejoresSoluciones(self, instancia, ml):
-        self.conectar()
-        
-        cursor = self.getCursor()
-        cursor.execute(f'''             
-            select e.id_experimento , e.MH , E.ML, r.solucion, MIN(r.fitness) 
-            from resultados r 
-            inner join experimentos e on r.fk_id_experimento = e.id_experimento
-            inner join iteraciones i on i.fk_id_experimento = e.id_experimento
-            inner join instancias i2 on e.fk_id_instancia = i2.id_instancia 
-            where i2.nombre  = '{instancia}' and e.ML = '{ml}'
-            group by e.MH , i2.nombre   
-        ''')
-        
-        data = cursor.fetchall()
-        
-        self.desconectar()
-        
-        return data
-    
-    def obtenerArchivosBSSClasificador(self, instancia, ml, bss, clasificador):
-        self.conectar()
-        
-        cursor = self.getCursor()
-        cursor.execute(f'''             
-            select e.id_experimento , e.MH , E.ML, e.ML_FS, e.paramMH, i2.nombre  , i.nombre , i.archivo , r.fitness  
-            from resultados r 
-            inner join experimentos e on r.fk_id_experimento = e.id_experimento
-            inner join iteraciones i on i.fk_id_experimento = e.id_experimento
-            inner join instancias i2 on e.fk_id_instancia = i2.id_instancia 
-            where i2.nombre  = '{instancia}' and e.ML = '{ml}' and e.paramMH = 'iter:{bss},pop:40,DS:V4-STD,cros:0.9;mut:0.20' and e.ML_FS = '{clasificador}' and e.MH = 'GA'
-        ''')
-        
-        data = cursor.fetchall()
-        
-        self.desconectar()
-        
-        return data
-    
-    def obtenerArchivosTecnica(self, instancia, ml, clasificador, tecnica):
-        self.conectar()
-        
-        cursor = self.getCursor()
-        cursor.execute(f'''             
-            select e.id_experimento , e.MH , E.ML, e.ML_FS, e.paramMH, i2.nombre  , i.nombre , i.archivo , r.fitness  
-            from resultados r 
-            inner join experimentos e on r.fk_id_experimento = e.id_experimento
-            inner join iteraciones i on i.fk_id_experimento = e.id_experimento
-            inner join instancias i2 on e.fk_id_instancia = i2.id_instancia 
-            where i2.nombre  = '{instancia}' and e.ML = '{ml}' and e.paramMH = 'iter:500,pop:50,DS:V4-STD,cros:0.9;mut:0.20' and e.ML_FS = '{clasificador}' and e.MH = '{tecnica}'        
-        ''')
-        
-        data = cursor.fetchall()
-        
+
         self.desconectar()
         
         return data
@@ -545,148 +417,11 @@ class BD:
         
         return data
     
-    def obtenerTecnicas(self):
-        self.conectar()
-        
-        cursor = self.getCursor()
-        cursor.execute(f''' SELECT DISTINCT MH from experimentos e   ''')
-        data = cursor.fetchall()
-        
-        self.desconectar()
-        
-        return data
-    
-    def obtenerInstanciasEjecutadas(self, tipo_problema):
-        self.conectar()
-        
-        cursor = self.getCursor()
-        cursor.execute(f''' select DISTINCT i.nombre  from experimentos e inner join instancias i on e.fk_id_instancia = i.id_instancia where i.tipo_problema = '{tipo_problema}' order by i.nombre asc ''')
-        data = cursor.fetchall()
-        
-        self.desconectar()
-        
-        return data
-    
-    def obtenerExperimentosEspecial(self, tipo_problema, mh, especial):
-        self.conectar()
-        
-        cursor = self.getCursor()
-        cursor.execute(f''' SELECT DISTINCT e.experimento  from experimentos e inner join instancias i on e.fk_id_instancia = i.id_instancia where i.tipo_problema = '{tipo_problema}' AND e.MH = '{mh}' and e.experimento like '%{especial}%' ''')
-        data = cursor.fetchall()
-        
-        self.desconectar()
-        
-        return data
-    
-    def obtenerEjecuciones(self, instancia, mh, experimento):
-        self.conectar()
-        
-        cursor = self.getCursor()
-        cursor.execute(f'''
-                        select e.id_experimento , e.experimento, i.nombre , i.archivo , r.fitness, r.tiempoEjecucion  
-                        from resultados r 
-                        inner join experimentos e on r.fk_id_experimento = e.id_experimento
-                        inner join iteraciones i on i.fk_id_experimento = e.id_experimento
-                        inner join instancias i2 on e.fk_id_instancia = i2.id_instancia 
-                        where i2.nombre  = '{instancia}' and e.experimento = '{experimento}' and e.MH = '{mh}'
-                        ''')
-        
-        data = cursor.fetchall()
-        
-        self.desconectar()
-        
-        return data
-    
-    def obtenerMejoresEjecucionesSCP(self, instancia, mh, experimento):
-        self.conectar()
-        cursor = self.getCursor()
-        cursor.execute(f''' 
-    
-    
-                        select e.id_experimento , e.experimento, i.nombre , i.archivo , MIN(r.fitness) 
-                        from resultados r 
-                        inner join experimentos e on r.fk_id_experimento = e.id_experimento
-                        inner join iteraciones i on i.fk_id_experimento = e.id_experimento
-                        inner join instancias i2 on e.fk_id_instancia = i2.id_instancia 
-                        where i2.nombre  = '{instancia}' and e.experimento = '{experimento}' and e.MH = '{mh}'
-                        ''')
-        
-        data = cursor.fetchall()
-        
-        self.desconectar()
-        
-        return data
-    
-    def obtenerMejoresEjecucionesKP(self, instancia, mh, experimento):
-        self.conectar()
-        
-        cursor = self.getCursor()
-        cursor.execute(f''' 
-                        select e.id_experimento , e.experimento, i.nombre , i.archivo , MAX(r.fitness) 
-                        from resultados r 
-                        inner join experimentos e on r.fk_id_experimento = e.id_experimento
-                        inner join iteraciones i on i.fk_id_experimento = e.id_experimento
-                        inner join instancias i2 on e.fk_id_instancia = i2.id_instancia 
-                        where i2.nombre  = '{instancia}' and e.experimento = '{experimento}' and e.MH = '{mh}'
-                        ''')
-        
-        data = cursor.fetchall()
-        
-        self.desconectar()
-        
-        return data
-    
     def obtenerOptimoInstancia(self, instancia):
         self.conectar()
         
         cursor = self.getCursor()
         cursor.execute(f''' SELECT optimo  from instancias i where nombre = '{instancia}'  ''')
-        data = cursor.fetchall()
-        
-        self.desconectar()
-        
-        return data
-    
-    def obtenerTiposProblemas(self):
-        self.conectar()
-        
-        cursor = self.getCursor()
-        cursor.execute(f''' 
-            SELECT DISTINCT i.tipo_problema from experimentos e 
-            inner join instancias i ON e.fk_id_instancia = i.id_instancia
-                        ''')
-        
-        data = cursor.fetchall()
-        
-        return data
-    
-    def obtenerNombreExperimentos(self, tipo_problema):
-        self.conectar()
-        
-        cursor = self.getCursor()
-        cursor.execute(f''' 
-            SELECT DISTINCT experimento  
-            from experimentos e
-            inner join instancias i ON e.fk_id_instancia = i.id_instancia
-            where i.tipo_problema = '{tipo_problema}'
-                        ''')
-        
-        data = cursor.fetchall()
-        
-        self.desconectar()
-        
-        return data
-    
-    def obtenerInstanciasByProblema(self, problema):
-        self.conectar()
-        
-        cursor = self.getCursor()
-        cursor.execute(f''' 
-            SELECT DISTINCT i.nombre  from experimentos e 
-            inner join instancias i ON e.fk_id_instancia = i.id_instancia
-            where i.tipo_problema = '{problema}'
-                        ''')
-        
         data = cursor.fetchall()
         
         self.desconectar()

@@ -2,7 +2,7 @@ import time
 
 from Solver.solverBEN import solverBEN
 from Solver.solverSCP import solverSCP
-from Solver.solverUSCP import solverUSCP
+#from Solver.solverUSCP import solverUSCP
 
 from BD.sqlite import BD
 
@@ -20,7 +20,7 @@ def ejecutar_ben(id, experimento, parametrosInstancia, parametros):
         int(parametros["pop"]), parametros["instancia"], lb, ub, dim
     )
 
-def ejecutar_problema_scp_uscp(id, instancia, ds, parametros, solver_func):
+def ejecutar_problema_scp_uscp(id, instancia, ds, parametros, solver_func, unicost):
     """Ejecuta problemas de tipo SCP o USCP."""
     repair = parametros["repair"]
     
@@ -28,7 +28,7 @@ def ejecutar_problema_scp_uscp(id, instancia, ds, parametros, solver_func):
     
     solver_func(
         id, parametros["mh"], int(parametros["iter"]),
-        int(parametros["pop"]), instancia, ds, repair, parMH
+        int(parametros["pop"]), instancia, ds, repair, parMH, unicost
     )
 
 def procesar_experimento(data, bd):
@@ -44,7 +44,7 @@ def procesar_experimento(data, bd):
         "instancia": datosInstancia[0][2],})
     
     problema = datosInstancia[0][1]
-
+    
     # Validación de iteraciones
     if int(parametros["iter"]) < 4:
         log_error(id, "El número de iteraciones (iter) debe ser al menos 4. Marcado como error.")
@@ -59,10 +59,10 @@ def procesar_experimento(data, bd):
         ejecutar_ben(id, data[0][1], datosInstancia[0][4], parametros)
 
     elif problema == "SCP":
-        ejecutar_problema_scp_uscp(id, f"scp{datosInstancia[0][2]}", data[0][3], parametros, solverSCP)
+        ejecutar_problema_scp_uscp(id, f"scp{datosInstancia[0][2]}", data[0][3], parametros, solverSCP, unicost=False)
 
     elif problema == "USCP":
-        ejecutar_problema_scp_uscp(id, f"uscp{datosInstancia[0][2][1:]}", data[0][3], parametros, solverUSCP)
+        ejecutar_problema_scp_uscp(id, f"uscp{datosInstancia[0][2][1:]}", data[0][3], parametros, solverSCP, unicost=True)
 
     '''except ValueError as ve:
         log_error(id, f"Error de valor: {str(ve)}")

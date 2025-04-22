@@ -1,109 +1,7 @@
-import math
 import os
-import random
-import numpy as np
 import json
 
 from Util.log import log_error
-
-def esDecimal(numero):
-    try:
-        float(numero)
-        return True
-    
-    except:
-        return False
-
-def distEuclidiana(x, y, missd, missdValue):
-    suma = 0
-    for i in range(x.__len__()):
-        if missd:
-            if x[i] != missdValue and y[i] != missdValue:
-                suma = suma + ( (x[i] - y[i])**2 )
-        
-        else:
-            suma = suma + ((x[i] - y[i]) ** 2)
-        
-    return math.sqrt(suma)
-
-def porcentajesXLPXPT(div, maxDiv):
-    XPL = round((div/maxDiv) * 100, 2)
-    XPT = round((abs(div-maxDiv)/maxDiv) * 100, 2)
-    
-    state = -1
-    # Determinar estado
-    if XPL >= XPT:
-        state = 1 # Exploración
-    
-    else:
-        state = 0 # Explotación
-    
-    return XPL, XPT, state
-
-def generacionMixtaFS(poblacion, caracteristicas):
-    pop = np.zeros(shape=(poblacion, caracteristicas))
-
-    mayor = int(caracteristicas * 0.8)
-    menor = int(caracteristicas * 0.3)
-
-    individuo = 0
-    
-    for ind in pop:
-        if individuo < int(len(pop) / 2) :
-            L = [random.randint(0, caracteristicas-1)] #este es L[0]
-            i = 1
-            
-            while i < mayor:
-                x = random.randint(0, caracteristicas - 1)
-                
-                if x not in L:
-                    L.append(x)
-                    i += 1
-                    
-            unos = sorted(L)
-            individuo += 1
-            
-        else:
-            L = [random.randint(0, caracteristicas - 1)] #este es L[0]
-            i = 1
-            
-            while i < menor:
-                x = random.randint(0,caracteristicas - 1)
-                
-                if x not in L:
-                    L.append(x)
-                    i += 1
-
-            unos = sorted(L)
-
-        ind[unos] = 1
-        
-    return pop
-
-def diversidadHussain(matriz):
-    medianas = []
-    
-    for j in range(matriz[0].__len__()):
-        suma = 0
-        
-        for i in range(matriz.__len__()):
-            suma += matriz[i][j]
-            
-        medianas.append(suma/matriz.__len__())
-    
-    n = len(matriz)
-    l = len(matriz[0])
-    diversidad = 0
-    
-    for d in range(l):
-        div_d = 0
-        
-        for i in range(n):
-            div_d = div_d + abs(medianas[d] - matriz[i][d])
-            
-        diversidad = diversidad + div_d
-        
-    return (1 / (l * n)) * diversidad
 
 def selectionSort(lista):
     posiciones = []
@@ -123,53 +21,6 @@ def selectionSort(lista):
         posiciones[i], posiciones[lowest_value_index] = posiciones[lowest_value_index], posiciones[i]
         
     return posiciones
-
-def normr(Mat):
-    norma = 0
-    
-    for i in range(Mat.__len__()):
-        norma = norma + abs(math.pow(Mat[i], 2))
-        
-    norma = math.sqrt(norma)
-    B = []
-    
-    for i in range(Mat.__len__()):
-        B.append(Mat[i] / norma)
-        
-    return B
-
-def getUbLb(poblacion, dimension):
-    ub = []
-    lb = []
-    
-    for j in range(dimension):
-        lista = []
-        
-        for i in range(poblacion.__len__()):
-            lista.append(poblacion[i][j])
-        
-        ordenLista = selectionSort(lista)
-        ub.append(poblacion[ordenLista[poblacion.__len__()-1]][j])
-        lb.append(poblacion[ordenLista[0]][j])
-    
-    return ub, lb
-
-def RouletteWheelSelection(weights):
-    accumulation = sum(weights)
-    p = random.random() * accumulation
-    chosen_index = -1
-    suma = 0
-    
-    for index in range(len(weights)):
-        suma = suma + weights[index]
-        
-        if suma > p:
-            chosen_index = index
-            break
-        
-    choice = chosen_index
-    
-    return choice
 
 # Create a function that converts a digital file into binary
 def convert_into_binary(file_path):
@@ -198,6 +49,14 @@ def cargar_directorios():
     
     with open(ruta_directorios, 'r') as archivo:
         return json.load(archivo)
+    
+def cargar_configuracion_exp(CONFIG_FILE, EXPERIMENTS_FILE):
+    """Carga la configuración y los experimentos desde archivos JSON."""
+    with open(CONFIG_FILE, 'r') as config_file:
+        config = json.load(config_file)
+    with open(EXPERIMENTS_FILE, 'r') as experiments_file:
+        experiments = json.load(experiments_file)
+    return config, experiments
     
 def parse_parametros(parametrosMH):
     """Parsea los parámetros y devuelve un diccionario con claves y valores."""
@@ -228,11 +87,13 @@ def verificar_y_crear_carpetas():
     
     # Definir las subcarpetas necesarias
     subcarpetas = [
-        "Transitorio",
-        "Graficos",
-        "Best",
+        "transitorio",
+        "graficos",
+        "best",
         "boxplot",
-        "violinplot"
+        "violinplot",
+        "resumen",
+        "fitness"
     ]
 
     # Crear las carpetas si no existen
@@ -241,8 +102,10 @@ def verificar_y_crear_carpetas():
         if not os.path.exists(ruta_completa):
             os.makedirs(ruta_completa)
 
-def invertirArray(vector):
-    return vector[::-1]
+def asegurar_directorio(path):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
 
-def totalFeature():
-    return 57
+# Util json
+
+#"mhs": ["AOA", "EBWOA", "EOO", "FLO", "FOX", "GA", "GOA", "GWO", "HBA", "HLOA", "LOA", "NO", "PO", "POA", "PSO",
+#    "QSO", "RSA", "SBOA", "SCA", "SHO", "TDO", "WOA", "WOM"]

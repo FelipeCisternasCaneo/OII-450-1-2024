@@ -7,7 +7,7 @@ from Diversity.Codes.diversity import initialize_diversity, calculate_diversity
 from Metaheuristics.imports import metaheuristics, IterarPO
 from Problem.Benchmark.Problem import fitness as f
 
-from Util.poblacion import initialize_population, evaluate_population, update_population, iterate_population
+from Solver.population.population_BEN import initialize_population, evaluate_population, update_population, iterate_population
 from Util.log import initial_log, log_progress, final_log
 from Util.util import convert_into_binary
 
@@ -65,7 +65,19 @@ def solverBEN(id, mh, maxIter, pop, function, lb, ub, dim):
         timerStart = time.time()
         
         population, vel, posibles_mejoras = iterate_population(
-        mh, metaheuristics, population, iter, maxIter, dim, fitness, best, vel, pBest, ub, lb, fo_vectorized)
+            mh,               # 1
+            population,       # 2
+            iter,             # 3
+            maxIter,          # 4
+            dim,              # 5
+            fitness,          # 6
+            best,             # 7
+            vel=vel,          # 8
+            pBest=pBest,      # 9
+            ub=ub,            # 10
+            lb=lb,            # 11
+            fo=fo_vectorized  # 12
+        )
         
         if mh == 'PO':
             iterarPO.pob(population, iter)

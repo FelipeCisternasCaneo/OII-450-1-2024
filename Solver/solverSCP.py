@@ -3,28 +3,27 @@ import os
 import time
 
 from Problem.SCP.problem import SCP
-
-from Metaheuristics.imports import iterarGWO, iterarSCA, iterarWOA, iterarPSA, iterarGA
-from Metaheuristics.imports import iterarPSO, iterarFOX, iterarEOO, iterarRSA, iterarGOA
-from Metaheuristics.imports import iterarHBA, iterarTDO, iterarSHO, iterarSBOA, iterarEHO
-from Metaheuristics.imports import iterarEBWOA, iterarFLO, iterarHLOAScp, iterarLOA, iterarNO
-from Metaheuristics.imports import iterarPOA, IterarPO, iterarWOM, iterarQSO, iterarAOA
-
+from Problem.USCP.problem import USCP
+from Metaheuristics.imports import IterarPO
 from Diversity.Codes.diversity import initialize_diversity, calculate_diversity
 from Discretization import discretization as b
-
 from Util import util
-from Util.poblacion_SCP import (initialize_population, evaluate_population, binarize_and_evaluate, 
-                                update_best_solution)
+from Solver.population.population_SCP import (initialize_population, evaluate_population, binarize_and_evaluate, 
+                                update_best_solution, iterate_population_scp)
 
 from BD.sqlite import BD
+from Util.log import initial_log_scp_uscp, log_progress, final_log_scp
 
-from Util.log import initial_log_scp_uscp, log_progress, final_log
-
-def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
+def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param, unicost):
+    
+    bd = BD()
+    
     dirResult = './Resultados/Transitorio/'
     
-    instance = SCP(instances)
+    if unicost:
+        instance = USCP(instances)
+    else:
+        instance = SCP(instances)
     
     # tomo el tiempo inicial de la ejecucion
     initialTime = time.time()
@@ -68,96 +67,31 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
     for iter in range(1, maxIter + 1):
         # obtengo mi tiempo inicial
         timerStart = time.time()
-
-        # perturbo la poblacion con la metaheuristica, pueden usar SCA y GWO
-        # en las funciones internas tenemos los otros dos for, for de individuos y for de dimensiones
         
-        if mh == "SCA":
-            population = iterarSCA(maxIter, iter, instance.getColumns(), population, best)
-            
-        if mh == "GWO":
-            population = iterarGWO(maxIter, iter, instance.getColumns(), population, fitness, 'MIN')
-            
-        if mh == 'WOA':
-            population = iterarWOA(maxIter, iter, instance.getColumns(), population, best)
-            
-        if mh == 'PSA':
-            population = iterarPSA(maxIter, iter, instance.getColumns(), population, best)
-            
-        if mh == "GA":
-            partes = param.split(";")
-            
-            cross = float(partes[0])
-            muta = float(partes[1].split(":")[1])
-            
-            population = iterarGA(population, fitness, cross, muta)
-            
-        if mh == 'PSO':
-            population, vel = iterarPSO(maxIter, iter, instance.getColumns(), population, best, pBest, vel, 1)
-            
-        if mh == 'FOX':
-            population = iterarFOX(maxIter, iter, instance.getColumns(), population, best)
-            
-        if mh == 'EOO':
-            population = iterarEOO(maxIter, iter, population.tolist(), best.tolist())
-            
-        if mh == 'RSA':
-            population = iterarRSA(maxIter, iter, instance.getColumns(), population, best, 0, 1)
-            
-        if mh == 'GOA':
-            population = iterarGOA(maxIter, iter, instance.getColumns(), population, best, fitness, fo, 'MIN')
-            
-        if mh == 'HBA':
-            population = iterarHBA(maxIter, iter, instance.getColumns(), population, best, fitness, fo, 'MIN')
-            
-        if mh == 'TDO':
-            population = iterarTDO(maxIter, iter, instance.getColumns(), population, fitness, fo, 'MIN')
-            
-        if mh == 'SHO':
-            population = iterarSHO(maxIter, iter, instance.getColumns(), population, best, fo, 'MIN')
-            
-        if mh == 'SBOA':
-            population = iterarSBOA(maxIter, iter, instance.getColumns(), population, fitness, best, fo)
-            
-        if mh == 'EHO':
-            lb = [0] * instance.getColumns()
-            ub = [1] * instance.getColumns()
-            
-            population = iterarEHO(maxIter, iter, instance.getColumns(), population, best, lb, ub, fitness)
-            
-        if mh == 'EBWOA':
-            population = iterarEBWOA(maxIter, iter, instance.getColumns(), population, best, 0, 1)
-            
-        if mh == 'FLO': 
-            population = iterarFLO(maxIter, iter, instance.getColumns(), population, fitness, best, fo, 'MIN', 0, 1)
-            
-        if mh == 'HLOA':
-            population = iterarHLOAScp(maxIter, iter, instance.getColumns(), population, best, 0, 1)
-            
-        if mh == "LOA":
-            population, posibles_mejoras = iterarLOA(maxIter, population, best, 0, 1, iter, instance.getColumns())
-            
-        if mh == 'NO':
-            population = iterarNO(maxIter, iter, instance.getColumns(), population, best)
-            
-        if mh == 'POA':
-            population = iterarPOA(maxIter, iter, instance.getColumns(), population, fitness, fo, 0, 1, 'MIN')
-            
+        # --- Manejo especial para PO (se mantiene fuera de iterate_population_scp) ---
+        
         if mh == 'PO':
+            # 'population' no fue modificada por iterate_population_scp en este caso
             iterarPO.pob(population, iter)
             population = iterarPO.optimizer(iter)
-            
-        if mh == 'WOM':
-            lb = [0] * instance.getColumns()
-            ub = [1] * instance.getColumns()
-            
-            population = iterarWOM(maxIter, iter, instance.getColumns(), population, fitness, lb, ub, fo)
-        
-        if mh == 'QSO':
-            population = iterarQSO(maxIter, iter, instance.getColumns(), population, best, 0, 1)
-            
-        if mh == 'AOA':
-            population = iterarAOA(maxIter, iter, instance.getColumns(), population, best)
+            if not isinstance(population, np.ndarray):
+                population = np.array(population)
+                
+        # --- Fin Manejo PO ---
+
+        population, vel, posibles_mejoras = iterate_population_scp(
+            mh=mh,
+            population=population,
+            iter=iter,
+            maxIter=maxIter,
+            instance=instance,
+            fitness=fitness,
+            best=best,
+            vel=vel,
+            pBest=pBest,
+            fo=fo,
+            param=param
+        )
         
         # Binarizo, calculo de factibilidad de cada individuo y calculo del fitness
         population, fitness, pBest = binarize_and_evaluate(
@@ -181,7 +115,9 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
         
     finalTime = time.time()
     
-    final_log(bestFitness, initialTime, finalTime)
+    numberOfSubsets = str(sum(best))
+    
+    final_log_scp(bestFitness, numberOfSubsets, initialTime, finalTime)
     
     results.close()
     
@@ -189,7 +125,6 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param):
     
     fileName = mh + "_" + instances.split(".")[0]
 
-    bd = BD()
     bd.insertarIteraciones(fileName, binary, id)
     bd.insertarResultados(bestFitness, finalTime - initialTime, best, id)
     bd.actualizarExperimento(id, 'terminado')

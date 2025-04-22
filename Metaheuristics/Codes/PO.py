@@ -52,7 +52,7 @@ class IterarPO:
         self._best = min(self._sol, key=lambda x: x['Cost'])
 
         # Si es la primera iteracion, guardar el mejor costo inicial
-        if iter == 0:
+        if iter == 1:
             self._initialBest = self._best['Cost']
 
     # Covertir la poblacion del PO a uno que pueda entender Solver

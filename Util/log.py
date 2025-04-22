@@ -68,6 +68,13 @@ def final_log(bestFitness, initialTime, finalTime):
     print(f"{Fore.GREEN}Tiempo de ejecución (s): {(finalTime - initialTime):.2f}")
     print(f"{Fore.GREEN}Best Fitness: {bestFitness:.2e}")
     print("------------------------------------------------------------------------------------------------------")
+        
+def final_log_scp(bestFitness, subsSelected, initialTime, finalTime):
+    print("------------------------------------------------------------------------------------------------------")
+    print(f"{Fore.GREEN}Tiempo de ejecución (s): {(finalTime - initialTime):.2f}")
+    print(f"{Fore.GREEN}Best Fitness: {bestFitness:.2e} ({bestFitness})")
+    print(f"{Fore.GREEN}Subconjuntos seleccionados: {subsSelected}")
+    print("------------------------------------------------------------------------------------------------------")
 
 def log_experimento(data):
     """Log para mostrar el inicio del procesamiento de un experimento."""
