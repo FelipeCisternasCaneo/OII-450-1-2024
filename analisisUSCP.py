@@ -27,7 +27,7 @@ DIR_BOXPLOT      = DIRS["boxplot"]
 DIR_VIOLIN       = DIRS["violinplot"]
 
 # === Parámetros generales ===
-GRAFICOS = True
+GRAFICOS = False # <-- Cambiar a True para generar gráficos para cada corrida
 MHS_LIST = EXPERIMENTS["mhs"]
 COLORS = ['r', 'g']
 
@@ -43,7 +43,7 @@ class InstancesMhs:
         self.bestTime = []
 
 # === Inicialización ===
-mhs_instances = {name: InstancesMhs() for name in MHS_LIST}
+#mhs_instances = {name: InstancesMhs() for name in MHS_LIST}
 bd = BD()
 
 # === Función para actualizar Datos ===
@@ -155,7 +155,7 @@ def graficar_boxplot_violin(instancia, binarizacion):
     plt.savefig(file_path_violin)
     plt.close()
 
-def procesar_archivos(instancia, blob, archivo_fitness, bin_actual):
+def procesar_archivos(instancia, blob, archivo_fitness, bin_actual, mhs_instances):
     """
     Procesa una lista de archivos (blob), extrae sus datos y genera gráficos asociados
     a una instancia específica del USCP, utilizando una binarización concreta.
@@ -306,6 +306,8 @@ def analizar_instancias():
 
         for binarizacion in lista_bin:
             print(f"    ↳ Binarización: {binarizacion}")
+            
+            mhs_instances_local = {name: InstancesMhs() for name in MHS_LIST}
 
             # Preparar carpetas de salida
             output_dir_resumen = os.path.join(DIR_RESUMEN, 'USCP')
@@ -326,13 +328,13 @@ def analizar_instancias():
             archivoFitness.write("MH, FITNESS\n")
 
             # Procesar resultados y escribir datos
-            procesar_archivos(instancia_id, blob, archivoFitness, binarizacion)
+            procesar_archivos(instancia_id, blob, archivoFitness, binarizacion, mhs_instances_local)
 
             # Escribir resúmenes estadísticos
-            escribir_resumenes(mhs_instances, archivoResumenFitness, archivoResumenTimes, archivoResumenPercentage, MHS_LIST)
+            escribir_resumenes(mhs_instances_local, archivoResumenFitness, archivoResumenTimes, archivoResumenPercentage, MHS_LIST)
 
             # Generar gráficos resumen
-            graficar_mejores_resultados(instancia_id, mhs_instances, binarizacion)
+            graficar_mejores_resultados(instancia_id, mhs_instances_local, binarizacion)
             graficar_boxplot_violin(instancia_id, binarizacion)
 
             # Cerrar archivos
