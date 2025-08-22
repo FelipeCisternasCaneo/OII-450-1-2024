@@ -2,6 +2,9 @@ import random
 import numpy as np
 import math
 
+# Draco Lizard Optimizer (DLO)
+# https://doi.org/10.1007/s12065-024-00998-5
+
 # Realiza una perturbación de movimiento mediante el vuelo de Lèvy
 def levy_flight(size, alpha=1.5, beta=0.5):
     dl = (math.gamma(1 + alpha) * np.sin(np.pi * alpha / 2) / (
