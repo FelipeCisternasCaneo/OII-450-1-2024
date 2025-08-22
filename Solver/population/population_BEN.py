@@ -81,7 +81,7 @@ def update_population(population, fitness, _, lb, ub, function, best, bestFitnes
 
     return population, fitness, best, bestFitness, div_t
 
-def iterate_population(mh, population, iter, maxIter, dim, fitness, best, vel=None, pBest=None, ub=None, lb=None, fo=None):
+def iterate_population(mh, population, iter, maxIter, dim, fitness, best, vel=None, pBest=None, ub=None, lb=None, fo=None, userData=None):
     """
     Itera sobre la población usando la metaheurística especificada ('mh'),
     construyendo los argumentos dinámicamente basados en MH_ARG_MAP.
@@ -123,6 +123,7 @@ def iterate_population(mh, population, iter, maxIter, dim, fitness, best, vel=No
         'lb0': lb0_val,
         'fo': fo,
         'objective_type': 'MIN',
+        'userData': userData,
     }
 
     required_args_names = MH_ARG_MAP[mh]

@@ -26,7 +26,14 @@ from .Codes.SHO import iterarSHO
 from .Codes.TDO import iterarTDO
 from .Codes.WOA import iterarWOA
 from .Codes.WOM import iterarWOM
-
+from .Codes.SSO import iterarSSO
+from .Codes.DLO import iterarDLO
+from .Codes.DOA import iterarDOA
+from .Codes.EHO import iterarEHO
+from .Codes.DRA import iterarDRA
+from .Codes.SRO import iterarSRO
+from .Codes.GOOSE_original import iterarGOOSE_original
+from .Codes.GOOSE2 import iterarGOOSE
 # --- Diccionario central de metaheurísticas
 
 metaheuristics = {
@@ -51,9 +58,17 @@ metaheuristics = {
     "SBOA": iterarSBOA,
     "SCA": iterarSCA,
     "SHO": iterarSHO,
+    "SSO": iterarSSO,
     "TDO": iterarTDO,
     "WOA": iterarWOA,
     "WOM": iterarWOM,
+    "DLO": iterarDLO,
+    "DOA": iterarDOA,
+    "EHO": iterarEHO,
+    "DRA": iterarDRA,
+    "SRO": iterarSRO,
+    "GOOSE2": iterarGOOSE,
+    "GOOSE": iterarGOOSE_original,
 }
 
 # --- Mapa de argumentos requeridos (MH_ARG_MAP) ---
@@ -63,10 +78,15 @@ MH_ARG_MAP = {
 
     # A
     'AOA':   ('maxIter', 'iter', 'dim', 'population', 'best', 'lb0', 'ub0'),
+    
+    # D
+    'DOA':  ('maxIter', 'iter', 'dim', 'population', 'best', 'fo', 'lb', 'ub'),
+    'DLO':   ('iter', 'maxIter','dim', 'population', 'fitness', 'best', 'lb', 'ub', 'fo'),
+    'DRA':   ('maxIter', 'iter', 'dim', 'population', 'fitness', 'best', 'fo', 'lb', 'ub', 'objective_type'),
 
     # E
     'EBWOA': ('maxIter', 'iter', 'dim', 'population', 'best', 'lb0', 'ub0'),
-    'EHO':   ('maxIter', 'iter', 'dim', 'population', 'best', 'lb', 'ub', 'fitness'),
+    'EHO':   ('maxIter', 'iter', 'dim', 'population', 'best', 'lb', 'ub', 'fitness', 'fo'),
     'EOO':   ('maxIter', 'iter', 'population', 'best'),
 
     # F
@@ -76,6 +96,8 @@ MH_ARG_MAP = {
     # G
     'GA':    ('population', 'fitness', 'cross', 'muta'),
     'GOA':   ('maxIter', 'iter', 'dim', 'population', 'best', 'fitness', 'fo', 'objective_type'),
+    'GOOSE': ('dim', 'population', 'best'),
+    'GOOSE2': ('maxIter', 'iter', 'dim', 'population', 'best'),
     'GWO':   ('maxIter', 'iter', 'dim', 'population', 'fitness', 'objective_type'),
 
     # H
@@ -104,6 +126,8 @@ MH_ARG_MAP = {
     'SBOA':  ('maxIter', 'iter', 'dim', 'population', 'fitness', 'best', 'fo'),
     'SCA':   ('maxIter', 'iter', 'population', 'best'),
     'SHO':   ('maxIter', 'iter', 'dim', 'population', 'best', 'fo', 'objective_type'),
+    'SSO':   ('maxIter', 'iter', 'dim', 'population', 'fitness', 'best', 'fo', 'lb', 'ub'),
+    'SRO':   ('maxIter', 'iter', 'dim', 'population', 'best', 'fo', 'vel', 'userData'),
 
     # T
     'TDO':   ('maxIter', 'iter', 'dim', 'population', 'fitness', 'fo', 'objective_type'),

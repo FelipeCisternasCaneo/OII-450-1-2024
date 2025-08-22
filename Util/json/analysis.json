@@ -1,18 +1,7 @@
 {
 
 "ben": true,
-"scp": true,
-"uscp": false,
-
-"mhs": ["SBOA"],
-    
-"DS_actions": ["V3-STD", "V3-ELIT"],
-
-"instancias":
-{
-    "BEN": ["F8"],
-    "SCP": ["41"],
-    "USCP": ["uclr10"]
-}
+"scp": false,
+"uscp": false
 
 }

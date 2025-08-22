@@ -27,7 +27,7 @@ DIR_BOXPLOT      = DIRS["boxplot"]
 DIR_VIOLIN       = DIRS["violinplot"]
 
 # === Parámetros generales ===
-GRAFICOS = False # <-- Cambiar a True para generar gráficos para cada corrida
+GRAFICOS = True # <-- Cambiar a True para generar gráficos para cada corrida
 MHS_LIST = EXPERIMENTS["mhs"]
 COLORS = ['r', 'g']
 

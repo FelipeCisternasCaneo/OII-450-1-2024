@@ -1,5 +1,4 @@
 import os
-import json
 import opfunu.cec_based
 
 from BD.sqlite import BD

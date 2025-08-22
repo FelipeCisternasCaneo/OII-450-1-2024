@@ -13,10 +13,10 @@
     "ben": true,
     "scp": false,
     "uscp": false,
-    
-    "mhs": ["SBOA"],
-    
-    "DS_actions": ["V3-STD", "V3-ELIT"],
+
+    "mhs": ["SBOA", "PSO"],
+
+    "DS_actions": ["V3-ELIT"],
 
     "dimensiones": {
         "BEN": {
@@ -28,14 +28,16 @@
     },
 
     "experimentos": {
-        "BEN": {"iteraciones": 100, "poblacion": 50, "num_experimentos": 1},
-        "SCP": {"iteraciones": 100, "poblacion": 10, "num_experimentos": 1},
+        "BEN": {"iteraciones": 500, "poblacion": 30, "num_experimentos": 5},
+        "SCP": {"iteraciones": 100, "poblacion": 30, "num_experimentos": 1},
         "USCP": {"iteraciones": 100, "poblacion": 10, "num_experimentos": 1}
     },
 
     "instancias": {
-        "BEN": ["F8"],
-        "SCP": ["41"],
+        "BEN": ["F1", "F2", "F3", "F4", "F6", "F7", "F8", "F9", "F10", 
+                "F11", "F12", "F13", "F14", "F15", "F16", "F17", "F18", 
+                "F19", "F20", "F21", "F22", "F23"],
+        "SCP": ["41", "51", "61"],
         "USCP": ["uclr10"]
     }
 }

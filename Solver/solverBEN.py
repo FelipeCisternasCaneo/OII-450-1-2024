@@ -60,6 +60,8 @@ def solverBEN(id, mh, maxIter, pop, function, lb, ub, dim):
     if mh == 'PO':
         iterarPO = IterarPO(fo_vectorized, dim, pop, maxIter, lb[0], ub[0])
         
+    userData = {}
+        
     # Bucle de iteraciones
     for iter in range(1, maxIter + 1):
         timerStart = time.time()
@@ -76,7 +78,8 @@ def solverBEN(id, mh, maxIter, pop, function, lb, ub, dim):
             pBest=pBest,      # 9
             ub=ub,            # 10
             lb=lb,            # 11
-            fo=fo_vectorized  # 12
+            fo=fo_vectorized,  # 12
+            userData=userData # 13
         )
         
         if mh == 'PO':

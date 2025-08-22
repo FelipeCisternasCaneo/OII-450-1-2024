@@ -39,7 +39,7 @@ def evaluate_population(mh, population, fitness, instance, pBest, pBestScore, re
     return fitness, best, bestFitness, pBest, pBestScore
 
 def iterate_population_scp(mh, population, iter, maxIter, instance, fitness, best,
-                           vel=None, pBest=None, fo=None, param=None):
+                           vel=None, pBest=None, fo=None, param=None, userData=None):
     """
     Itera sobre la población para SCP usando la metaheurística especificada ('mh'),
     construyendo los argumentos dinámicamente basados en MH_ARG_MAP.
@@ -96,6 +96,7 @@ def iterate_population_scp(mh, population, iter, maxIter, instance, fitness, bes
         'ub0': ub0_val,         # Escalar 1
         'lb0': lb0_val,         # Escalar 0
         'fo': fo,
+        'userData': userData,
         'objective_type': 'MIN'
     }
 
