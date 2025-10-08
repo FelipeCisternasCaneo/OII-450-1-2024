@@ -3,6 +3,7 @@
 # --- Importaciones de las implementaciones
 
 from .Codes.AOA import iterarAOA
+from .Codes.APO import iterarAPO
 from .Codes.EBWOA import iterarEBWOA
 from .Codes.EOO import iterarEOO
 from .Codes.FLO import iterarFLO
@@ -38,6 +39,7 @@ from .Codes.GOOSE2 import iterarGOOSE
 
 metaheuristics = {
     "AOA": iterarAOA,
+    "APO": iterarAPO,
     "EBWOA": iterarEBWOA,
     "EOO": iterarEOO,
     "FLO": iterarFLO,
@@ -78,6 +80,7 @@ MH_ARG_MAP = {
 
     # A
     'AOA':   ('maxIter', 'iter', 'dim', 'population', 'best', 'lb0', 'ub0'),
+    'APO':   ('maxIter', 'population', 'dim', 'fitness'),
     
     # D
     'DOA':  ('maxIter', 'iter', 'dim', 'population', 'best', 'fo', 'lb', 'ub'),

@@ -52,7 +52,7 @@ def main():
     print("=" * ancho)
 
     for metodo, duracion in tiempos.items():
-        print(f"  ▸ {metodo:<6} : {duracion:>6.2f} segundos")
+        print(f"  -- {metodo:<6} : {duracion:>6.2f} segundos")
 
     print("-" * ancho)
     print(f"    TOTAL    : {tiempo_total:>6.2f} segundos")

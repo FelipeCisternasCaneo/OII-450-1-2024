@@ -41,6 +41,16 @@ class InstancesMhs:
         self.xpt = []
         self.bestFitness = []
         self.bestTime = []
+        # NEW: diversity & gaps
+        self.ent = []
+        self.divj_mean = []
+        self.divj_min = []
+        self.divj_max = []
+        self.gap = []
+        self.rdp = []
+        # NEW: per-iteration series for best-style plots
+        self.xpl_iter = None
+        self.xpt_iter = None
 
 # === Inicialización ===
 # mhs_instances = {name: InstancesMhs() for name in MHS_LIST}
@@ -49,11 +59,20 @@ bd = BD()
 # === Función para actualizar Datos ===
 def actualizar_datos(mhs_instances, mh, archivo_fitness, data):
     instancia = mhs_instances[mh]
-    instancia.fitness.append(np.min(data['fitness']))
+
+    # Core summaries
+    instancia.fitness.append(np.min(data['best_fitness']))
     instancia.time.append(np.round(np.sum(data['time']), 3))
     instancia.xpl.append(np.round(np.mean(data['XPL']), 2))
     instancia.xpt.append(np.round(np.mean(data['XPT']), 2))
-    archivo_fitness.write(f'{mh}, {np.min(data["fitness"])}\n')
+    archivo_fitness.write(f'{mh}, {np.min(data["best_fitness"])}\n')
+
+    instancia.ent.append(float(np.nanmean(data['ENT'])))
+    instancia.divj_mean.append(float(np.nanmean(data['Divj_mean'])))
+    instancia.divj_min.append(float(np.nanmean(data['Divj_min'])))
+    instancia.divj_max.append(float(np.nanmean(data['Divj_max'])))
+    instancia.gap.append(float(np.nanmean(data['GAP'])))
+    instancia.rdp.append(float(np.nanmean(data['RDP'])))
 
 def graficar_datos(iteraciones, fitness, xpl, xpt, tiempo, mh, problem, corrida, binarizacion):
     """
@@ -67,7 +86,7 @@ def graficar_datos(iteraciones, fitness, xpl, xpt, tiempo, mh, problem, corrida,
     # --- Gráfico de convergencia ---
     path_convergencia = os.path.join(output_dir, f'Convergence_{mh}_SCP_{problem}_{corrida}_{binarizacion}.pdf')
     _, ax = plt.subplots()
-    ax.plot(iteraciones, fitness, marker='o')
+    ax.plot(iteraciones, fitness)
     ax.set_title(f'Convergence {mh}\nscp{problem} - Run {corrida} - ({binarizacion})')
     ax.set_ylabel("Fitness")
     ax.set_xlabel("Iteration")
@@ -195,14 +214,35 @@ def procesar_archivos(instancia, blob, archivo_fitness, bin_actual, mhs_instance
         # Solo procesar si la metaheurística está registrada
         if mh in MHS_LIST:
             actualizar_datos(mhs_instances, mh, archivo_fitness, data)
-            mhs_instances[mh].bestFitness = data['fitness']
-            mhs_instances[mh].bestTime = data['time']
+
+            # Decide which run to keep for "best-style" plots:
+            # keep the run with the lowest final fitness value.
+            new_final = float(data['best_fitness'].iloc[-1])
+
+            prev_final = np.inf
+            prev_series = getattr(mhs_instances[mh], 'bestFitness', None)
+            if prev_series is not None:
+                try:
+                    # Si es una Serie de pandas
+                    if len(prev_series) > 0:
+                        prev_final = float(prev_series.iloc[-1])
+                except AttributeError:
+                    # Si es lista o array
+                    if len(prev_series) > 0:
+                        prev_final = float(prev_series[-1])
+
+            # Si esta corrida termina con mejor fitness, la guardamos
+            if new_final < prev_final:
+                mhs_instances[mh].bestFitness = data['best_fitness']
+                mhs_instances[mh].bestTime    = data['time']
+                mhs_instances[mh].xpl_iter    = data['XPL']
+                mhs_instances[mh].xpt_iter    = data['XPT']
 
         # Generar gráficos por corrida
         if GRAFICOS:
             graficar_datos(
                 iteraciones=data['iter'],
-                fitness=data['fitness'],
+                fitness=data['best_fitness'],
                 xpl=data['XPL'],
                 xpt=data['XPT'],
                 tiempo=data['time'],
@@ -278,6 +318,50 @@ def graficar_mejores_resultados(instancia, mhs_instances, binarizacion):
     plt.tight_layout()
     plt.savefig(os.path.join(output_dir, f'time_SCP_{instancia}_{binarizacion}.pdf'))
     plt.close()
+    
+        # Combined best-style plot: XPL% and XPT% per MH over iterations
+    output_dir = os.path.join(DIR_BEST, 'SCP')
+    os.makedirs(output_dir, exist_ok=True)
+
+    colors = ["tab:red", "tab:blue", "tab:green", "tab:orange", "tab:purple",
+            "tab:cyan", "tab:pink", "tab:brown", "tab:olive", "tab:gray"]
+    color_map = {name: colors[i % len(colors)] for i, name in enumerate(MHS_LIST)}
+
+    plt.figure(figsize=(8, 5))
+    any_series = False
+    max_len = 0
+
+    for name in MHS_LIST:
+        mh = mhs_instances[name]
+        if mh.xpl_iter is None or mh.xpt_iter is None:
+            continue
+
+        any_series = True
+        color = color_map[name]
+        x_idx = np.arange(len(mh.xpl_iter))
+
+        plt.plot(x_idx, mh.xpt_iter, linestyle='-',  linewidth=2,
+                label=f'{name} XPT% (avg {np.round(np.mean(mh.xpt_iter), 2)}%)',
+                color=color)
+        plt.plot(x_idx, mh.xpl_iter, linestyle='--', linewidth=2,
+                label=f'{name} XPL% (avg {np.round(np.mean(mh.xpl_iter), 2)}%)',
+                color=color)
+
+        max_len = max(max_len, len(x_idx))
+
+    if any_series:
+        plt.title(f'Exploration (XPL) vs Exploitation (XPT) per MH\nscp{instancia} - {binarizacion}')
+        plt.ylabel("Percentage (%)")
+        plt.xlabel("Iteration")
+        plt.ylim(0, 100)
+        if max_len <= 1:
+            plt.xlim(-0.5, 0.5)
+        plt.legend(loc='upper right', fontsize=8)
+        plt.tight_layout()
+        plt.savefig(os.path.join(output_dir, f'xpl_xpt_SCP_{instancia}_{binarizacion}.pdf'))
+        plt.close()
+    else:
+        plt.close()
 
 
 def analizar_instancias():
@@ -307,7 +391,7 @@ def analizar_instancias():
             continue
 
         for binarizacion in lista_bin:
-            print(f"    ↳ Binarización: {binarizacion}")
+            print(f"    -- Binarización: {binarizacion}")
             
             mhs_instances_local = {name: InstancesMhs() for name in MHS_LIST}
 
@@ -317,32 +401,58 @@ def analizar_instancias():
             os.makedirs(output_dir_resumen, exist_ok=True)
             os.makedirs(output_dir_fitness, exist_ok=True)
 
-            # Inicializar archivos de salida
+            # Inicializar archivos de salida (incluye diversidad y gap/rdp)
             archivoResumenFitness = open(os.path.join(output_dir_resumen, f'resumen_fitness_SCP_{instancia_id}_{binarizacion}.csv'), 'w')
             archivoResumenTimes = open(os.path.join(output_dir_resumen, f'resumen_times_SCP_{instancia_id}_{binarizacion}.csv'), 'w')
             archivoResumenPercentage = open(os.path.join(output_dir_resumen, f'resumen_percentage_SCP_{instancia_id}_{binarizacion}.csv'), 'w')
+            archivoResumenDiversity = open(os.path.join(output_dir_resumen, f'resumen_diversity_SCP_{instancia_id}_{binarizacion}.csv'), 'w')
+            archivoResumenGap = open(os.path.join(output_dir_resumen, f'resumen_gap_SCP_{instancia_id}_{binarizacion}.csv'), 'w')
             archivoFitness = open(os.path.join(output_dir_fitness, f'fitness_SCP_{instancia_id}_{binarizacion}.csv'), 'w')
 
             # Escribir encabezados
-            archivoResumenFitness.write("instance, best, avg. fitness, std fitness\n")
-            archivoResumenTimes.write("instance, min time (s), avg. time (s), std time (s)\n")
-            archivoResumenPercentage.write("instance, avg. XPL%, avg. XPT%\n")
+            archivoResumenFitness.write("MH, min best, avg. best, std. best\n")
+            archivoResumenTimes.write("MH, min time (s), avg. time (s), std time (s)\n")
+            archivoResumenPercentage.write("MH, avg. XPL%, avg. XPT%\n")
+            archivoResumenDiversity.write("MH, avg. ENT, avg. Divj_mean, avg. Divj_min, avg. Divj_max\n")
+            archivoResumenGap.write("MH, avg. GAP, avg. RDP\n")
             archivoFitness.write("MH, FITNESS\n")
 
-            # Procesar resultados y escribir datos
+            # Procesar resultados y escribir datos por corrida
             procesar_archivos(instancia_id, blob, archivoFitness, binarizacion, mhs_instances_local)
 
-            # Escribir resúmenes estadísticos
+            # Escribir resúmenes estadísticos core (fitness, tiempo, %)
             escribir_resumenes(mhs_instances_local, archivoResumenFitness, archivoResumenTimes, archivoResumenPercentage, MHS_LIST)
 
-            # Generar gráficos resumen
+            # Graficos comparativos (incluye el combinado XPL/XPT si lo agregaste en graficar_mejores_resultados)
             graficar_mejores_resultados(instancia_id, mhs_instances_local, binarizacion)
             graficar_boxplot_violin(instancia_id, binarizacion)
+
+            # NUEVO: escribir promedios de diversidad y GAP/RDP por MH
+            for name in MHS_LIST:
+                mh = mhs_instances_local[name]
+
+                # Diversity summary (si hay datos)
+                if len(mh.ent) or len(mh.divj_mean) or len(mh.divj_min) or len(mh.divj_max):
+                    ent_avg       = np.round(np.mean(mh.ent), 6)        if len(mh.ent)       else np.nan
+                    divj_mean_avg = np.round(np.mean(mh.divj_mean), 6)  if len(mh.divj_mean) else np.nan
+                    divj_min_avg  = np.round(np.mean(mh.divj_min), 6)   if len(mh.divj_min)  else np.nan
+                    divj_max_avg  = np.round(np.mean(mh.divj_max), 6)   if len(mh.divj_max)  else np.nan
+                    archivoResumenDiversity.write(
+                        f"{name}, {ent_avg}, {divj_mean_avg}, {divj_min_avg}, {divj_max_avg}\n"
+                    )
+
+                # GAP/RDP summary (si hay datos)
+                if len(mh.gap) or len(mh.rdp):
+                    gap_avg = np.round(np.mean(mh.gap), 6) if len(mh.gap) else np.nan
+                    rdp_avg = np.round(np.mean(mh.rdp), 6) if len(mh.rdp) else np.nan
+                    archivoResumenGap.write(f"{name}, {gap_avg}, {rdp_avg}\n")
 
             # Cerrar archivos
             archivoResumenFitness.close()
             archivoResumenTimes.close()
             archivoResumenPercentage.close()
+            archivoResumenDiversity.close()
+            archivoResumenGap.close()
             archivoFitness.close()
 
         print("")  # Separación visual entre instancias

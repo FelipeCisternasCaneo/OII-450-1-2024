@@ -1,2 +1,5 @@
 from Diversity.Codes.hussainDiversity import diversidadHussain
 from Diversity.Codes.XPLXTP import porcentajesXLPXPT
+from Diversity.Codes.diversityDimention import diversity_per_dimension
+from Diversity.Codes.gap_rdp_calculation import compute_gap_rdp
+from Diversity.Codes.populationEntropy import population_entropy

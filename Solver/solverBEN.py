@@ -4,11 +4,13 @@ import os
 import json
 
 from Diversity.Codes.diversity import initialize_diversity, calculate_diversity
-from Metaheuristics.imports import metaheuristics, IterarPO
+from Diversity.imports import compute_gap_rdp, diversity_per_dimension, population_entropy
+from Metaheuristics.imports import IterarPO
 from Problem.Benchmark.Problem import fitness as f
 
 from Solver.population.population_BEN import initialize_population, evaluate_population, update_population, iterate_population
-from Util.log import initial_log, log_progress, final_log
+from Util.console_logging import print_initial, print_iteration, print_final
+from Util.csv_writer import open_csv, write_csv_row, close_csv
 from Util.util import convert_into_binary
 
 from BD.sqlite import BD
@@ -47,15 +49,35 @@ def solverBEN(id, mh, maxIter, pop, function, lb, ub, dim):
     
     # Inicializamos el archivo de resultados
     results = open(dirResult + f"{mh}_{function}_{id}.csv", "w")
-    results.write('iter,fitness,time,XPL,XPT,DIV\n')
+    results.write("iter,best_fitness,mean_fitness,std_fitness,time,XPL,XPT,DIV,GAP,RDP,ENT,Divj_mean,Divj_min,Divj_max\n")
+    
+    results_divj = open(dirResult + f"{mh}_{function}_{id}_divj.csv", "w")
+    divj_header = ",".join([f"Divj_{j+1}" for j in range(dim)])
+    results_divj.write(f"iter,{divj_header}\n")
     
     maxDiversity, XPL, XPT = initialize_diversity(population)
 
     initializationTime2 = time.time()
     
-    initial_log(function, dim, mh, bestFitness, optimo, 
-                initializationTime1, initializationTime2, XPT,
-                XPL, maxDiversity, results)
+        # --- Write full iteration 0 row (all columns) ---
+    meanFitness0 = float(np.mean(fitness))
+    stdFitness0  = float(np.std(fitness))
+    gap0, rdp0   = compute_gap_rdp(bestFitness, optimo)
+    
+    divj_vec0, divj_mean0, divj_min0, divj_max0 = diversity_per_dimension(population)
+    ent_avg0, ent_dim0 = population_entropy(population, bins=20, lb=lb, ub=ub)
+    
+    time0 = initializationTime2 - initializationTime1
+    
+    results.write(
+    f"0,{bestFitness:.6e},{meanFitness0:.6f},{stdFitness0:.6f},"
+    f"{time0:.3f},{XPL:.6f},{XPT:.6f},{maxDiversity:.6f},"
+    f"{gap0:.6f},{rdp0:.6f},{ent_avg0:.6f},{divj_mean0:.6f},{divj_min0:.6f},{divj_max0:.6f}\n"
+    )
+    
+    results_divj.write("0," + ",".join([f"{v:.6f}" for v in divj_vec0]) + "\n")
+    
+    print_initial(f"{function} {dim} {mh}", bestFitness)
     
     if mh == 'PO':
         iterarPO = IterarPO(fo_vectorized, dim, pop, maxIter, lb[0], ub[0])
@@ -91,15 +113,33 @@ def solverBEN(id, mh, maxIter, pop, function, lb, ub, dim):
         
         div_t, maxDiversity, XPL, XPT = calculate_diversity(population, maxDiversity)
         
+        # --- Additional metrics ---
+        meanFitness = float(np.mean(fitness))
+        stdFitness = float(np.std(fitness))
+        gap, rdp = compute_gap_rdp(bestFitness, optimo)
+
+        divj_vec, divj_mean, divj_min, divj_max = diversity_per_dimension(population)
+        ent_avg, ent_dim = population_entropy(population, bins=20, lb=lb, ub=ub)
+        
         timerFinal = time.time()
         
-        log_progress(iter, maxIter, bestFitness, optimo, timerFinal - timerStart, XPT, XPL, div_t, results)
+        results.write(
+            f"{iter},{bestFitness:.6e},{meanFitness:.6f},{stdFitness:.6f},"
+            f"{round(timerFinal - timerStart,3)},{XPL:.6f},{XPT:.6f},{div_t:.6f},"
+            f"{gap:.6f},{rdp:.6f},{ent_avg:.6f},{divj_mean:.6f},{divj_min:.6f},{divj_max:.6f}\n"
+        )
+        
+        results_divj.write(f"{iter}," + ",".join([f"{v:.6f}" for v in divj_vec]) + "\n")
+        
+        print_iteration(iter, maxIter, bestFitness, optimo, timerFinal - timerStart, XPT, XPL, div_t)
 
     finalTime = time.time()
     
-    final_log(bestFitness, initialTime, finalTime)
+    print_final(bestFitness, initialTime, finalTime)
     
     results.close()
+    results_divj.close()
+
     binary = convert_into_binary(dirResult + f"{mh}_{function}_{id}.csv")
     
     bd.insertarIteraciones(f"{mh}_{function}", binary, id)
