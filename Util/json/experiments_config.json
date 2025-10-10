@@ -10,8 +10,8 @@
         "instancias": "Identificadores de los instancias de los problemas que se van a procesar."
     },
 
-    "ben": false,
-    "scp": false,
+    "ben": true,
+    "scp": true,
     "uscp": true,
 
     "mhs": ["SBOA", "LOA", "GWO"],
@@ -28,9 +28,9 @@
     },
 
     "experimentos": {
-        "BEN": {"iteraciones": 250, "poblacion": 30, "num_experimentos": 1},
-        "SCP": {"iteraciones": 25, "poblacion": 30, "num_experimentos": 1},
-        "USCP": {"iteraciones": 100, "poblacion": 10, "num_experimentos": 1}
+        "BEN": {"iteraciones": 50, "poblacion": 30, "num_experimentos": 1},
+        "SCP": {"iteraciones": 5, "poblacion": 30, "num_experimentos": 1},
+        "USCP": {"iteraciones": 5, "poblacion": 10, "num_experimentos": 1}
     },
 
     "instancias": {
