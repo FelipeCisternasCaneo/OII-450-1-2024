@@ -2,14 +2,17 @@
 
 # --- Importaciones de las implementaciones
 
+from .Codes.ALA import iterarALA
 from .Codes.AOA import iterarAOA
 from .Codes.APO import iterarAPO
 from .Codes.EBWOA import iterarEBWOA
+from .Codes.CCMGO import iterarCCMGO
 from .Codes.EOO import iterarEOO
 from .Codes.FLO import iterarFLO
 from .Codes.FOX import iterarFOX
 from .Codes.GA import iterarGA
 from .Codes.GOA import iterarGOA
+from .Codes.GOAT import iterarGOAT
 from .Codes.GWO import iterarGWO
 from .Codes.HBA import iterarHBA
 from .Codes.HLOA import iterarHLOAScp, iterarHLOABen
@@ -17,6 +20,7 @@ from .Codes.LOA import iterarLOA
 from .Codes.NO import iterarNO
 from .Codes.PO import IterarPO
 from .Codes.POA import iterarPOA
+from .Codes.PGA import iterarPGA
 from .Codes.PSA import iterarPSA
 from .Codes.PSO import iterarPSO
 from .Codes.QSO import iterarQSO
@@ -33,11 +37,12 @@ from .Codes.DOA import iterarDOA
 from .Codes.EHO import iterarEHO
 from .Codes.DRA import iterarDRA
 from .Codes.SRO import iterarSRO
-from .Codes.GOOSE_original import iterarGOOSE_original
-from .Codes.GOOSE2 import iterarGOOSE
+from .Codes.WO import iterarWO
+from .Codes.DHOA import iterarDHOA
 # --- Diccionario central de metaheurísticas
 
 metaheuristics = {
+    "ALA": iterarALA,
     "AOA": iterarAOA,
     "APO": iterarAPO,
     "EBWOA": iterarEBWOA,
@@ -53,6 +58,7 @@ metaheuristics = {
     "LOA": iterarLOA,
     "NO": iterarNO,
     "POA": iterarPOA,
+    "PGA": iterarPGA,
     "PSA": iterarPSA,
     "PSO": iterarPSO,
     "QSO": iterarQSO,
@@ -69,8 +75,10 @@ metaheuristics = {
     "EHO": iterarEHO,
     "DRA": iterarDRA,
     "SRO": iterarSRO,
-    "GOOSE2": iterarGOOSE,
-    "GOOSE": iterarGOOSE_original,
+    "CCMGO": iterarCCMGO,
+    "WO": iterarWO,
+    "GOAT": iterarGOAT,
+    "DHOA": iterarDHOA
 }
 
 # --- Mapa de argumentos requeridos (MH_ARG_MAP) ---
@@ -80,12 +88,17 @@ MH_ARG_MAP = {
 
     # A
     'AOA':   ('maxIter', 'iter', 'dim', 'population', 'best', 'lb0', 'ub0'),
-    'APO':   ('maxIter', 'population', 'dim', 'fitness'),
+    "ALA":   ('maxIter', 'iter', 'dim', 'population', 'fitness', 'best', 'fo', 'lb', 'ub'),
+    'APO':   ('maxIter', 'population', 'dim', 'fitness', 'fo'),
+    
+    # C
+    'CCMGO': ('iter', 'maxIter', 'dim', 'population', 'fitness', 'best', 'lb', 'ub', 'fo'),
     
     # D
     'DOA':  ('maxIter', 'iter', 'dim', 'population', 'best', 'fo', 'lb', 'ub'),
     'DLO':   ('iter', 'maxIter','dim', 'population', 'fitness', 'best', 'lb', 'ub', 'fo'),
     'DRA':   ('maxIter', 'iter', 'dim', 'population', 'fitness', 'best', 'fo', 'lb', 'ub', 'objective_type'),
+    'DHOA':  ('maxIter', 'iter', 'dim', 'population', 'fitness', 'best', 'fo', 'lb', 'ub'),
 
     # E
     'EBWOA': ('maxIter', 'iter', 'dim', 'population', 'best', 'lb0', 'ub0'),
@@ -99,7 +112,8 @@ MH_ARG_MAP = {
     # G
     'GA':    ('population', 'fitness', 'cross', 'muta'),
     'GOA':   ('maxIter', 'iter', 'dim', 'population', 'best', 'fitness', 'fo', 'objective_type'),
-    'GOOSE': ('dim', 'population', 'best'),
+    'GOAT': ('maxIter', 'iter', 'dim', 'population', 'best', 'fitness','fo', 'lb', 'ub','jump_prob', 'filter_ratio', 'objective_type'),
+   
     'GOOSE2': ('maxIter', 'iter', 'dim', 'population', 'best'),
     'GWO':   ('maxIter', 'iter', 'dim', 'population', 'fitness', 'objective_type'),
 
@@ -116,6 +130,7 @@ MH_ARG_MAP = {
 
     # P
     'POA':   ('iter', 'dim', 'population', 'fitness', 'fo', 'lb0', 'ub0', 'objective_type'),
+    'PGA':   ('maxIter', 'iter', 'dim', 'population', 'fitness', 'best', 'fo', 'objective_type'),
     'PSA':   ('maxIter', 'iter', 'dim', 'population', 'best'),
     'PSO':   ('maxIter', 'iter', 'dim', 'population', 'best', 'pBest', 'vel', 'ub0'),
 
@@ -136,6 +151,7 @@ MH_ARG_MAP = {
     'TDO':   ('maxIter', 'iter', 'dim', 'population', 'fitness', 'fo', 'objective_type'),
 
     # W
+    'WO' :   ('maxIter', 'iter', 'dim', 'population', 'fitness', 'best', 'fo', 'lb', 'ub'),
     'WOA':   ('maxIter', 'iter', 'dim', 'population', 'best'),
     'WOM':   ('iter', 'dim', 'population', 'fitness', 'fo', 'lb', 'ub'),
 }

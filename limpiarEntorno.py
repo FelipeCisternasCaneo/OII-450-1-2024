@@ -27,8 +27,4 @@ def limpiarEntorno():
 
 if __name__ == '__main__':
     # Preguntar al usuario para seguridad
-    confirmacion = input("¿Estás seguro de que quieres borrar TODO el contenido de './resultados/'? (s/N): ")
-    if confirmacion.lower() == 's':
-        limpiarEntorno()
-    else:
-        print("Operación cancelada.")
+    limpiarEntorno()

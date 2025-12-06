@@ -1,197 +1,143 @@
-# -*- coding: utf-8 -*-
-import random
-import numpy as np
-import math
+def iterarAPO(maxIter, population, dim, fitness, fo):
+    import numpy as np
+    import math
 
-def iterarAPO(maxIter, population, dim, fitness):
-  #Definición párametros iniciales
-  X, dim = population, dim
-  poblacion = population.shape[0]
-  vecinos_par = 2
-  proporcion_max = 5
-  max_FE = 10
-  FE = 0
-  iter_max = maxIter
-  prob_ayh = 0.5
-  prob_dyr = 0.5
-  protozoa_inferior = -100
-  protozoa_superior = 100
-  eps = 1e-6
-  fitness_values = fitness
+    """
+    Parámetros:
+    - maxIter (int): número máximo de iteraciones (equivalente a max_FE/ps).
+    - population (np.ndarray): población inicial [ps, dim].
+    - dim (int): dimensión del problema.
+    - fitness (np.ndarray): fitness inicial correspondiente a cada individuo.
+    - fo (callable): función objetivo que retorna (solución, fitness).
 
-  #fitness_calculator
-  def calculator(X):
-      return np.sum(X**2)
+    Retorna:
+    - pob_protozoa (np.ndarray): población final.
+    - fitness_values (np.ndarray): fitness final.
+    - curva (np.ndarray): evolución del mejor fitness.
+    """
 
-  def fitness_calculator(X):
-      f_x = calculator(X)
-      f_x_eps = calculator(X + eps)
+    # --- Parámetros APO del paper ---
+    ps = population.shape[0]
+    pf_max = 0.1
+    np_pairs = 2
+    epsilon = 1e-10
+    xmin, xmax = -100, 100
 
-      if f_x_eps == 0:   # evitar división por cero
-          f_x_eps = eps
+    # --- Inicialización ---
+    pob_protozoa = population.copy()
+    fitness_values = fitness.copy()
 
-      ratio = (f_x / f_x_eps)
-      return math.exp(-abs(ratio))
+    best_idx = np.argmin(fitness_values)
+    best_fitness = fitness_values[best_idx]
 
-  #Factor de Forrajeo
-  i = np.random.uniform(0, 1)
-  f = np.random.uniform(0, 1) * (1 + math.cos((i/ iter_max) * math.pi))
+    curva = []
+    FE = 0          # Evaluaciones de la función objetivo
 
-  #Vector Rand
-  vector = np.zeros(dim)
-  for i in range(dim):
-    vector[i] = np.random.uniform(0, 1)
+    # --- Bucle principal (basado en evaluaciones) ---
+    while FE < maxIter:
+        #if FE % (ps * 10) == 0:
+        #    print(f"Iteración: {FE//ps} | Mejor fitness: {best_fitness}")
 
-  #Sorteo
-  def sorteo_protozoos(X, fitness_values):
-    sorted_indices = np.argsort(fitness_values)  # ordena de menor a mayor
-    X_sorted = X[sorted_indices]
-    fitness_sorted = fitness_values[sorted_indices]
-    return X_sorted, fitness_sorted
+        idx_sorted = np.argsort(fitness_values)
+        protozoa_fitness = fitness_values[idx_sorted]
+        protozoa_sorted = pob_protozoa[idx_sorted, :]
 
-  #Index Dormancia//Reproducción
-  def index_eleccion(poblacion, proporcion):
-    ps = poblacion
-    pf = proporcion
+        prop = pf_max * np.random.rand()
+        size_dr = int(np.ceil(ps * prop))
+        dr_set = set(np.random.choice(ps, size_dr, replace=False))
 
-    num_selected = int(np.ceil(ps * pf))
-    num_selected = min(num_selected, ps)
-    return np.random.choice(ps, num_selected, replace=True)
+        protozoa_nuevo = np.zeros_like(pob_protozoa)
 
-  #Mapeo Reproducción
-  def set_mapeo_reproduccion():
+        # --- Etapas de dormancia, reproducción y forrajeo ---
+        for i in range(ps):
+            if i in dr_set:
+                # Dormancia o reproducción
+                p_dr = 0.5 * (1 + math.cos((1 - (i + 1) / ps) * math.pi))
+                if np.random.rand() < p_dr:
+                    # Ecuación (11): Dormancia
+                    protozoa_nuevo[i, :] = xmin + np.random.rand(1, dim) * (xmax - xmin)
+                else:
+                    # Ecuación (13): Reproducción
+                    flag = 1 if np.random.rand() < 0.5 else -1
+                    mapeo_rep = np.zeros(dim)
+                    idx_rand = np.random.permutation(dim)[:int(np.ceil(np.random.rand() * dim))]
+                    mapeo_rep[idx_rand] = 1
 
-    Mr = np.zeros(dim)
-    num_actual = int(np.ceil(dim * np.random.uniform(0, 1)))
-    indices_update = np.random.choice(dim, num_actual, replace=False)
-    Mr[indices_update] = 1
-    return Mr
+                    perturbacion = xmin + np.random.rand(1, dim) * (xmax - xmin)
+                    protozoa_nuevo[i, :] = (
+                        protozoa_sorted[i, :] + flag * np.random.rand() * perturbacion * mapeo_rep
+                    )
+            else:
+                # Forrajeo (autotrófico o heterotrófico)
+                ratio = FE / (maxIter * ps)
+                factor = np.random.rand() * (1 + math.cos(ratio * math.pi))
+                mapeo_f = np.zeros(dim)
+                idx_rand = np.random.permutation(dim)[:int(np.ceil(dim * (i + 1) / ps))]
+                mapeo_f[idx_rand] = 1
 
-    print("Vector Mr:", Mr)
+                prob_ah = 0.5 * (1 + math.cos(ratio * math.pi))
+                vecinos = np.zeros((np_pairs, dim))
 
-  #Mapeo Forrajeo
-  def set_mapeo_forrajeo():
+                if np.random.rand() < prob_ah:
+                    # Autotrófico (Ecuación 1)
+                    j = np.random.randint(0, ps)
+                    for k in range(np_pairs):
+                        k_minus = np.random.randint(0, i + 1) if i > 0 else 0
+                        k_plus = np.random.randint(i, ps)
+                        peso_a = math.exp(
+                            -abs(protozoa_fitness[k_minus] / (protozoa_fitness[k_plus] + epsilon))
+                        )
+                        vecinos[k, :] = peso_a * (
+                            protozoa_sorted[k_minus, :] - protozoa_sorted[k_plus, :]
+                        )
+                    vecinos_sum = np.sum(vecinos, axis=0) / np_pairs
+                    protozoa_nuevo[i, :] = (
+                        protozoa_sorted[i, :]
+                        + factor * (pob_protozoa[j, :] - protozoa_sorted[i, :] + vecinos_sum) * mapeo_f
+                    )
+                else:
+                    # Heterotrófico (Ecuación 7)
+                    for k in range(np_pairs):
+                        i_kminus = max(0, i - k - 1)
+                        i_kplus = min(ps - 1, i + k + 1)
+                        peso_h = math.exp(
+                            -abs(protozoa_fitness[i_kminus] / (protozoa_fitness[i_kplus] + epsilon))
+                        )
+                        vecinos[k, :] = peso_h * (
+                            protozoa_sorted[i_kminus, :] - protozoa_sorted[i_kplus, :]
+                        )
+                    flag = 1 if np.random.rand() < 0.5 else -1
+                    X_near = (1 + flag * np.random.rand(1, dim) * (1 - ratio)) * protozoa_sorted[i, :]
+                    vecinos_sum = np.sum(vecinos, axis=0) / np_pairs
+                    protozoa_nuevo[i, :] = (
+                        protozoa_sorted[i, :]
+                        + factor * (X_near - protozoa_sorted[i, :] + vecinos_sum) * mapeo_f
+                    )
 
-    Mf = np.zeros(dim)
-    num_actual = int(np.ceil(dim * (1/poblacion)))
-    indices_update = np.random.choice(dim, num_actual, replace=False)
-    Mf[indices_update] = 1
-    return Mf
+        # --- Corrección de límites ---
+        protozoa_nuevo = np.clip(protozoa_nuevo, xmin, xmax)
 
-    print("Vector Mf:", Mf)
+        # --- Evaluación de nueva población ---
+        fitness_nuevo = np.zeros(ps)
+        for i in range(ps):
+            sol, fit = fo(protozoa_nuevo[i, :])
+            protozoa_nuevo[i, :] = sol
+            fitness_nuevo[i] = fit
+        FE += ps  # Contador de evaluaciones
 
-  #Protozoa cercano
-  def cercano(protozoa_actual):
-    for i in range(dim):
-      x_n = (1 + vector[i] *(1 - i/iter_max)) * protozoa_actual
-    return x_n
+        # --- Actualización (Ecuación 14) ---
+        mask = fitness_nuevo < protozoa_fitness
+        protozoa_sorted[mask, :] = protozoa_nuevo[mask, :]
+        protozoa_fitness[mask] = fitness_nuevo[mask]
 
-  def peso_autotrofico(protozoa_actual, X, i):
-    #Seleccionar un vecino aleatorio
-    k = np.random.choice([idx for idx in range(len(X)) if idx != i])
-    #Cálculo de fitness_calculator
-    fitness_i = fitness_calculator(protozoa_actual)
-    fitness_k = fitness_calculator(X[k])
+        pob_protozoa = protozoa_sorted
+        fitness_values = protozoa_fitness
 
-    if fitness_k == 0:
-        w_a = 1
-    else:
-        w_a = math.exp(-(abs(fitness_i / fitness_k)))
-    return w_a
+        # --- Actualizar mejor global ---
+        best_idx = np.argmin(fitness_values)
+        best_fitness = fitness_values[best_idx]
+        curva.append(best_fitness)
 
-  #Ecuación 1 (forrajeo autotrófico)
-  def ecuacion_1(protozoa_actual, peso, X, i):
-    j = np.random.choice([idx for idx in range(poblacion) if idx != i])
-    protozoa_j = X[j]
-    Mf = set_mapeo_forrajeo()
+        #print("Después de incrementar FE:", FE)
 
-    sum_vecinos = np.zeros(dim)
-    for i in range(vecinos_par):
-      #Seleccion de vecinos
-      indices_vecinos = np.random.choice([idx for idx in range(poblacion) if idx != i], 2, replace=False)
-      k_minus_idx = indices_vecinos[0]
-      k_plus_idx = indices_vecinos[1]
-
-      sum_vecinos += peso * (X[k_minus_idx] - X[k_plus_idx])
-
-    nuevo_actual = protozoa_actual + f * ((protozoa_j) - protozoa_actual + (1/vecinos_par) * sum_vecinos) * Mf
-
-    return nuevo_actual
-
-  #Calculo de peso heterotrófico
-  def peso_heterotrofico(protozoa_actual, X, i):
-    #Seleccionar un vecino aleatorio
-    k = np.random.choice([idx for idx in range(len(X)) if idx != i])
-    #Cálculo de fitness_calculator
-    fitness_i = fitness_calculator( protozoa_actual)
-    fitness_i_plus_k = fitness_calculator(X[(i + k) % len(X)])
-    fitness_i_minus_k = fitness_calculator(X[(i - k) % len(X)])
-
-    if fitness_i_plus_k == 0:
-        w_h = 1
-    else:
-        w_h = math.exp(-(abs(fitness_i_minus_k / fitness_i_plus_k)))
-    return w_h
-
-  #Ecuación 7 (forrajeo heterotrófico)
-  def ecuacion_7(protozoa_actual, peso, X, i):
-    x_n = cercano(protozoa_actual)
-    Mf = set_mapeo_forrajeo()
-
-    sum_vecinos = np.zeros(dim)
-    for i in range(vecinos_par):
-      # Selección de vecinos
-      indices_vecinos = np.random.choice([idx for idx in range(poblacion) if idx != i], 2, replace=False)
-      k_minus_idx = indices_vecinos[0]
-      k_plus_idx = indices_vecinos[1]
-
-      sum_vecinos += peso * (X[k_minus_idx] - X[k_plus_idx])
-
-    nuevo_actual = protozoa_actual + f * (x_n - protozoa_actual + (1/vecinos_par) * sum_vecinos) * Mf
-
-    return nuevo_actual
-
-  #Ecuación 11 (Dormancia)
-  def ecuacion_11(protozoa_actual):
-    nuevo_actual = protozoa_inferior + vector * (protozoa_superior - protozoa_inferior)
-    return nuevo_actual
-
-  #Ecuación 13 (Reproducción)
-  def ecuacion_13(protozoa_actual):
-    random = np.random.uniform(0, 1)
-    mapeo_reproduccion = set_mapeo_reproduccion()
-    nuevo_actual = protozoa_actual + random * (protozoa_inferior + vector * (protozoa_inferior - protozoa_superior)) * mapeo_reproduccion
-    return nuevo_actual
-
-  while FE < max_FE:
-    X, fitness_values = sorteo_protozoos(X, fitness_values)
-    proporcion = proporcion_max * np.random.uniform(0, 1)
-    index_dyr = index_eleccion(poblacion, proporcion)
-
-    for i in range(poblacion):
-      protozoa_actual = X[i]
-
-      if i in index_dyr: #Dormancia o Reproducción
-        if prob_dyr > np.random.uniform(0, 1):
-          nuevo_actual = ecuacion_11(protozoa_actual)#Ecuación 11
-
-        else:
-          set_mapeo_reproduccion()
-          nuevo_actual = ecuacion_13(protozoa_actual)#Ecuación 13
-
-      else: #Autotrofia o Heterotrifia
-        set_mapeo_forrajeo()
-        if prob_ayh > random.uniform(0, 1):
-          w_a = peso_autotrofico(protozoa_actual, X, i)
-          nuevo_actual = ecuacion_1(protozoa_actual, w_a, X, i)#Ecuación 1
-
-        else:
-          w_h = peso_heterotrofico(protozoa_actual, X, i)
-          nuevo_actual = ecuacion_7(protozoa_actual, w_h, X, i)#Ecuación 7
-
-      if fitness_calculator(nuevo_actual) < fitness_calculator(protozoa_actual):
-        X[i] = nuevo_actual
-      
-    FE += 1
-
-  return X
+    return pob_protozoa, fitness_values

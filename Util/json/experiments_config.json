@@ -3,6 +3,7 @@
         "ben": "Indica si se van a procesar funciones BEN.",
         "scp": "Indica si se van a procesar instancias SCP.",
         "uscp": "Indica si se van a procesar instancias USCP.",
+        "kp": "Indica si se van a procesar instancias KP.",
         "mhs": "Lista de metaheurísticas que se van a procesar.",
         "DS_actions": "Lista de acciones de binarización de la población.",
         "dimensiones": "Mapea cada función BEN a las dimensiones que utiliza.",
@@ -10,34 +11,36 @@
         "instancias": "Identificadores de los instancias de los problemas que se van a procesar."
     },
 
-    "ben": true,
+    "ben": false,
     "scp": true,
     "uscp": true,
+    "kp": false,
 
-    "mhs": ["SBOA", "LOA", "GWO"],
+    "mhs": ["AOA", "SBOA"],
 
-    "DS_actions": ["V3-ELIT", "V4-ELIT"],
+    "DS_actions": ["S3-ELIT", "V3-ELIT"],
 
     "dimensiones": {
         "BEN": {
-            "F1": [30], "F2": [30], "F3": [30], "F4": [30], "F5": [30], "F6": [30],
-            "F7": [30], "F8": [30], "F9": [30], "F10": [30], "F11": [30], "F12": [30], "F13": [30],
-            "F14": [2], "F15": [4], "F16": [2], "F17": [2], "F18": [2],
-            "F19": [3], "F20": [6], "F21": [4], "F22": [4], "F23": [4]
+            "F1": [30], "F2": [30], "F3": [30], "F4": [30], "F5": [30], "F6": [30], "F7": [30],
+            "F8": [30], "F9": [30], "F10": [30], "F11": [30], "F12": [30], "F13": [30],
+            "F14": [2], "F15": [4], "F16": [2], "F17": [2], "F18": [2], "F19": [3], "F20": [6],
+            "F21": [4], "F22": [4], "F23": [4]
         }
     },
 
     "experimentos": {
-        "BEN": {"iteraciones": 50, "poblacion": 30, "num_experimentos": 1},
-        "SCP": {"iteraciones": 5, "poblacion": 30, "num_experimentos": 1},
-        "USCP": {"iteraciones": 5, "poblacion": 10, "num_experimentos": 1}
+        "BEN": {"iteraciones": 100, "poblacion": 30, "num_experimentos": 1},
+        "SCP": {"iteraciones": 100, "poblacion": 10, "num_experimentos": 1},
+        "USCP": {"iteraciones": 100, "poblacion": 10, "num_experimentos": 1},
+        "KP": {"iteraciones": 5, "poblacion": 10, "num_experimentos": 1}
     },
 
     "instancias": {
-        "BEN": ["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", 
-                "F11", "F12", "F13", "F14", "F15", "F16", "F17", "F18", 
-                "F19"],
-        "SCP": ["41"],
-        "USCP": ["uclr10", "uclr11", "uclr12"]
+        "BEN": [],
+        "SCP": ["41", "51", "61", "a1", "b1", "c1", "d1", "nre1", "nrf1", "nrg1", "nrh1"],
+        "USCP": ["u41", "u51", "ua1", "ub1", "uc1", "uclr10", "ucyc08", "ud1", "unre1", "unrf1",
+            "unrg1", "unrh1"],
+        "KP": []
     }
 }

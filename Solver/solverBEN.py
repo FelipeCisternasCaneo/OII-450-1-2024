@@ -15,11 +15,11 @@ from Util.util import convert_into_binary
 
 from BD.sqlite import BD
 
-def solverBEN(id, mh, maxIter, pop, function, lb, ub, dim):
+def solverBEN(id, mh, maxIter, pop, function, lb, ub, dim, extra_params=None):
     dirResult = './Resultados/Transitorio/'
-    
-    os.makedirs(dirResult, exist_ok = True)
-    
+
+    os.makedirs(dirResult, exist_ok=True)
+
     bd = BD()
     
     if not isinstance(lb, list):
@@ -83,6 +83,14 @@ def solverBEN(id, mh, maxIter, pop, function, lb, ub, dim):
         iterarPO = IterarPO(fo_vectorized, dim, pop, maxIter, lb[0], ub[0])
         
     userData = {}
+    if mh == "GOAT":
+        # Si vienen parámetros extra desde la BD, úsalos
+        if extra_params is not None:
+            userData["jump_prob"] = float(extra_params.get("jump_prob", 0.3))
+            userData["filter_ratio"] = float(extra_params.get("filter_ratio", 0.5))
+        else:
+            userData["jump_prob"] = 0.3
+            userData["filter_ratio"] = 0.5
         
     # Bucle de iteraciones
     for iter in range(1, maxIter + 1):

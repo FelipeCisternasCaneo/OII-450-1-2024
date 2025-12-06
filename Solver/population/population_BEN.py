@@ -125,6 +125,10 @@ def iterate_population(mh, population, iter, maxIter, dim, fitness, best, vel=No
         'objective_type': 'MIN',
         'userData': userData,
     }
+    
+    # Alias específicos para ciertos MH
+    if userData:
+        context.update(userData)
 
     required_args_names = MH_ARG_MAP[mh]
     
@@ -153,10 +157,20 @@ def iterate_population(mh, population, iter, maxIter, dim, fitness, best, vel=No
             new_vel = vel
          else:
              raise TypeError(f"Retorno inesperado de {mh}. Se esperaba (population, posibles_mejoras), se obtuvo {type(result)}")
-    
+         
+    elif mh == 'GOAT':   # 👈 caso especial GOAT
+        if isinstance(result, tuple) and len(result) == 3:
+            new_population, fitness, best = result
+            new_vel = vel
+        else:
+            raise TypeError(
+                f"Retorno inesperado de GOAT. "
+                f"Se esperaba (population, fitness, best), se obtuvo {type(result)}"
+            )
+
     elif isinstance(result, tuple) and len(result) == 2: # Para PSO y otros
         new_population, new_vel = result
-    
+        
     elif isinstance(result, (np.ndarray, list)): # Para otros casos
         new_population = result
         new_vel = vel
