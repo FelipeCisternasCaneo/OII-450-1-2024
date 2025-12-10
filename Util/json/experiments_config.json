@@ -11,12 +11,12 @@
         "instancias": "Identificadores de los instancias de los problemas que se van a procesar."
     },
 
-    "ben": false,
-    "scp": true,
-    "uscp": true,
+    "ben": true,
+    "scp": false,
+    "uscp": false,
     "kp": false,
 
-    "mhs": ["AOA", "SBOA"],
+    "mhs": ["SBOA"],
 
     "DS_actions": ["S3-ELIT", "V3-ELIT"],
 
@@ -25,19 +25,40 @@
             "F1": [30], "F2": [30], "F3": [30], "F4": [30], "F5": [30], "F6": [30], "F7": [30],
             "F8": [30], "F9": [30], "F10": [30], "F11": [30], "F12": [30], "F13": [30],
             "F14": [2], "F15": [4], "F16": [2], "F17": [2], "F18": [2], "F19": [3], "F20": [6],
-            "F21": [4], "F22": [4], "F23": [4]
+            "F21": [4], "F22": [4], "F23": [4],
+
+            "F1CEC2017": [30], "F2CEC2017": [30],
+            "F3CEC2017": [30], "F4CEC2017": [30],
+            "F5CEC2017": [30], "F6CEC2017": [30],
+            "F7CEC2017": [30], "F8CEC2017": [30],
+            "F9CEC2017": [30], "F10CEC2017": [30],
+            "F11CEC2017": [30], "F12CEC2017": [30],
+            "F13CEC2017": [30], "F14CEC2017": [30],
+            "F15CEC2017": [30], "F16CEC2017": [30],
+            "F17CEC2017": [30], "F18CEC2017": [30],
+            "F19CEC2017": [30], "F20CEC2017": [30],
+            "F21CEC2017": [30], "F22CEC2017": [30],
+            "F23CEC2017": [30], "F24CEC2017": [30],
+            "F25CEC2017": [30], "F26CEC2017": [30],
+            "F27CEC2017": [30], "F28CEC2017": [30],
+            "F29CEC2017": [30], "F30CEC2017": [30]
         }
     },
 
     "experimentos": {
-        "BEN": {"iteraciones": 100, "poblacion": 30, "num_experimentos": 1},
+        "BEN": {"iteraciones": 500, "poblacion": 30, "num_experimentos": 1},
         "SCP": {"iteraciones": 100, "poblacion": 10, "num_experimentos": 1},
         "USCP": {"iteraciones": 100, "poblacion": 10, "num_experimentos": 1},
         "KP": {"iteraciones": 5, "poblacion": 10, "num_experimentos": 1}
     },
 
     "instancias": {
-        "BEN": [],
+        "BEN": ["F1CEC2017", "F2CEC2017", "F3CEC2017", "F4CEC2017", "F5CEC2017", "F6CEC2017",
+            "F7CEC2017", "F8CEC2017", "F9CEC2017", "F10CEC2017", "F11CEC2017", "F12CEC2017",
+            "F13CEC2017", "F14CEC2017", "F15CEC2017", "F16CEC2017", "F17CEC2017",
+            "F18CEC2017", "F19CEC2017", "F20CEC2017", "F21CEC2017", "F22CEC2017",
+            "F23CEC2017", "F24CEC2017", "F25CEC2017", "F26CEC2017", "F27CEC2017",
+            "F28CEC2017", "F29CEC2017", "F30CEC2017"],
         "SCP": ["41", "51", "61", "a1", "b1", "c1", "d1", "nre1", "nrf1", "nrg1", "nrh1"],
         "USCP": ["u41", "u51", "ua1", "ub1", "uc1", "uclr10", "ucyc08", "ud1", "unre1", "unrf1",
             "unrg1", "unrh1"],

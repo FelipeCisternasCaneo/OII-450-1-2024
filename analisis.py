@@ -176,6 +176,37 @@ def _validar_csv(data, nombre_archivo):
         cols_disponibles = ', '.join(data.columns.tolist())
         return None, False, f"Faltan columnas: {columnas_faltantes}. Disponibles: [{cols_disponibles}]"
     
+    # VALIDAR QUE LAS COLUMNAS SEAN NUMÉRICAS
+    for col in ['best_fitness', 'time']:
+        try:
+            # Intentar convertir a numérico
+            data[col] = pd.to_numeric(data[col], errors='coerce')
+            
+            # Si después de la conversión todo es NaN, el CSV está corrupto
+            if data[col].isna().all():
+                return None, False, f"Columna '{col}' contiene solo valores no numéricos o está corrupta"
+            
+            # Eliminar filas con valores NaN en columnas críticas
+            if data[col].isna().any():
+                filas_antes = len(data)
+                data = data.dropna(subset=[col])
+                filas_despues = len(data)
+                if filas_despues == 0:
+                    return None, False, f"Todas las filas tienen valores inválidos en '{col}'"
+                print(f"      [WARN] '{nombre_archivo}': {filas_antes - filas_despues} filas con NaN en '{col}' eliminadas")
+        
+        except Exception as e:
+            return None, False, f"Error al validar columna '{col}': {str(e)}"
+    
+    # Validar columnas opcionales de diversidad
+    for col in ['ENT', 'Divj_mean', 'Divj_min', 'Divj_max', 'GAP', 'RDP']:
+        if col in data.columns:
+            try:
+                data[col] = pd.to_numeric(data[col], errors='coerce')
+            except:
+                # Si falla, simplemente eliminar la columna
+                data = data.drop(columns=[col])
+    
     return data, True, None
 
 # ========= Helpers =========
@@ -184,14 +215,23 @@ def _actualizar_datos(mhs_instances, mh, archivo_fitness, data):
     """Versión vectorizada con validación"""
     inst = mhs_instances[mh]
     
+    # VALIDAR que las columnas sean numéricas antes de calcular
+    if not pd.api.types.is_numeric_dtype(data['best_fitness']):
+        print(f"      [ERROR] Columna 'best_fitness' no es numérica para {mh}")
+        return
+    
+    if not pd.api.types.is_numeric_dtype(data['time']):
+        print(f"      [ERROR] Columna 'time' no es numérica para {mh}")
+        return
+    
     # Operaciones vectorizadas (más rápidas)
     inst.fitness.append(data['best_fitness'].min())
     inst.time.append(data['time'].sum().round(3))
     
     # XPL y XPT son opcionales
-    if 'XPL' in data.columns:
+    if 'XPL' in data.columns and pd.api.types.is_numeric_dtype(data['XPL']):
         inst.xpl.append(data['XPL'].mean().round(2))
-    if 'XPT' in data.columns:
+    if 'XPT' in data.columns and pd.api.types.is_numeric_dtype(data['XPT']):
         inst.xpt.append(data['XPT'].mean().round(2))
     
     archivo_fitness.write(f'{mh}, {inst.fitness[-1]}\n')
@@ -202,8 +242,10 @@ def _actualizar_datos(mhs_instances, mh, archivo_fitness, data):
         ('Divj_min', 'divj_min'), ('Divj_max', 'divj_max'),
         ('GAP', 'gap'), ('RDP', 'rdp'),
     ]:
-        if col in data.columns:
-            getattr(inst, target).append(data[col].mean())
+        if col in data.columns and pd.api.types.is_numeric_dtype(data[col]):
+            # Verificar que no todo sea NaN
+            if not data[col].isna().all():
+                getattr(inst, target).append(data[col].mean())
 
 def _graficar_por_corrida(iteraciones, fitness, xpl, xpt, tiempo, mh, problem_id, corrida, subfolder, binarizacion=None):
     out = os.path.join(DIR_GRAFICOS, subfolder) if binarizacion is None \

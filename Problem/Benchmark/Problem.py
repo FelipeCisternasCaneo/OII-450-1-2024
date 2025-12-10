@@ -1,8 +1,12 @@
 import numpy as np 
 import math
 import opfunu.cec_based
+from Problem.Benchmark.CEC.cec2017.functions import all_functions
 
 from BD.sqlite import BD
+
+# Crear diccionario de funciones CEC2017
+cec2017_functions = {func.__name__.upper() + 'CEC2017': func for func in all_functions}
 
 def fitness(problem, individual):
     """
@@ -17,14 +21,30 @@ def fitness(problem, individual):
     def opfunu_cec_function(x):
         func_class = getattr(opfunu.cec_based, f"{problem}")
         return func_class().evaluate(x)
+    
+    def cec2017_function(x):
+        """Evalúa funciones CEC2017."""
+        func = cec2017_functions[problem]
+        # cec2017 espera shape (n_samples, dim), entonces reshape
+        if x.ndim == 1:
+            x_reshaped = x.reshape(1, -1)
+        else:
+            x_reshaped = x
+        result = func(x_reshaped)
+        # Retornar solo el primer valor si es array
+        return result[0] if isinstance(result, np.ndarray) else result
 
     # Asegurar que `problem` sea un string válido
     if isinstance(problem, str):
         if problem in BD.data:
-            try:
-                fitness_value = globals()[problem](individual)
-            except KeyError:
-                raise ValueError(f"La función '{problem}' no está definida en el contexto global.")
+            # Verificar si es CEC2017 primero
+            if problem in cec2017_functions:
+                fitness_value = cec2017_function(individual)
+            else:
+                try:
+                    fitness_value = globals()[problem](individual)
+                except KeyError:
+                    raise ValueError(f"La función '{problem}' no está definida en el contexto global.")
         elif problem in BD.opfunu_cec_data:
             fitness_value = opfunu_cec_function(individual)
         else:
