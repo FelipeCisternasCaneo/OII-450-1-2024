@@ -274,6 +274,3 @@ def iterarALA(maxIter, iter, dim, population, fitness, best, fo, lb, ub):
         population=population, best=best, fo=fo,
         lb=lb, ub=ub, old_fitness=fitness
     )
-
-
-
