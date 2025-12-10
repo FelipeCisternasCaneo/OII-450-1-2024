@@ -7,15 +7,18 @@ from Metaheuristics.imports import metaheuristics, MH_ARG_MAP
 def initialize_population(mh, pop, dim, lb, ub):
     vel, pBestScore, pBest = None, None, None
     
-    if mh == 'PSO':
-        vel = np.zeros((pop, dim))
-        pBestScore = np.full(pop, np.inf)  # Más directo
+     # Inicialización de Memoria (pBest) - Común para PSO y TJO
+    if mh in ['PSO', 'TJO']:
+        pBestScore = np.full(pop, np.inf)
         pBest = np.zeros((pop, dim))
     
-    # Vectorización para generar población inicial
+    # Inicialización de Velocidad (vel) - Exclusivo para PSO
+    if mh == 'PSO':
+        vel = np.zeros((pop, dim))
+    
+    # Generación de la población inicial (Común para todos)
     lb = np.array(lb)
     ub = np.array(ub)
-    
     population = np.random.uniform(0, 1, (pop, dim)) * (ub - lb) + lb
     
     return population, vel, pBestScore, pBest
@@ -24,16 +27,17 @@ def evaluate_population(mh, population, fitness, _, lb, ub, function, nfe_counte
     """Evalúa fitness inicial de la población."""
     pBest, pBestScore = None, None
     
-    if mh == 'PSO':
+    # MODIFICACIÓN: Inicializar estructuras locales si es PSO o TJO
+    if mh == 'PSO' or mh == 'TJO':
         pBest = np.zeros_like(population)
         pBestScore = np.full(population.shape[0], float("inf"))
     
     for i in range(population.shape[0]):
         population[i] = np.clip(population[i], lb, ub)
         fitness[i] = f(function, population[i])
-        nfe_counter[0] += 1  # ← Solo agregar esto
         
-        if mh == 'PSO' and pBestScore[i] > fitness[i]:
+        # MODIFICACIÓN: Guardar el pBest inicial (memoria histórica)
+        if (mh == 'PSO' or mh == 'TJO') and pBestScore[i] > fitness[i]:
             pBestScore[i] = fitness[i]
             pBest[i] = population[i].copy()
 
@@ -79,8 +83,9 @@ def update_population(population, fitness, _, lb, ub, function, best, bestFitnes
                 population[i] = posibles_mejoras[i]
                 fitness[i] = mejora_fitness
 
-    if mh == 'PSO':
+    if mh == 'PSO' or mh == 'TJO':
         for i in range(population.shape[0]):
+            
             if fitness[i] < pBestScore[i]:
                 pBestScore[i] = fitness[i]
                 pBest[i] = population[i]
