@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import os
 from joblib import Parallel, delayed
-from Problem.Benchmark.CEC.cec2017.cec2017.functions import all_functions
+from Problem.Benchmark.CEC.cec2017.functions import all_functions
 
 # Directorio de salida
 OUTPUT_DIR = './Graficos_Benchmark/CEC2017/'
