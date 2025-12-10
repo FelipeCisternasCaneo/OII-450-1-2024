@@ -16,7 +16,7 @@
     "uscp": false,
     "kp": false,
 
-    "mhs": ["SBOA"],
+    "mhs": ["CLO"],
 
     "DS_actions": ["S3-ELIT", "V3-ELIT"],
 
@@ -46,7 +46,7 @@
     },
 
     "experimentos": {
-        "BEN": {"iteraciones": 500, "poblacion": 30, "num_experimentos": 1},
+        "BEN": {"iteraciones": 1000, "poblacion": 50, "num_experimentos": 1},
         "SCP": {"iteraciones": 100, "poblacion": 10, "num_experimentos": 1},
         "USCP": {"iteraciones": 100, "poblacion": 10, "num_experimentos": 1},
         "KP": {"iteraciones": 5, "poblacion": 10, "num_experimentos": 1}
@@ -55,10 +55,9 @@
     "instancias": {
         "BEN": ["F1CEC2017", "F2CEC2017", "F3CEC2017", "F4CEC2017", "F5CEC2017", "F6CEC2017",
             "F7CEC2017", "F8CEC2017", "F9CEC2017", "F10CEC2017", "F11CEC2017", "F12CEC2017",
-            "F13CEC2017", "F14CEC2017", "F15CEC2017", "F16CEC2017", "F17CEC2017",
-            "F18CEC2017", "F19CEC2017", "F20CEC2017", "F21CEC2017", "F22CEC2017",
-            "F23CEC2017", "F24CEC2017", "F25CEC2017", "F26CEC2017", "F27CEC2017",
-            "F28CEC2017", "F29CEC2017", "F30CEC2017"],
+            "F13CEC2017", "F14CEC2017", "F15CEC2017", "F16CEC2017", "F17CEC2017", "F18CEC2017",
+            "F19CEC2017", "F20CEC2017", "F21CEC2017", "F22CEC2017", "F23CEC2017", "F24CEC2017",
+            "F25CEC2017", "F26CEC2017", "F27CEC2017", "F28CEC2017", "F29CEC2017", "F30CEC2017"],
         "SCP": ["41", "51", "61", "a1", "b1", "c1", "d1", "nre1", "nrf1", "nrg1", "nrh1"],
         "USCP": ["u41", "u51", "ua1", "ub1", "uc1", "uclr10", "ucyc08", "ud1", "unre1", "unrf1",
             "unrg1", "unrh1"],

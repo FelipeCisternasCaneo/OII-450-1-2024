@@ -39,6 +39,7 @@ from .Codes.DRA import iterarDRA
 from .Codes.SRO import iterarSRO
 from .Codes.WO import iterarWO
 from .Codes.DHOA import iterarDHOA
+from .Codes.CLO import iterarCLO
 # --- Diccionario central de metaheurísticas
 
 metaheuristics = {
@@ -78,7 +79,8 @@ metaheuristics = {
     "CCMGO": iterarCCMGO,
     "WO": iterarWO,
     "GOAT": iterarGOAT,
-    "DHOA": iterarDHOA
+    "DHOA": iterarDHOA,
+    "CLO": iterarCLO
 }
 
 # --- Mapa de argumentos requeridos (MH_ARG_MAP) ---
@@ -89,10 +91,11 @@ MH_ARG_MAP = {
     # A
     'AOA':   ('maxIter', 'iter', 'dim', 'population', 'best', 'lb0', 'ub0'),
     "ALA":   ('maxIter', 'iter', 'dim', 'population', 'fitness', 'best', 'fo', 'lb', 'ub'),
-    'APO':   ('maxIter', 'population', 'dim', 'fitness', 'fo'),
+    'APO':   ('maxIter', 'iter', 'population', 'dim', 'fitness', 'fo'),
     
     # C
     'CCMGO': ('iter', 'maxIter', 'dim', 'population', 'fitness', 'best', 'lb', 'ub', 'fo'),
+    'CLO': ['maxIter', 'iter', 'population', 'dim', 'fitness', 'best', 'lb', 'ub', 'fo'],
     
     # D
     'DOA':  ('maxIter', 'iter', 'dim', 'population', 'best', 'fo', 'lb', 'ub'),
