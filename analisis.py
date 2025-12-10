@@ -252,15 +252,26 @@ def _graficar_por_corrida(iteraciones, fitness, xpl, xpt, tiempo, mh, problem_id
           else os.path.join(DIR_GRAFICOS, subfolder, str(binarizacion))
     os.makedirs(out, exist_ok=True)
 
-    # Convergencia
+    # Convergencia con escala logarítmica si el rango es muy grande
     fpath = os.path.join(out, f'Convergence_{mh}_{subfolder}_{problem_id}_{corrida}' + (f'_{binarizacion}' if binarizacion else '') + '.pdf')
     _, ax = plt.subplots()
     ax.plot(iteraciones, fitness)
+    
+    # Detectar si se necesita escala logarítmica
+    fitness_range = np.max(fitness) - np.min(fitness)
+    fitness_max = np.max(fitness)
+    if fitness_max > 0 and (fitness_range / fitness_max > 1e-3 and fitness_max > 1e6):
+        ax.set_yscale('log')
+        ax.set_ylabel("Fitness (log scale)")
+    else:
+        ax.set_ylabel("Fitness")
+    
     ax.set_title(f'Convergence {mh}\n{problem_id} - Run {corrida}' + (f' - ({binarizacion})' if binarizacion else ''))
-    ax.set_ylabel("Fitness"); ax.set_xlabel("Iteration")
+    ax.set_xlabel("Iteration")
+    ax.grid(True, alpha=0.3)
     plt.tight_layout(); plt.savefig(fpath); plt.close()
 
-    # XPL vs XPT
+    # XPL vs XPT (sin cambios)
     fpath = os.path.join(out, f'Percentage_{mh}_{subfolder}_{problem_id}_{corrida}' + (f'_{binarizacion}' if binarizacion else '') + '.pdf')
     _, ax = plt.subplots()
     ax.plot(iteraciones, xpl, color="r", label=rf"$\overline{{XPL}}$: {np.round(np.mean(xpl), 2)}%")
@@ -268,18 +279,27 @@ def _graficar_por_corrida(iteraciones, fitness, xpl, xpt, tiempo, mh, problem_id
     ax.set_title(f'XPL% - XPT% {mh}\n{problem_id} - Run {corrida}' + (f' - ({binarizacion})' if binarizacion else ''))
     ax.set_ylabel("Percentage"); ax.set_xlabel("Iteration")
     ax.legend(loc='upper right')
+    ax.grid(True, alpha=0.3)
     plt.tight_layout(); plt.savefig(fpath); plt.close()
 
-    # Tiempo por iteración
+    # Tiempo por iteración (sin cambios)
     fpath = os.path.join(out, f'Time_{mh}_{subfolder}_{problem_id}_{corrida}' + (f'_{binarizacion}' if binarizacion else '') + '.pdf')
     _, ax = plt.subplots()
     ax.plot(iteraciones, tiempo, label='Time per Iteration')
     ax.set_title(f'Time per Iteration {mh}\n{problem_id} - Run {corrida}' + (f' - ({binarizacion})' if binarizacion else ''))
     ax.set_ylabel("Time (s)"); ax.set_xlabel("Iteration")
     ax.legend(loc='upper right')
+    ax.grid(True, alpha=0.3)
     plt.tight_layout(); plt.savefig(fpath); plt.close()
 
-def _graficar_box_violin(instancia_id, subfolder, binarizacion=None, title_prefix=""):
+def _graficar_box_violin(instancia_id, subfolder, binarizacion=None, title_prefix="", num_experimentos=1):
+    """
+    Genera boxplot y violinplot solo si hay múltiples experimentos.
+    """
+    # Si solo hay 1 experimento, no generar gráficos estadísticos
+    if num_experimentos <= 1:
+        return
+    
     suf = f'_{binarizacion}' if binarizacion else ''
     datos_path = os.path.join(DIR_FITNESS, f'{subfolder}/fitness_{subfolder}_{instancia_id}{suf}.csv')
     try:
@@ -324,28 +344,63 @@ def _graficar_best(instancia_id, mhs_instances, subfolder, title_prefix="", bina
     suf = f'_{binarizacion}' if binarizacion else ''
     title_id = f'{title_prefix}{instancia_id}' + (f' - {binarizacion}' if binarizacion else '')
 
-    # Fitness
+    # Fitness con escala logarítmica automática
+    fig, ax = plt.subplots(figsize=(10, 6))
+    all_fitness_values = []
+    
     for name in MHS_LIST:
         mh = mhs_instances[name]
-        if len(mh.bestFitness): plt.plot(range(len(mh.bestFitness)), mh.bestFitness, label=name)
-    plt.title(f'Best Fitness per MH \n {title_id}\nBest: {best_f_mh} ({best_f})')
-    plt.ylabel("Fitness"); plt.xlabel("Iteration"); plt.legend()
-    plt.tight_layout(); plt.savefig(os.path.join(out, f'fitness_{subfolder}_{instancia_id}{suf}.pdf')); plt.close()
+        if len(mh.bestFitness):
+            fitness_vals = np.array(mh.bestFitness)
+            all_fitness_values.extend(fitness_vals)
+            ax.plot(range(len(fitness_vals)), fitness_vals, label=name, linewidth=2)
+    
+    # Determinar si usar escala logarítmica
+    if len(all_fitness_values) > 0:
+        fitness_range = np.max(all_fitness_values) - np.min(all_fitness_values)
+        fitness_max = np.max(all_fitness_values)
+        
+        # Si el rango dinámico es muy grande (>6 órdenes de magnitud) o valores muy grandes
+        if fitness_max > 0 and (fitness_range / fitness_max > 1e-3 and fitness_max > 1e6):
+            ax.set_yscale('log')
+            ylabel = "Fitness (log scale)"
+        else:
+            ylabel = "Fitness"
+        
+        ax.set_ylabel(ylabel, fontsize=12)
+    else:
+        ax.set_ylabel("Fitness", fontsize=12)
+    
+    ax.set_title(f'Best Fitness per MH\n{title_id}\nBest: {best_f_mh} ({best_f:.4e})', fontsize=13)
+    ax.set_xlabel("Iteration", fontsize=12)
+    ax.legend(loc='best', fontsize=10)
+    ax.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(os.path.join(out, f'fitness_{subfolder}_{instancia_id}{suf}.pdf'))
+    plt.close()
 
-    # Time
+    # Time (sin cambios en escala)
+    fig, ax = plt.subplots(figsize=(10, 6))
     for name in MHS_LIST:
         mh = mhs_instances[name]
-        if len(mh.bestTime): plt.plot(range(len(mh.bestTime)), mh.bestTime, label=name)
-    plt.title(f'Best Time per MH \n {title_id}\nBest: {best_t_mh} ({best_t:.2f} s)')
-    plt.ylabel("Time (s)"); plt.xlabel("Iteration"); plt.legend()
-    plt.tight_layout(); plt.savefig(os.path.join(out, f'time_{subfolder}_{instancia_id}{suf}.pdf')); plt.close()
+        if len(mh.bestTime):
+            ax.plot(range(len(mh.bestTime)), mh.bestTime, label=name, linewidth=2)
+    
+    ax.set_title(f'Best Time per MH\n{title_id}\nBest: {best_t_mh} ({best_t:.2f} s)', fontsize=13)
+    ax.set_ylabel("Time (s)", fontsize=12)
+    ax.set_xlabel("Iteration", fontsize=12)
+    ax.legend(loc='best', fontsize=10)
+    ax.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(os.path.join(out, f'time_{subfolder}_{instancia_id}{suf}.pdf'))
+    plt.close()
 
-    # XPL vs XPT combinado
+    # XPL vs XPT combinado (sin cambios)
     colors = ["tab:red", "tab:blue", "tab:green", "tab:orange", "tab:purple",
               "tab:cyan", "tab:pink", "tab:brown", "tab:olive", "tab:gray"]
     cmap = {name: colors[i % len(colors)] for i, name in enumerate(MHS_LIST)}
 
-    plt.figure(figsize=(8,5))
+    plt.figure(figsize=(10, 6))
     any_series, max_len = False, 0
     for name in MHS_LIST:
         mh = mhs_instances[name]
@@ -358,12 +413,18 @@ def _graficar_best(instancia_id, mhs_instances, subfolder, title_prefix="", bina
         plt.plot(x, mh.xpl_iter, linestyle='--', linewidth=2,
                  label=f'{name} XPL% (avg {np.round(np.mean(mh.xpl_iter), 2)}%)', color=c)
         max_len = max(max_len, len(x))
+    
     if any_series:
-        plt.title(f'Exploration (XPL) vs Exploitation (XPT) per MH\n{title_id}')
-        plt.ylabel("Percentage (%)"); plt.xlabel("Iteration"); plt.ylim(0,100)
+        plt.title(f'Exploration (XPL) vs Exploitation (XPT) per MH\n{title_id}', fontsize=13)
+        plt.ylabel("Percentage (%)", fontsize=12)
+        plt.xlabel("Iteration", fontsize=12)
+        plt.ylim(0, 100)
         if max_len <= 1: plt.xlim(-0.5, 0.5)
         plt.legend(loc='upper right', fontsize=8)
-        plt.tight_layout(); plt.savefig(os.path.join(out, f'xpl_xpt_{subfolder}_{instancia_id}{suf}.pdf')); plt.close()
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.savefig(os.path.join(out, f'xpl_xpt_{subfolder}_{instancia_id}{suf}.pdf'))
+        plt.close()
     else:
         plt.close()
 
@@ -519,7 +580,7 @@ def _escribir_div_gap(problem_cfg, instancia_id, mhs_instances, binarizacion, fh
             fh_gap.write(f"{name}, {gap_avg}, {rdp_avg}\n")
 
 # ========= Orquestador =========
-def _procesar_instancia_binarizacion(inst, binarizacion, cfg, uses_bin, title_prefix):
+def _procesar_instancia_binarizacion(inst, binarizacion, cfg, uses_bin, title_prefix, num_experimentos):
     """Procesa una combinación instancia-binarización."""
     instancia_id = inst[1]
     pid = f"{title_prefix}{instancia_id}" if title_prefix else f"{instancia_id}"
@@ -564,7 +625,8 @@ def _procesar_instancia_binarizacion(inst, binarizacion, cfg, uses_bin, title_pr
     
     escribir_resumenes(mhs_map, fh_rf, fh_rt, fh_rp, MHS_LIST)
     _graficar_best(instancia_id, mhs_map, subfolder=sub, title_prefix=title_prefix, binarizacion=binarizacion)
-    _graficar_box_violin(instancia_id, subfolder=sub, binarizacion=binarizacion, title_prefix=title_prefix)
+    _graficar_box_violin(instancia_id, subfolder=sub, binarizacion=binarizacion, 
+                        title_prefix=title_prefix, num_experimentos=num_experimentos)  # ← AGREGAR PARÁMETRO
     _escribir_div_gap(cfg, instancia_id, mhs_map, binarizacion, fh_div, fh_gap)
     
     fh_fit.close(); fh_rf.close(); fh_rt.close(); fh_rp.close(); fh_div.close(); fh_gap.close()
@@ -576,12 +638,31 @@ def analizar_problema(problem_name: str, n_jobs=-1):
     cfg = PROBLEMS[problem_name]
     sub, inst_key, uses_bin, title_prefix = cfg["sub"], cfg["inst_key"], cfg["uses_bin"], cfg["title_prefix"]
     
+    # Verificar si el problema está habilitado en la configuración
+    problem_enabled_map = {
+        "BEN": EXPERIMENTS.get("ben", False),
+        "SCP": EXPERIMENTS.get("scp", False),
+        "USCP": EXPERIMENTS.get("uscp", False),
+    }
+    
+    if not problem_enabled_map.get(problem_name, False):
+        print(f"[INFO] Análisis {sub} deshabilitado en la configuración (experiments_config.json)")
+        return
+    
     os.makedirs(DIR_TRANSITORIO, exist_ok=True)
     
     lista_inst = ', '.join([f'"{func}"' for func in EXPERIMENTS["instancias"][inst_key]])
     instancias = list(_obtener_instancias_cached(lista_inst))
     
+    if not instancias:
+        print(f"[INFO] No hay instancias para procesar en {sub}")
+        return
+    
+    # Obtener número de experimentos desde la configuración
+    num_experimentos = EXPERIMENTS["experimentos"][inst_key].get("num_experimentos", 1)
+    
     print(f"[INFO] Ejecutando análisis {sub} con paralelización...")
+    print(f"[INFO] Número de experimentos: {num_experimentos}")
     print("[INFO] Pre-cargando datos en caché...")
     
     incluir_bin = cfg["obtenerArchivos_kwargs"].get("incluir_binarizacion", True)
@@ -592,7 +673,7 @@ def analizar_problema(problem_name: str, n_jobs=-1):
     print("-"*50, "\nIniciando procesamiento de instancias...\n")
     
     bin_list = EXPERIMENTS["DS_actions"] if uses_bin else [None]
-    tareas = [(inst, bin_val, cfg, uses_bin, title_prefix) 
+    tareas = [(inst, bin_val, cfg, uses_bin, title_prefix, num_experimentos)  # ← AGREGAR num_experimentos
               for inst in instancias 
               for bin_val in bin_list]
     
