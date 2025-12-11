@@ -11,13 +11,7 @@ import psutil
 from Util.util import cargar_configuracion_exp, writeTofile
 from BD.sqlite import BD
 from Util.log import escribir_resumenes
-
-# ========= CONFIGURACIÓN PARA DATASETS GRANDES =========
-BATCH_SIZE = 200
-GC_INTERVAL = 500
-RAM_WARNING = 85
-CACHE_MAX_SIZE = 256
-# =======================================================
+import json
 
 # ========= CACHÉ DE BD (Versión picklable) =========
 _CACHE_BLOB = {}
@@ -72,7 +66,22 @@ def _mostrar_estadisticas_cache():
 # ========= Config =========
 CONFIG_FILE = './util/json/dir.json'
 EXPERIMENTS_FILE = './util/json/experiments_config.json'
+ANALYSIS_FILE = './util/json/analysis.json'
 CONFIG, EXPERIMENTS = cargar_configuracion_exp(CONFIG_FILE, EXPERIMENTS_FILE)
+
+# Cargar configuración de análisis
+with open(ANALYSIS_FILE, 'r', encoding='utf-8') as f:
+    ANALYSIS_CONFIG = json.load(f)
+
+# Configuración de performance
+BATCH_SIZE = ANALYSIS_CONFIG['performance']['batch_size']
+GC_INTERVAL = ANALYSIS_CONFIG['performance']['gc_interval']
+RAM_WARNING = ANALYSIS_CONFIG['performance']['ram_warning']
+CACHE_MAX_SIZE = ANALYSIS_CONFIG['performance']['cache_max_size']
+
+# Configuración de gráficos
+GRAFICOS_POR_CORRIDA = ANALYSIS_CONFIG['graficos']['graficos_por_corrida']
+MODO_LOGARITMICO = ANALYSIS_CONFIG['graficos']['modo_logaritmico']
 
 DIRS = CONFIG["dirs"]
 DIR_FITNESS      = DIRS["fitness"]
@@ -82,8 +91,6 @@ DIR_GRAFICOS     = DIRS["graficos"]
 DIR_BEST         = DIRS["best"]
 DIR_BOXPLOT      = DIRS["boxplot"]
 DIR_VIOLIN       = DIRS["violinplot"]
-
-GRAFICOS_POR_CORRIDA = False
 
 MHS_LIST = EXPERIMENTS["mhs"]
 bd = BD()
@@ -252,20 +259,35 @@ def _graficar_por_corrida(iteraciones, fitness, xpl, xpt, tiempo, mh, problem_id
           else os.path.join(DIR_GRAFICOS, subfolder, str(binarizacion))
     os.makedirs(out, exist_ok=True)
 
-    # Convergencia con escala logarítmica si el rango es muy grande
+    # Convergencia con modo logarítmico según configuración
     fpath = os.path.join(out, f'Convergence_{mh}_{subfolder}_{problem_id}_{corrida}' + (f'_{binarizacion}' if binarizacion else '') + '.pdf')
     _, ax = plt.subplots()
-    ax.plot(iteraciones, fitness)
     
-    # Detectar si se necesita escala logarítmica
-    fitness_range = np.max(fitness) - np.min(fitness)
-    fitness_max = np.max(fitness)
-    if fitness_max > 0 and (fitness_range / fitness_max > 1e-3 and fitness_max > 1e6):
+    # Determinar modo de visualización
+    fitness_array = np.array(fitness)
+    y_data = fitness_array
+    ylabel = "Fitness"
+    
+    if MODO_LOGARITMICO == 'log_transform':
+        # ln(fitness) como en TJO original
+        # Evitar log(0) o log(negativos)
+        y_data = np.log(np.maximum(fitness_array, 1e-10))
+        ylabel = "Ln Objective function"
+    elif MODO_LOGARITMICO == 'log_scale':
+        # Escala logarítmica en el eje (valores originales)
         ax.set_yscale('log')
-        ax.set_ylabel("Fitness (log scale)")
-    else:
-        ax.set_ylabel("Fitness")
+        ylabel = "Fitness (log scale)"
+    elif MODO_LOGARITMICO == 'auto':
+        # Solo usar escala log si valores muy grandes
+        fitness_range = np.max(fitness_array) - np.min(fitness_array)
+        fitness_max = np.max(fitness_array)
+        if fitness_max > 0 and (fitness_range / fitness_max > 1e-3 and fitness_max > 1e6):
+            ax.set_yscale('log')
+            ylabel = "Fitness (log scale)"
+    # else: 'none' - lineal normal
     
+    ax.plot(iteraciones, y_data)
+    ax.set_ylabel(ylabel)
     ax.set_title(f'Convergence {mh}\n{problem_id} - Run {corrida}' + (f' - ({binarizacion})' if binarizacion else ''))
     ax.set_xlabel("Iteration")
     ax.grid(True, alpha=0.3)
@@ -344,32 +366,45 @@ def _graficar_best(instancia_id, mhs_instances, subfolder, title_prefix="", bina
     suf = f'_{binarizacion}' if binarizacion else ''
     title_id = f'{title_prefix}{instancia_id}' + (f' - {binarizacion}' if binarizacion else '')
 
-    # Fitness con escala logarítmica automática
+    # Fitness con modo logarítmico según configuración
     fig, ax = plt.subplots(figsize=(10, 6))
     all_fitness_values = []
+    ylabel = "Fitness"
     
-    for name in MHS_LIST:
-        mh = mhs_instances[name]
-        if len(mh.bestFitness):
-            fitness_vals = np.array(mh.bestFitness)
-            all_fitness_values.extend(fitness_vals)
-            ax.plot(range(len(fitness_vals)), fitness_vals, label=name, linewidth=2)
-    
-    # Determinar si usar escala logarítmica
-    if len(all_fitness_values) > 0:
-        fitness_range = np.max(all_fitness_values) - np.min(all_fitness_values)
-        fitness_max = np.max(all_fitness_values)
-        
-        # Si el rango dinámico es muy grande (>6 órdenes de magnitud) o valores muy grandes
-        if fitness_max > 0 and (fitness_range / fitness_max > 1e-3 and fitness_max > 1e6):
-            ax.set_yscale('log')
-            ylabel = "Fitness (log scale)"
-        else:
-            ylabel = "Fitness"
-        
-        ax.set_ylabel(ylabel, fontsize=12)
+    # Determinar modo de visualización
+    if MODO_LOGARITMICO == 'log_transform':
+        # ln(fitness) como en TJO original
+        for name in MHS_LIST:
+            mh = mhs_instances[name]
+            if len(mh.bestFitness):
+                fitness_vals = np.array(mh.bestFitness)
+                all_fitness_values.extend(fitness_vals)
+                # Aplicar ln, evitando log(0)
+                y_data = np.log(np.maximum(fitness_vals, 1e-10))
+                ax.plot(range(len(y_data)), y_data, label=name, linewidth=2)
+        ylabel = "Ln Objective function"
     else:
-        ax.set_ylabel("Fitness", fontsize=12)
+        # Graficar valores originales
+        for name in MHS_LIST:
+            mh = mhs_instances[name]
+            if len(mh.bestFitness):
+                fitness_vals = np.array(mh.bestFitness)
+                all_fitness_values.extend(fitness_vals)
+                ax.plot(range(len(fitness_vals)), fitness_vals, label=name, linewidth=2)
+        
+        # Determinar escala del eje
+        if len(all_fitness_values) > 0:
+            if MODO_LOGARITMICO == 'log_scale':
+                ax.set_yscale('log')
+                ylabel = "Fitness (log scale)"
+            elif MODO_LOGARITMICO == 'auto':
+                fitness_range = np.max(all_fitness_values) - np.min(all_fitness_values)
+                fitness_max = np.max(all_fitness_values)
+                if fitness_max > 0 and (fitness_range / fitness_max > 1e-3 and fitness_max > 1e6):
+                    ax.set_yscale('log')
+                    ylabel = "Fitness (log scale)"
+    
+    ax.set_ylabel(ylabel, fontsize=12)
     
     ax.set_title(f'Best Fitness per MH\n{title_id}\nBest: {best_f_mh} ({best_f:.4e})', fontsize=13)
     ax.set_xlabel("Iteration", fontsize=12)

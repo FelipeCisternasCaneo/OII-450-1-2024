@@ -1,7 +1,24 @@
 {
-
-"ben": false,
-"scp": false,
-"uscp": true
-
+    "_comentarios": {
+        "descripcion": "Configuración del análisis de resultados",
+        "batch_size": "Número de archivos a procesar en cada lote (memoria)",
+        "gc_interval": "Intervalo de archivos para ejecutar garbage collection",
+        "ram_warning": "Porcentaje de RAM para mostrar advertencia (%)",
+        "cache_max_size": "Tamaño máximo del caché de BD (número de blobs)",
+        "graficos_por_corrida": "Generar gráficos individuales por cada corrida experimental",
+        "modo_logaritmico": "Modo de visualización: 'log_scale' (eje log, valores originales), 'log_transform' (ln(fitness), como TJO original), 'auto' (solo si valores grandes), 'none' (lineal siempre)"
+    },
+    
+    "performance": {
+        "batch_size": 200,
+        "gc_interval": 500,
+        "ram_warning": 85,
+        "cache_max_size": 256
+    },
+    
+    "graficos": {
+        "graficos_por_corrida": false,
+        "modo_logaritmico": "log_transform",
+        "dpi": 300
+    }
 }

@@ -46,7 +46,7 @@
     },
 
     "experimentos": {
-        "BEN": {"iteraciones": 1000, "poblacion": 50, "num_experimentos": 1},
+        "BEN": {"iteraciones": 500, "poblacion": 50, "num_experimentos": 1},
         "SCP": {"iteraciones": 100, "poblacion": 10, "num_experimentos": 1},
         "USCP": {"iteraciones": 100, "poblacion": 10, "num_experimentos": 1},
         "KP": {"iteraciones": 5, "poblacion": 10, "num_experimentos": 1}
