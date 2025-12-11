@@ -1,8 +1,8 @@
 import time
+import shutil
 
 from Solver.solverBEN import solverBEN
 from Solver.solverSCP import solverSCP
-#from Solver.solverUSCP import solverUSCP
 
 from BD.sqlite import BD
 
@@ -94,6 +94,8 @@ def main():
     
     log_fecha_hora("Fin de la ejecución")
     log_final(total_time)
+    
+    shutil.rmtree("Resultados\\transitorio", ignore_errors=True)
     
 if __name__ == "__main__":
     main()

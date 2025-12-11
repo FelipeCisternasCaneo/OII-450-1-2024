@@ -1,68 +1,111 @@
 import numpy as np
 
-# Traffic Jam Optimization (TJO)
-# Basado en la implementación original en MATLAB
-
-def iterarTJO(maxIter, iter, dim, population, best, pBest, lb, ub):
+def iterarTJO(maxIter, iter, dim, population, fitness, best, pBest, lb, ub, fo):
     """
-    Traffic Jam Optimization (TJO) - Iteración Única
+    Traffic Jam Optimization (TJO) - 100% fiel al MATLAB original
     
     Args:
-        maxIter: Máximo de iteraciones
-        iter: Iteración actual
-        dim: Dimensión del problema
+        maxIter: Máximo de iteraciones (T)
+        iter: Iteración actual (t)
+        dim: Dimensión del problema (nvars)
         population: Población actual (x)
-        best: Mejor solución global actual (bestx)
-        pBest: Memoria de la mejor posición de cada individuo (FlockMemoryX)
+        fitness: Fitness actual de la población (f)
+        best: Mejor solución global (bestx)
+        pBest: Memoria histórica de cada conductor (FlockMemoryX)
         lb: Límite inferior
         ub: Límite superior
+        fo: Función objetivo (para evaluar)
     
     Returns:
-        np.ndarray: Población actualizada (nuevas posiciones candidatas)
+        tuple: (población actualizada, fitness actualizado, pBest actualizado)
     """
     lb = np.array(lb)
     ub = np.array(ub)
-
-    a_start, a_end = 0.2, 0.9 
-    c_start, c_end = 0.1, 0.8
+    N = population.shape[0]
     
-    a_t = a_start + (iter / maxIter) * (a_end - a_start)
-    c_t = c_start + (iter / maxIter) * (c_end - c_start)
+    # ========== PARÁMETROS ORIGINALES DEL PAPER ==========
+    # MATLAB: a = linspace(0.5, 1.5, T)
+    #         c = linspace(1.5, 0.5, T)
+    a_start, a_end = 0.5, 1.5
+    c_start, c_end = 1.5, 0.5
     
-    N = population.shape[0]     
-    r = iter / maxIter          
+    # Calcular a(t) y c(t) para la iteración actual
+    a_t = a_start + (iter - 1) / (maxIter - 1) * (a_end - a_start)
+    c_t = c_start + (iter - 1) / (maxIter - 1) * (c_end - c_start)
+    # =====================================================
+    
+    # r = t/T (MATLAB empieza en t=1)
+    r = iter / maxIter
     
     best = np.array(best)
     
-    # Calcular BestX (Posición objetivo híbrida)
+    # ========== 1. Calculate the best position for each driver ==========
+    # BestX = (1-r).*FlockMemoryX + r.*bestx;
     BestX = (1 - r) * pBest + r * best
-
-    # Conductores conduciendo aleatoriamente (Traffic Jam)
+    
+    # ========== 2. Drivers driving randomly causing traffic jam ==========
+    # y = (1-r)*exp(-r)*sin(2*pi*rand(N,1)).*cos(2*pi*rand(N,1)).*c(t);
+    # x = BestX + y.*((ub-lb).*rand(N,nvars)+lb);
     rand_sin = np.sin(2 * np.pi * np.random.rand(N, 1))
     rand_cos = np.cos(2 * np.pi * np.random.rand(N, 1))
     y = (1 - r) * np.exp(-r) * rand_sin * rand_cos * c_t
     
     rand_pos = (ub - lb) * np.random.rand(N, dim) + lb
-    population = BestX + y * rand_pos
+    x = BestX + y * rand_pos
     
-    # Auto-ajuste de los conductores (Drivers self-adjustment)
-    indices_rand = np.random.randint(0, N, size=N)
+    # ========== 3. Drivers self-adjustment ==========
+    # for i = 1:N
+    #     if rand>0.5
+    #         x(i,:) = x(i,:) + c(t)*sin(pi*rand).*(x(randi(N),:) - x(i,:));
+    #     else
+    #         x(i,:) = x(i,:) + c(t)*sin(pi*rand).*(BestX(randi(N),:) - x(i,:));
+    #     end
+    # end
+    for i in range(N):
+        rand_idx = np.random.randint(0, N)
+        adjust_factor = c_t * np.sin(np.pi * np.random.rand())
+        
+        if np.random.rand() > 0.5:
+            # Ajuste basado en otro conductor aleatorio
+            x[i, :] = x[i, :] + adjust_factor * (x[rand_idx, :] - x[i, :])
+        else:
+            # Ajuste basado en BestX de otro conductor
+            x[i, :] = x[i, :] + adjust_factor * (BestX[rand_idx, :] - x[i, :])
     
-    mask = np.random.rand(N, 1) > 0.5
-    
-    adjust_factor = c_t * np.sin(np.pi * np.random.rand(N, 1))
-    
-    diff_case_1 = population[indices_rand] - population
-    
-    diff_case_2 = BestX[indices_rand] - population
-    
-    population = population + adjust_factor * np.where(mask, diff_case_1, diff_case_2)
-    
-    # Policía de tráfico dirigiendo (Traffic police)
+    # ========== 4. Traffic police directing drivers to drive ==========
+    # x = BestX + a(t)*sin(2*pi*rand(N,1)).*(BestX - x);
     police_factor = a_t * np.sin(2 * np.pi * np.random.rand(N, 1))
-    population = BestX + police_factor * (BestX - population)
+    x = BestX + police_factor * (BestX - x)
     
-    # Manejo de límites (Cross-border processing)
-    population = np.clip(population, lb, ub)
+    # ========== 5. Cross-border processing ==========
+    # lbExtended = repmat(lb,[N,1]);
+    # ubExtended = repmat(ub,[N,1]);
+    # lbViolated = x < lbExtended;
+    # ubViolated = x > ubExtended;
+    # x(lbViolated) = lbExtended(lbViolated);
+    # x(ubViolated) = ubExtended(ubViolated);
+    x = np.clip(x, lb, ub)
     
-    return population
+    # ========== 6. Calculate fitness ==========
+    # for i = 1:N
+    #     f(i,:) = fun(x(i,:));
+    # end
+    new_fitness = np.zeros(N)
+    for i in range(N):
+        _, new_fitness[i] = fo(x[i, :])
+    
+    # ========== 7. Update memory (GREEDY SELECTION) ==========
+    # UpdateMask = f < FlockMemoryF;
+    # FlockMemoryF(UpdateMask) = f(UpdateMask);
+    # FlockMemoryX(UpdateMask,:) = x(UpdateMask,:);
+    update_mask = new_fitness < fitness
+    
+    # Actualizar solo las soluciones que mejoraron
+    fitness[update_mask] = new_fitness[update_mask]
+    pBest[update_mask, :] = x[update_mask, :]
+    
+    # Si no mejoró, mantener la población anterior (implícito, x ya tiene los nuevos)
+    # Pero necesitamos retornar la población ACEPTADA (mezcla de nueva y anterior)
+    population_updated = np.copy(pBest)  # Retornar la memoria (mejores encontradas)
+    
+    return population_updated, fitness, pBest

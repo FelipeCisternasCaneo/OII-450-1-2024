@@ -27,19 +27,28 @@ def evaluate_population(mh, population, fitness, _, lb, ub, function, nfe_counte
     """Evalúa fitness inicial de la población."""
     pBest, pBestScore = None, None
     
-    # MODIFICACIÓN: Inicializar estructuras locales si es PSO o TJO
-    if mh == 'PSO' or mh == 'TJO':
+    if mh == 'PSO':
         pBest = np.zeros_like(population)
         pBestScore = np.full(population.shape[0], float("inf"))
+    
+    # ========== INICIALIZACIÓN PARA TJO ==========
+    if mh == 'TJO':
+        pBest = np.zeros_like(population)  # FlockMemoryX
+    # ============================================
     
     for i in range(population.shape[0]):
         population[i] = np.clip(population[i], lb, ub)
         fitness[i] = f(function, population[i])
+        nfe_counter[0] += 1
         
-        # MODIFICACIÓN: Guardar el pBest inicial (memoria histórica)
-        if (mh == 'PSO' or mh == 'TJO') and pBestScore[i] > fitness[i]:
+        if mh == 'PSO' and pBestScore[i] > fitness[i]:
             pBestScore[i] = fitness[i]
             pBest[i] = population[i].copy()
+        
+        # ========== INICIALIZACIÓN PARA TJO ==========
+        if mh == 'TJO':
+            pBest[i] = population[i].copy()  # FlockMemoryX = x inicial
+        # ============================================
 
     solutionsRanking = np.argsort(fitness)
     bestIndex = solutionsRanking[0]
@@ -52,9 +61,9 @@ def update_population(population, fitness, _, lb, ub, function, best, bestFitnes
                      pBest=None, pBestScore=None, mh=None, posibles_mejoras=None, nfe_counter=None):
     """Actualiza población y evalúa fitness."""
     
-    # ========== EXCEPCIÓN PARA CLO ==========
-    # CLO ya evaluó y seleccionó dentro de iterarCLO()
-    if mh == 'CLO':
+    # ========== EXCEPCIÓN PARA CLO Y TJO ==========
+    # CLO y TJO ya evaluaron y seleccionaron dentro de sus funciones
+    if mh in ['CLO', 'TJO']:
         # Solo actualizar el mejor global
         bestIndex = np.argmin(fitness)
         if fitness[bestIndex] < bestFitness:
@@ -63,9 +72,9 @@ def update_population(population, fitness, _, lb, ub, function, best, bestFitnes
         
         div_t = diversidadHussain(population)
         return population, fitness, best, bestFitness, div_t
-    # ========================================
+    # ==============================================
     
-    # Para el resto de algoritmos, continuar normal
+    # Para el resto de algoritmos continuar normal...
     population = np.clip(population, lb, ub)
 
     for i in range(population.shape[0]):
@@ -180,20 +189,21 @@ def iterate_population(mh, population, iter, maxIter, dim, fitness, best, vel=No
         else:
             raise TypeError(f"Retorno inesperado de GOAT. Se esperaba (population, fitness, best)")
     
-    elif mh == 'APO':  # ← AGREGAR CASO ESPECIAL PARA APO
-        # APO solo retorna población, no modifica vel
-        if isinstance(result, np.ndarray):
-            new_population = result
+    elif mh == 'TJO':
+        # TJO retorna (población, fitness, pBest)
+        if isinstance(result, tuple) and len(result) == 3:
+            new_population, fitness, pBest = result
             new_vel = vel
         else:
-            raise TypeError(f"Retorno inesperado de APO. Se esperaba np.ndarray")
+            raise TypeError(f"Retorno inesperado de TJO. Se esperaba (population, fitness, pBest)")
     
-    elif mh == 'CLO':  # ← AGREGAR
+    elif mh in ['APO', 'CLO']:
+        # APO y CLO solo retornan población, no modifican vel
         if isinstance(result, np.ndarray):
             new_population = result
             new_vel = vel
         else:
-            raise TypeError(f"Retorno inesperado de CLO. Se esperaba np.ndarray")
+            raise TypeError(f"Retorno inesperado de {mh}. Se esperaba np.ndarray")
     
     elif isinstance(result, tuple) and len(result) == 2:
         new_population, new_vel = result

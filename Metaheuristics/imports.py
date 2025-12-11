@@ -154,7 +154,7 @@ MH_ARG_MAP = {
 
     # T
     'TDO':   ('maxIter', 'iter', 'dim', 'population', 'fitness', 'fo', 'objective_type'),
-    'TJO':   ('maxIter', 'iter', 'dim', 'population', 'best', 'pBest', 'lb', 'ub'),
+    'TJO':   ('maxIter', 'iter', 'dim', 'population', 'fitness', 'best', 'pBest', 'lb', 'ub', 'fo'),
 
     # W
     'WO' :   ('maxIter', 'iter', 'dim', 'population', 'fitness', 'best', 'fo', 'lb', 'ub'),
