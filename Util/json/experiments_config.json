@@ -11,14 +11,14 @@
         "instancias": "Identificadores de los instancias de los problemas que se van a procesar."
     },
 
-    "ben": true,
-    "scp": false,
-    "uscp": false,
+    "ben": false,
+    "scp": true,
+    "uscp": true,
     "kp": false,
 
-    "mhs": ["TJO"],
+    "mhs": ["TJO", "CLO"],
 
-    "DS_actions": ["S3-ELIT", "V3-ELIT"],
+    "DS_actions": ["V3-ELIT"],
 
     "dimensiones": {
         "BEN": {
@@ -58,9 +58,8 @@
             "F13CEC2017", "F14CEC2017", "F15CEC2017", "F16CEC2017", "F17CEC2017", "F18CEC2017",
             "F19CEC2017", "F20CEC2017", "F21CEC2017", "F22CEC2017", "F23CEC2017", "F24CEC2017",
             "F25CEC2017", "F26CEC2017", "F27CEC2017", "F28CEC2017", "F29CEC2017", "F30CEC2017"],
-        "SCP": ["41", "51", "61", "a1", "b1", "c1", "d1", "nre1", "nrf1", "nrg1", "nrh1"],
-        "USCP": ["u41", "u51", "ua1", "ub1", "uc1", "uclr10", "ucyc08", "ud1", "unre1", "unrf1",
-            "unrg1", "unrh1"],
+        "SCP": ["41", "51", "61"],
+        "USCP": ["u41", "u51", "u61"],
         "KP": []
     }
 }

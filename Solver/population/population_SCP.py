@@ -6,13 +6,17 @@ from Metaheuristics.imports import metaheuristics, MH_ARG_MAP
 def initialize_population(mh, pop, instance):
     vel, pBestScore, pBest = None, None, None
     
-    if mh == 'PSO':
-        vel = np.zeros((pop, instance.getColumns()))
-        pBestScore = np.full(pop, float("inf"))  # Más directo
-        pBest = np.zeros((pop, instance.getColumns()))
-    
     # Genero una población inicial binaria, esto ya que nuestro problema es binario
     population = np.random.randint(low = 0, high = 2, size = (pop, instance.getColumns()))
+    
+    # Inicialización de Memoria (pBest) - Común para PSO y TJO
+    if mh in ['PSO', 'TJO']:
+        pBestScore = np.full(pop, float("inf"))
+        pBest = population.copy()  # Inicializar con la población inicial
+    
+    # Inicialización de Velocidad (vel) - Exclusivo para PSO
+    if mh == 'PSO':
+        vel = np.zeros((pop, instance.getColumns()))
     
     return population, vel, pBestScore, pBest
 
@@ -26,10 +30,15 @@ def evaluate_population(mh, population, fitness, instance, pBest, pBestScore, re
             
         fitness[i] = instance.fitness(population[i])
         
+        # Inicialización de pBest para PSO y TJO
         if mh == 'PSO':
             if pBestScore[i] > fitness[i]:
                 pBestScore[i] = fitness[i]
                 pBest[i, :] = population[i, :].copy()
+        
+        # TJO inicializa pBest con la población inicial
+        if mh == 'TJO':
+            pBest[i, :] = population[i, :].copy()
         
     solutionsRanking = np.argsort(fitness) # rankings de los mejores fitnes
     bestRowAux = solutionsRanking[0] # DETERMINO MI MEJOR SOLUCION Y LA GUARDO 
@@ -43,11 +52,11 @@ def iterate_population_scp(mh, population, iter, maxIter, instance, fitness, bes
     """
     Itera sobre la población para SCP usando la metaheurística especificada ('mh'),
     construyendo los argumentos dinámicamente basados en MH_ARG_MAP.
-    Maneja casos especiales como PO y GA.
+    Maneja casos especiales como PO, GA y TJO.
     """
     # --- Manejo especial para PO ---
     if mh == 'PO':
-        return np.array(population), vel, None
+        return np.array(population), vel, None, pBest
 
     # --- Manejo especial para GA ---
     if mh == 'GA':
@@ -63,7 +72,7 @@ def iterate_population_scp(mh, population, iter, maxIter, instance, fitness, bes
         if not isinstance(new_population, np.ndarray):
             new_population = np.array(new_population)
             
-        return new_population, vel, None
+        return new_population, vel, None, pBest
     
     # --- Mapeo específico para HLOA ---
     # Si se llama con 'HLOA', usar la versión SCP
@@ -120,8 +129,18 @@ def iterate_population_scp(mh, population, iter, maxIter, instance, fitness, bes
     new_population = None
     new_vel = vel
     posibles_mejoras = None
+    updated_pBest = pBest  # Por defecto mantener el pBest actual
 
-    if mh == 'LOA':
+    # --- Manejo especial para TJO ---
+    if mh == 'TJO':
+        if isinstance(result, tuple) and len(result) == 3:
+            new_population, updated_fitness, updated_pBest = result
+            # TJO ya actualiza el fitness internamente, pero no lo usamos aquí
+            # porque binarize_and_evaluate recalcula todo
+        else:
+            raise TypeError(f"Retorno inesperado de TJO (SCP). Se esperaba (population, fitness, pBest), se obtuvo {type(result)}")
+    
+    elif mh == 'LOA':
         if isinstance(result, tuple) and len(result) == 2:
             new_population, posibles_mejoras = result
         else:
@@ -139,7 +158,7 @@ def iterate_population_scp(mh, population, iter, maxIter, instance, fitness, bes
     if not isinstance(new_population, np.ndarray):
        new_population = np.array(new_population)
 
-    return new_population, new_vel, posibles_mejoras
+    return new_population, new_vel, posibles_mejoras, updated_pBest
 
 def binarize_and_evaluate(mh, population, fitness, DS, best, matrixBin, instance, repairType, pBest, pBestScore, posibles_mejoras, fo):
     # Binarizo, calculo de factibilidad de cada individuo y calculo del fitness
@@ -155,8 +174,10 @@ def binarize_and_evaluate(mh, population, fitness, DS, best, matrixBin, instance
             
         fitness[i] = instance.fitness(population[i])
 
-        if mh == 'PSO':
+        # Actualización de pBest para PSO y TJO
+        if mh in ['PSO', 'TJO']:
             if fitness[i] < pBestScore[i]:
+                pBestScore[i] = fitness[i]
                 pBest[i] = np.copy(population[i])
                 
         if mh == 'LOA':

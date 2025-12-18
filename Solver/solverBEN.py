@@ -80,7 +80,7 @@ def solverBEN(id, mh, maxIter, pop, function, lb, ub, dim, extra_params=None):
     # =================================================
     
     results_divj.write("0," + ",".join([f"{v:.6f}" for v in divj_vec0]) + "\n")
-    print_initial(f"{function} {dim} {mh}", bestFitness)
+    print_initial(f"{function} | dim: {dim} | {mh}", bestFitness)
     
     if mh == 'PO':
         iterarPO = IterarPO(fo_vectorized, dim, pop, maxIter, lb[0], ub[0])

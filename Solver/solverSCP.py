@@ -75,7 +75,7 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param, unicost):
     results_divj.write("0," + ",".join([f"{v:.6f}" for v in divj_vec0]) + "\n")
 
     # Logging consola (igual a BEN)
-    print_initial(f"scp{instances} {dim} {mh}", bestFitness)
+    print_initial(f"{instances} | cols: {dim} | {mh}", bestFitness)
 
     matrixBin = population.copy()
     posibles_mejoras = None
@@ -101,7 +101,7 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param, unicost):
                 population = np.array(population)
 
         # Movimiento de la población
-        population, vel, posibles_mejoras = iterate_population_scp(
+        population, vel, posibles_mejoras, pBest = iterate_population_scp(
             mh=mh,
             population=population,
             iter=iter,
