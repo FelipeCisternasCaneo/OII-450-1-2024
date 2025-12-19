@@ -1,7 +1,12 @@
+import sys
+import os
+
+# Agregar el directorio raíz al path para imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-import os
 from joblib import Parallel, delayed
 from Problem.Benchmark.CEC.cec2017.functions import all_functions
 

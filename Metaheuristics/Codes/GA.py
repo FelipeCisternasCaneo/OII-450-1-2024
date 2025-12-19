@@ -1,6 +1,5 @@
 import random
 import numpy as np
-from Util.util import selectionSort
 
 # Genetic Algorithm (GA)
 
@@ -8,7 +7,8 @@ def selectParent(population, fitness):
     """
     Selecciona dos padres basados en el ranking de fitness.
     """
-    position = selectionSort(fitness)
+    # Usar np.argsort para ordenar por fitness (más rápido que selectionSort)
+    position = np.argsort(fitness)
     parent1, parent2 = population[position[0]], population[position[1]]
     
     return parent1, parent2
