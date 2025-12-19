@@ -1,15 +1,16 @@
 def diversidadHussain(matriz):
     medianas = []
+    n = len(matriz)
+    n_cols = len(matriz[0])
     
-    for j in range(matriz[0].__len__()):
+    for j in range(n_cols):
         suma = 0
         
-        for i in range(matriz.__len__()):
+        for i in range(n):
             suma += matriz[i][j]
             
-        medianas.append(suma / matriz.__len__())
+        medianas.append(suma / n)
     
-    n = len(matriz)
     l = len(matriz[0])
     diversidad = 0
     

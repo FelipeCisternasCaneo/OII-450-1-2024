@@ -36,9 +36,12 @@ def evaluate_population(mh, population, fitness, _, lb, ub, function, nfe_counte
         pBest = np.zeros_like(population)  # FlockMemoryX
     # ============================================
     
+    # Pre-clip vectorizado y cacheo de función
+    population = np.clip(population, lb, ub)
+    fitness_func = f
+    
     for i in range(population.shape[0]):
-        population[i] = np.clip(population[i], lb, ub)
-        fitness[i] = f(function, population[i])
+        fitness[i] = fitness_func(function, population[i])
         nfe_counter[0] += 1
         
         if mh == 'PSO' and pBestScore[i] > fitness[i]:
@@ -76,16 +79,17 @@ def update_population(population, fitness, _, lb, ub, function, best, bestFitnes
     
     # Para el resto de algoritmos continuar normal...
     population = np.clip(population, lb, ub)
+    fitness_func = f
 
     for i in range(population.shape[0]):
-        fitness[i] = f(function, population[i])
+        fitness[i] = fitness_func(function, population[i])
         nfe_counter[0] += 1
 
     if mh == 'LOA' and posibles_mejoras is not None:
         posibles_mejoras = np.clip(posibles_mejoras, lb, ub)
         
         for i in range(posibles_mejoras.shape[0]):
-            mejora_fitness = f(function, posibles_mejoras[i])
+            mejora_fitness = fitness_func(function, posibles_mejoras[i])
             nfe_counter[0] += 1  # ← Y esto (evaluación extra de LOA)
             
             if mejora_fitness < fitness[i]:

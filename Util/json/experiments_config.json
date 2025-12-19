@@ -47,7 +47,7 @@
 
     "experimentos": {
         "BEN": {"iteraciones": 500, "poblacion": 50, "num_experimentos": 1},
-        "SCP": {"iteraciones": 100, "poblacion": 10, "num_experimentos": 1},
+        "SCP": {"iteraciones": 10, "poblacion": 10, "num_experimentos": 1},
         "USCP": {"iteraciones": 100, "poblacion": 10, "num_experimentos": 1},
         "KP": {"iteraciones": 5, "poblacion": 10, "num_experimentos": 1}
     },
@@ -58,7 +58,7 @@
             "F13CEC2017", "F14CEC2017", "F15CEC2017", "F16CEC2017", "F17CEC2017", "F18CEC2017",
             "F19CEC2017", "F20CEC2017", "F21CEC2017", "F22CEC2017", "F23CEC2017", "F24CEC2017",
             "F25CEC2017", "F26CEC2017", "F27CEC2017", "F28CEC2017", "F29CEC2017", "F30CEC2017"],
-        "SCP": ["41", "51", "61"],
+        "SCP": ["nrh1", "nrh2", "nrh3"],
         "USCP": ["u41", "u51", "u61"],
         "KP": []
     }

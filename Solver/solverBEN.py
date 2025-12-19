@@ -136,7 +136,9 @@ def solverBEN(id, mh, maxIter, pop, function, lb, ub, dim, extra_params=None):
     finalTime = time.time()
     print_final(bestFitness, initialTime, finalTime)
     
+    results.flush()
     results.close()
+    results_divj.flush()
     results_divj.close()
 
     binary = convert_into_binary(dirResult + f"{mh}_{function}_{id}.csv")
@@ -144,4 +146,7 @@ def solverBEN(id, mh, maxIter, pop, function, lb, ub, dim, extra_params=None):
     bd.insertarResultados(bestFitness, finalTime - initialTime, best, id)
     bd.actualizarExperimento(id, 'terminado')
     
-    os.remove(dirResult + f"{mh}_{function}_{id}.csv")
+    results_path = dirResult + f"{mh}_{function}_{id}.csv"
+    results_divj_path = dirResult + f"{mh}_{function}_{id}_divj.csv"
+    os.remove(results_path)
+    os.remove(results_divj_path)

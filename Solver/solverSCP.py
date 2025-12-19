@@ -82,7 +82,7 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param, unicost):
 
     # FO para PO/HBA/GOA/etc (igual al original)
     def fo(x):
-        x = b.aplicarBinarizacion(x, DS, best, matrixBin[population.__len__() - 1])
+        x = b.aplicarBinarizacion(x, DS, best, matrixBin[len(population) - 1])
         x = instance.repair(x, repairType)
         return x, instance.fitness(x)
 
@@ -155,7 +155,10 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param, unicost):
     finalTime = time.time()
     print_final(bestFitness, initialTime, finalTime)
 
+    # Asegurar que todo se escriba al disco antes de cerrar
+    results.flush()
     results.close()
+    results_divj.flush()
     results_divj.close()
 
     # Guardado en BD (igual)
@@ -167,3 +170,4 @@ def solverSCP(id, mh, maxIter, pop, instances, DS, repairType, param, unicost):
 
     # Limpieza
     os.remove(results_path)
+    os.remove(results_divj_path)

@@ -22,13 +22,20 @@ def initialize_population(mh, pop, instance):
 
 def evaluate_population(mh, population, fitness, instance, pBest, pBestScore, repairType):
     # Calculo de factibilidad de cada individuo y calculo del fitness inicial
-    for i in range(population.__len__()):
-        flag, _ = instance.factibilityTest(population[i])
+    n_pop = len(population)
+    
+    # Cachear métodos para evitar lookups repetidos
+    factibilityTest = instance.factibilityTest
+    repair = instance.repair
+    fitness_func = instance.fitness
+    
+    for i in range(n_pop):
+        flag, _ = factibilityTest(population[i])
         
         if not flag: #solucion infactible
-            population[i] = instance.repair(population[i], repairType)
+            population[i] = repair(population[i], repairType)
             
-        fitness[i] = instance.fitness(population[i])
+        fitness[i] = fitness_func(population[i])
         
         # Inicialización de pBest para PSO y TJO
         if mh == 'PSO':
@@ -162,17 +169,26 @@ def iterate_population_scp(mh, population, iter, maxIter, instance, fitness, bes
 
 def binarize_and_evaluate(mh, population, fitness, DS, best, matrixBin, instance, repairType, pBest, pBestScore, posibles_mejoras, fo):
     # Binarizo, calculo de factibilidad de cada individuo y calculo del fitness
-    for i in range(population.__len__()):
-
-        if mh != "GA":
+    n_pop = len(population)
+    
+    # Cachear métodos para evitar lookups repetidos
+    factibilityTest = instance.factibilityTest
+    repair = instance.repair
+    fitness_func = instance.fitness
+    
+    # Pre-binarizar toda la población si no es GA (vectorizado cuando sea posible)
+    if mh != "GA":
+        for i in range(n_pop):
             population[i] = b.aplicarBinarizacion(population[i], DS, best, matrixBin[i])
-
-        flag, _ = instance.factibilityTest(population[i])
+    
+    # Procesar cada individuo (reparación no se puede vectorizar fácilmente)
+    for i in range(n_pop):
+        flag, _ = factibilityTest(population[i])
         
         if not flag: #solucion infactible
-            population[i] = instance.repair(population[i], repairType)
+            population[i] = repair(population[i], repairType)
             
-        fitness[i] = instance.fitness(population[i])
+        fitness[i] = fitness_func(population[i])
 
         # Actualización de pBest para PSO y TJO
         if mh in ['PSO', 'TJO']:

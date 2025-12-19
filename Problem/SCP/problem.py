@@ -235,6 +235,7 @@ class SCP:
     def repairComplex(self, solution):
         set_sparse = csr_matrix(self.getCoverange())  # Cobertura en formato disperso
         costs = self.getCost()
+        coverange = self.getCoverange()
         # Realizar la prueba de factibilidad inicial
         feasible, aux = self.factibilityTest(solution)
         reparaciones = 0
@@ -250,10 +251,13 @@ class SCP:
             trade_off = costs[indices] / cnc[indices]
             # Seleccionar la columna con el menor trade-off
             idx = np.argmin(trade_off)
+            selected_col = indices[idx]
             # Actualizar la solución asignando 1 a la columna seleccionada
-            solution[indices[idx]] = 1
-            # Verificar factibilidad nuevamente
-            feasible, aux = self.factibilityTest(solution)
+            solution[selected_col] = 1
+            # Actualizar aux incrementalmente en lugar de recalcular todo
+            aux += coverange[:, selected_col]
+            # Verificar factibilidad (solo chequeo, ya tenemos aux actualizado)
+            feasible = not (0 in aux)
             reparaciones += 1
         
         return solution
