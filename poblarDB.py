@@ -1,5 +1,4 @@
 import os
-import opfunu.cec_based
 
 from BD.sqlite import BD
 from Util.log import resumen_experimentos
@@ -34,6 +33,7 @@ def obtener_dimensiones_ben(funcion):
             return dims
         
     if funcion in bd.opfunu_cec_data:
+        import opfunu.cec_based  # Lazy import
         func_class = getattr(opfunu.cec_based, f"{funcion}")
         return [func_class().dim_default]
     
@@ -145,5 +145,8 @@ if __name__ == '__main__':
     log_resumen = []
     cantidad = 0
     
-    agregar_experimentos()
+    # Connection pooling: mantener conexión abierta durante todas las inserciones
+    with bd:
+        agregar_experimentos()
+    
     resumen_experimentos(log_resumen, cantidad)

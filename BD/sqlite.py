@@ -1,9 +1,7 @@
 import sqlite3
 import os
-import opfunu.cec_based
 
 from Problem.SCP.problem import obtenerOptimo
-from Problem.USCP.problem import obtenerOptimoUSCP
 from Problem.USCP.problem import obtenerOptimoUSCP
 
 class BD:
@@ -11,6 +9,8 @@ class BD:
         self.__dataBase = './BD/resultados.db'
         self.__conexion = None
         self.__cursor   = None
+        self.__pooling_active = False  # Flag para connection pooling
+        self.__pooling_depth = 0       # Contador de contextos anidados
 
     def getDataBase(self):
         return self.__dataBase
@@ -31,6 +31,10 @@ class BD:
         self.__cursor = cursor
 
     def conectar(self):
+        # Si pooling está activo y ya hay conexión, reutilizarla
+        if self.__pooling_active and self.__conexion is not None:
+            return
+        
         conn = sqlite3.connect(self.getDataBase())
         cursor = conn.cursor()
         
@@ -38,7 +42,33 @@ class BD:
         self.setCursor(cursor)
     
     def desconectar(self):
-        self.getConexion().close()
+        # Si pooling está activo, no cerrar la conexión aún
+        if self.__pooling_active:
+            return
+        
+        if self.__conexion is not None:
+            self.__conexion.close()
+            self.__conexion = None
+            self.__cursor = None
+    
+    def __enter__(self):
+        """Context manager para connection pooling: with bd:"""
+        self.__pooling_depth += 1
+        if self.__pooling_depth == 1:
+            self.__pooling_active = True
+            self.conectar()  # Abrir conexión al entrar al contexto
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Cerrar conexión al salir del contexto"""
+        self.__pooling_depth -= 1
+        if self.__pooling_depth == 0:
+            self.__pooling_active = False
+            if self.__conexion is not None:
+                self.__conexion.close()
+                self.__conexion = None
+                self.__cursor = None
+        return False  # No suprimir excepciones
         
     def commit(self):
         self.getConexion().commit()
@@ -94,6 +124,20 @@ class BD:
             )'''
         )
         
+        # Crear índices para optimizar consultas frecuentes
+        self.getCursor().execute(
+            '''CREATE INDEX IF NOT EXISTS idx_estado ON experimentos(estado)'''
+        )
+        self.getCursor().execute(
+            '''CREATE INDEX IF NOT EXISTS idx_instancia_nombre ON instancias(nombre)'''
+        )
+        self.getCursor().execute(
+            '''CREATE INDEX IF NOT EXISTS idx_iteraciones_fk ON iteraciones(fk_id_experimento)'''
+        )
+        self.getCursor().execute(
+            '''CREATE INDEX IF NOT EXISTS idx_resultados_fk ON resultados(fk_id_experimento)'''
+        )
+        
         self.commit()
         
         self.insertarInstanciasBEN()
@@ -106,21 +150,27 @@ class BD:
     def insertarExperimentos(self, data, corridas, id):
         self.conectar()
 
-        for _ in range(corridas):
-            self.getCursor().execute(f'''
-                INSERT INTO experimentos VALUES (
-                    NULL,
-                    '{str(data["experimento"])}',
-                    '{str(data["MH"])}',
-                    '{str(data["binarizacion"])}',
-                    '{str(data["paramMH"])}',
-                    '{str(data["ML"])}',
-                    '{str(data["paramML"])}',
-                    '{str(data["ML_FS"])}',
-                    '{str(data["paramML_FS"])}',
-                    '{str(data["estado"])}',
-                    {id}
-                )''')
+        # Bulk insert usando executemany
+        valores = [
+            (
+                str(data["experimento"]),
+                str(data["MH"]),
+                str(data["binarizacion"]),
+                str(data["paramMH"]),
+                str(data["ML"]),
+                str(data["paramML"]),
+                str(data["ML_FS"]),
+                str(data["paramML_FS"]),
+                str(data["estado"]),
+                id
+            )
+            for _ in range(corridas)
+        ]
+        
+        self.getCursor().executemany(
+            '''INSERT INTO experimentos VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+            valores
+        )
         
         self.commit()
         self.desconectar()
@@ -157,6 +207,7 @@ class BD:
         tipoProblema = 'BEN'
         
         def opfunu_cec_parametros(instancia):
+            import opfunu.cec_based  # Lazy import solo si se usan funciones CEC
             func_class = getattr(opfunu.cec_based, f"{instancia}")
             return func_class()
         
@@ -388,7 +439,7 @@ class BD:
         
         cursor = self.getCursor()
         
-        cursor.execute(f''' SELECT * FROM instancias WHERE id_instancia = {id} ''')
+        cursor.execute('''SELECT * FROM instancias WHERE id_instancia = ?''', (id,))
         data = cursor.fetchall()
         
         self.desconectar()
@@ -399,8 +450,7 @@ class BD:
         self.conectar()
         
         cursor = self.getCursor()
-        cursor.execute(f''' UPDATE experimentos SET estado = '{estado}' WHERE id_experimento =  {id} ''')
-        
+        cursor.execute('''UPDATE experimentos SET estado = ? WHERE id_experimento = ?''', (estado, id))
         
         self.commit()
         self.desconectar()

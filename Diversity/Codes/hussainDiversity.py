@@ -1,25 +1,22 @@
+import numpy as np
+
 def diversidadHussain(matriz):
-    medianas = []
-    n = len(matriz)
-    n_cols = len(matriz[0])
+    """
+    Calcula la diversidad de Hussain de forma vectorizada.
     
-    for j in range(n_cols):
-        suma = 0
-        
-        for i in range(n):
-            suma += matriz[i][j]
-            
-        medianas.append(suma / n)
+    Fórmula: (1 / (l * n)) * sum(abs(matriz[i][d] - media[d]))
+    donde media[d] es el promedio de la dimensión d.
+    """
+    # Asegurar que sea array de NumPy
+    matriz = np.asarray(matriz)
     
-    l = len(matriz[0])
-    diversidad = 0
+    n, l = matriz.shape  # n = filas (población), l = columnas (dimensiones)
     
-    for d in range(l):
-        div_d = 0
+    # Calcular medias por columna (vectorizado)
+    medianas = np.mean(matriz, axis=0)
     
-        for i in range(n):
-            div_d = div_d + abs(medianas[d] - matriz[i][d])
-        
-        diversidad = diversidad + div_d
-        
-    return round(((1 / (l * n)) * diversidad), 3)
+    # Calcular suma de diferencias absolutas (vectorizado)
+    diversidad = np.sum(np.abs(matriz - medianas))
+    
+    # Aplicar fórmula final
+    return round((diversidad / (l * n)), 3)

@@ -78,16 +78,19 @@ def main():
     verificar_y_crear_carpetas()
     
     bd = BD()
-    data = bd.obtenerExperimento()
     
     start_time = time.time()  # Registrar el tiempo inicial
     
     log_fecha_hora("Inicio de la ejecución")
 
-    while data is not None:
-        log_experimento(data)
-        procesar_experimento(data, bd)
+    # Connection pooling: mantener conexión abierta durante todo el procesamiento
+    with bd:
         data = bd.obtenerExperimento()
+        
+        while data is not None:
+            log_experimento(data)
+            procesar_experimento(data, bd)
+            data = bd.obtenerExperimento()
 
     end_time = time.time()
     total_time = end_time - start_time
