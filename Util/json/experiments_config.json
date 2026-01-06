@@ -8,17 +8,65 @@
         "DS_actions": "Lista de acciones de binarización de la población.",
         "dimensiones": "Mapea cada función BEN a las dimensiones que utiliza.",
         "experimentos": "Parámetros globales de iteraciones y población para cada problema.",
-        "instancias": "Identificadores de los instancias de los problemas que se van a procesar."
+        "instancias": "Identificadores de los instancias de los problemas que se van a procesar.",
+        "mapas_caoticos": "🌀 NUEVO: Configuración de mapas caóticos para experimentos",
+        "usar_mapas_caoticos": "🌀 NUEVO: Activar/desactivar mapas caóticos globalmente"
     },
 
     "ben": false,
-    "scp": false,
-    "uscp": true,
+    "scp": true,
+    "uscp": false,
     "kp": false,
 
     "mhs": ["TJO", "CLO"],
 
     "DS_actions": ["V3-ELIT"],
+
+    "_comentario_mapas_caoticos": "========== CONFIGURACIÓN DE MAPAS CAÓTICOS ==========",
+    
+    "usar_mapas_caoticos": true,
+    
+    "mapas_caoticos": {
+        "_comentario": "Configuración de mapas caóticos. Cada problema puede tener su propia configuración.",
+        
+        "modo": "comparacion",
+        "_modos_disponibles": {
+            "solo_estandar": "No usa mapas caóticos (como antes)",
+            "solo_caoticos": "Solo genera experimentos con mapas caóticos",
+            "comparacion": "Genera experimentos estándar Y caóticos para comparar",
+            "manual": "Usa la lista 'binarizaciones_manuales' definida abajo"
+        },
+        
+        "mapas_activos": ["LOG", "SINE"],
+        "_mapas_disponibles": ["LOG", "SINE", "TENT", "CIRCLE", "SINGER", "SINU", "PIECE"],
+        
+        "USCP": {
+            "usar_caoticos": false,
+            "modo": "comparacion",
+            "mapas": ["LOG"],
+            "_comentario": "Genera: V3-ELIT (estándar) + V3-ELIT_LOG (caótico)"
+        },
+        
+        "SCP": {
+            "usar_caoticos": true,
+            "modo": "comparacion",
+            "mapas": ["LOG", "SINE"],
+            "_comentario": "Solo usa binarización estándar"
+        },
+        
+        "KP": {
+            "usar_caoticos": false,
+            "modo": "solo_estandar",
+            "mapas": []
+        },
+        
+        "binarizaciones_manuales": {
+            "_comentario": "Solo se usa si modo='manual'. Lista exacta de binarizaciones a usar.",
+            "USCP": [],
+            "SCP": [],
+            "KP": []
+        }
+    },
 
     "dimensiones": {
         "BEN": {
@@ -58,7 +106,7 @@
             "F13CEC2017", "F14CEC2017", "F15CEC2017", "F16CEC2017", "F17CEC2017", "F18CEC2017",
             "F19CEC2017", "F20CEC2017", "F21CEC2017", "F22CEC2017", "F23CEC2017", "F24CEC2017",
             "F25CEC2017", "F26CEC2017", "F27CEC2017", "F28CEC2017", "F29CEC2017", "F30CEC2017"],
-        "SCP": ["nrh1", "nrh2", "nrh3"],
+        "SCP": ["41"],
         "USCP": ["u41", "u51", "u61"],
         "KP": []
     }
