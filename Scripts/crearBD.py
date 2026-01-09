@@ -1,4 +1,11 @@
 import os
+import sys
+
+# Permite ejecutar este script directamente (python Scripts/crearBD.py)
+# sin errores de imports del proyecto (BD, Util, etc.)
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
 from BD.sqlite import BD
 

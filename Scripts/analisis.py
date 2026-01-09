@@ -1,4 +1,11 @@
 import os
+import sys
+
+# Permite ejecutar este script directamente (python Scripts/analisis.py)
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -254,6 +261,39 @@ def _actualizar_datos(mhs_instances, mh, archivo_fitness, data):
             if not data[col].isna().all():
                 getattr(inst, target).append(data[col].mean())
 
+
+def _parse_result_filename(nombre_archivo: str):
+    """Extrae (mh, instancia, corrida) desde el nombre del CSV.
+
+    El formato esperado en este repo suele ser:
+        - En BD.iteraciones.nombre: <mh>_<instancia>
+        - En archivos sueltos:      <mh>_<instancia>_<id>.csv
+
+    Importante: <mh> puede contener guiones bajos (por ejemplo: PSO_mealpy).
+    Por eso no podemos usar split('_')[:2].
+    """
+
+    base = os.path.basename(str(nombre_archivo)).strip()
+    if base.lower().endswith(".csv"):
+        base = base[:-4]
+
+    parts = base.split("_")
+
+    # Caso 1: nombre almacenado en BD (sin corrida): <mh>_<instancia>
+    if len(parts) >= 2 and not parts[-1].isdigit():
+        mh = "_".join(parts[:-1])
+        instancia = parts[-1]
+        return mh, instancia, None
+
+    # Caso 2: archivo suelto con corrida al final: <mh>_<instancia>_<id>
+    if len(parts) >= 3 and parts[-1].isdigit():
+        mh = "_".join(parts[:-2])
+        instancia = parts[-2]
+        corrida = parts[-1]
+        return mh, instancia, corrida
+
+    return None, None, None
+
 def _graficar_por_corrida(iteraciones, fitness, xpl, xpt, tiempo, mh, problem_id, corrida, subfolder, binarizacion=None):
     out = os.path.join(DIR_GRAFICOS, subfolder) if binarizacion is None \
           else os.path.join(DIR_GRAFICOS, subfolder, str(binarizacion))
@@ -334,22 +374,46 @@ def _graficar_box_violin(instancia_id, subfolder, binarizacion=None, title_prefi
     except Exception as e:
         print(f"[ERROR] Error al leer {datos_path}: {e}"); return
 
+    # Detectar si conviene escala log (para evitar que un outlier aplaste al resto)
+    fitness_vals = pd.to_numeric(df['FITNESS'], errors='coerce').dropna().to_numpy(dtype=float)
+    fitness_vals = fitness_vals[np.isfinite(fitness_vals)]
+    fitness_min = float(np.min(fitness_vals)) if fitness_vals.size else np.nan
+    fitness_max = float(np.max(fitness_vals)) if fitness_vals.size else np.nan
+    use_log_y = False
+    if np.isfinite(fitness_min) and np.isfinite(fitness_max) and fitness_min > 0:
+        if MODO_LOGARITMICO == 'log_scale':
+            use_log_y = True
+        elif MODO_LOGARITMICO == 'auto' and fitness_max > 1e6:
+            use_log_y = True
+
     # Boxplot
     out = os.path.join(DIR_BOXPLOT, subfolder); os.makedirs(out, exist_ok=True)
     fpath = os.path.join(out, f'boxplot_fitness_{subfolder}_{instancia_id}{suf}.pdf')
+    plt.figure(figsize=(10, 6))
     sns.boxplot(x='MH', y='FITNESS', data=df, hue='MH', palette='Set2', legend=False)
+    if use_log_y:
+        plt.yscale('log')
+        ylabel = 'Fitness (log scale)'
+    else:
+        ylabel = 'Fitness'
     plt.title(f'Boxplot Fitness\n{title_prefix}{instancia_id}' + (f' - {binarizacion}' if binarizacion else ''))
-    plt.xlabel('Metaheurística'); plt.ylabel('Fitness')
+    plt.xlabel('Metaheurística'); plt.ylabel(ylabel)
     plt.xticks(rotation=45, ha='right')
+    plt.grid(True, axis='y', alpha=0.3)
     plt.tight_layout(); plt.savefig(fpath); plt.close()
 
     # Violin
     out = os.path.join(DIR_VIOLIN, subfolder); os.makedirs(out, exist_ok=True)
     fpath = os.path.join(out, f'violinplot_fitness_{subfolder}_{instancia_id}{suf}.pdf')
+    plt.figure(figsize=(10, 6))
+    # Nota: para que el violín se vea "normal", lo dejamos en escala lineal.
+    # En escala log (con outliers enormes) suele verse contraintuitivo.
     sns.violinplot(x='MH', y='FITNESS', data=df, hue='MH', palette='Set3', legend=False)
+    ylabel = 'Fitness'
     plt.title(f'Violinplot Fitness\n{title_prefix}{instancia_id}' + (f' - {binarizacion}' if binarizacion else ''))
-    plt.xlabel('Metaheurística'); plt.ylabel('Fitness')
+    plt.xlabel('Metaheurística'); plt.ylabel(ylabel)
     plt.xticks(rotation=45, ha='right')
+    plt.grid(True, axis='y', alpha=0.3)
     plt.tight_layout(); plt.savefig(fpath); plt.close()
 
 def _graficar_best(instancia_id, mhs_instances, subfolder, title_prefix="", binarizacion=None):
@@ -394,15 +458,25 @@ def _graficar_best(instancia_id, mhs_instances, subfolder, title_prefix="", bina
         
         # Determinar escala del eje
         if len(all_fitness_values) > 0:
+            all_vals = np.asarray(all_fitness_values, dtype=float)
+            all_vals = all_vals[np.isfinite(all_vals)]
+            if all_vals.size > 0:
+                fitness_min = float(np.min(all_vals))
+                fitness_max = float(np.max(all_vals))
+            else:
+                fitness_min, fitness_max = np.nan, np.nan
+
             if MODO_LOGARITMICO == 'log_scale':
-                ax.set_yscale('log')
-                ylabel = "Fitness (log scale)"
-            elif MODO_LOGARITMICO == 'auto':
-                fitness_range = np.max(all_fitness_values) - np.min(all_fitness_values)
-                fitness_max = np.max(all_fitness_values)
-                if fitness_max > 0 and (fitness_range / fitness_max > 1e-3 and fitness_max > 1e6):
+                if np.isfinite(fitness_min) and fitness_min > 0:
                     ax.set_yscale('log')
                     ylabel = "Fitness (log scale)"
+            elif MODO_LOGARITMICO == 'auto':
+                # Auto: si la instancia tiene fitness en varias órdenes de magnitud,
+                # usar escala log para evitar que todo quede aplastado cerca de 0.
+                if np.isfinite(fitness_min) and fitness_min > 0 and np.isfinite(fitness_max):
+                    if fitness_max > 1e6:
+                        ax.set_yscale('log')
+                        ylabel = "Fitness (log scale)"
     
     ax.set_ylabel(ylabel, fontsize=12)
     
@@ -480,12 +554,9 @@ def _procesar_archivos(problem_cfg, instancia_id, blob, archivo_fitness, mhs_ins
             nombre_archivo, contenido = item
             binarizacion = None
         
-        try:
-            mh, _ = nombre_archivo.split('_')[:2]
-            if mh in MHS_LIST:
-                archivos_filtrados.append((item, binarizacion))
-        except ValueError:
-            continue
+        mh, _, _ = _parse_result_filename(nombre_archivo)
+        if mh and mh in MHS_LIST:
+            archivos_filtrados.append((item, binarizacion))
     
     total = len(archivos_filtrados)
     if total == 0:
@@ -517,7 +588,10 @@ def _procesar_archivos(problem_cfg, instancia_id, blob, archivo_fitness, mhs_ins
             else:
                 nombre_archivo, contenido = item
             
-            mh, _ = nombre_archivo.split('_')[:2]
+            mh, _, _ = _parse_result_filename(nombre_archivo)
+            if not mh:
+                archivos_con_errores += 1
+                continue
             
             # Archivo temporal único
             unique_id = f"{os.getpid()}_{uuid.uuid4().hex[:8]}"
@@ -657,6 +731,11 @@ def _procesar_instancia_binarizacion(inst, binarizacion, cfg, uses_bin, title_pr
     fh_gap.write("MH, avg. GAP, avg. RDP\n")
     
     _procesar_archivos(cfg, instancia_id, blob, fh_fit, mhs_map, bin_actual=binarizacion)
+
+    # Avisar si alguna MH no aportó datos para esta instancia
+    faltantes = [name for name in MHS_LIST if len(mhs_map[name].fitness) == 0 and len(mhs_map[name].time) == 0]
+    if faltantes:
+        print(f"      [WARN] Sin datos ({len(faltantes)}): {', '.join(faltantes)}")
     
     escribir_resumenes(mhs_map, fh_rf, fh_rt, fh_rp, MHS_LIST)
     _graficar_best(instancia_id, mhs_map, subfolder=sub, title_prefix=title_prefix, binarizacion=binarizacion)

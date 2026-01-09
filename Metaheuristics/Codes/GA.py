@@ -35,7 +35,7 @@ def mutate(chromosome, mutationRate):
         
     return mutatedChromosome
 
-def iterarGA(population, fitness, cross, muta):
+def iterarGA(population, fitness, cross=0.4, muta=0.5):
     """
     Genetic Algorithm main loop for generating the next population.
     

@@ -62,6 +62,9 @@ def parse_parametros(parametrosMH):
     """Parsea los parámetros y devuelve un diccionario con claves y valores."""
     params = {}
     
+    # Reemplazar ; por , para unificar separadores
+    parametrosMH = parametrosMH.replace(';', ',')
+    
     for param in parametrosMH.split(","):
         # Verificar si el parámetro tiene el formato clave:valor
         if ":" in param:

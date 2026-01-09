@@ -145,10 +145,34 @@ def resumen_experimentos(log_resumen, cantidad):
 def escribir_resumenes(mhs_instances, archivoResumenFitness, archivoResumenTimes, archivoResumenPercentage, MHS_LIST):
     for name in MHS_LIST:
         mh = mhs_instances[name]
-        
-        archivoResumenFitness.write(f"{name}, {np.min(mh.fitness)}, {np.round(np.mean(mh.fitness), 3)}, {np.round(np.std(mh.fitness), 3)}\n")
-        archivoResumenTimes.write(f"{name}, {np.min(mh.time)}, {np.round(np.mean(mh.time), 3)}, {np.round(np.std(mh.time), 3)}\n")
-        archivoResumenPercentage.write(f"{name}, {np.round(np.mean(mh.xpl), 3)}, {np.round(np.mean(mh.xpt), 3)}\n")
+
+        # Fitness
+        if len(mh.fitness):
+            min_fit = float(np.min(mh.fitness))
+            avg_fit = float(np.round(np.mean(mh.fitness), 3))
+            std_fit = float(np.round(np.std(mh.fitness), 3))
+        else:
+            min_fit = np.nan
+            avg_fit = np.nan
+            std_fit = np.nan
+
+        # Tiempo
+        if len(mh.time):
+            min_time = float(np.min(mh.time))
+            avg_time = float(np.round(np.mean(mh.time), 3))
+            std_time = float(np.round(np.std(mh.time), 3))
+        else:
+            min_time = np.nan
+            avg_time = np.nan
+            std_time = np.nan
+
+        # Porcentajes
+        xpl_avg = float(np.round(np.mean(mh.xpl), 3)) if len(mh.xpl) else np.nan
+        xpt_avg = float(np.round(np.mean(mh.xpt), 3)) if len(mh.xpt) else np.nan
+
+        archivoResumenFitness.write(f"{name}, {min_fit}, {avg_fit}, {std_fit}\n")
+        archivoResumenTimes.write(f"{name}, {min_time}, {avg_time}, {std_time}\n")
+        archivoResumenPercentage.write(f"{name}, {xpl_avg}, {xpt_avg}\n")
 
 def log_fecha_hora(evento):
     """Muestra la fecha y hora actual."""

@@ -1,6 +1,10 @@
 import os
-import json
-import opfunu.cec_based
+import sys
+
+# Permite ejecutar este script directamente (python Scripts/poblarDB.py)
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
 from BD.sqlite import BD
 from Util.log import resumen_experimentos
@@ -35,6 +39,7 @@ def obtener_dimensiones_ben(funcion):
             return dims
         
     if funcion in bd.opfunu_cec_data:
+        import opfunu.cec_based  # Lazy import
         func_class = getattr(opfunu.cec_based, f"{funcion}")
         return [func_class().dim_default]
     
@@ -70,40 +75,52 @@ def obtener_dimensiones(instance, problema):
 
     return "-"
 
+def crear_data_experimento(instancia, dim, mh, binarizacion, iteraciones, poblacion, extra_params, problemaActual):
+    return {
+        'experimento': f'{instancia[1]} {dim}' if problemaActual == 'BEN' else f'{instancia[1]}',
+        'MH': mh,
+        'binarizacion': binarizacion if binarizacion else 'N/A',  # Agregar binarización solo si existe
+        'paramMH': f'iter:{iteraciones},pop:{poblacion}{extra_params}',
+        'ML': '',
+        'paramML': '',
+        'ML_FS': '',
+        'paramML_FS': '',
+        'estado': 'pendiente'
+    }
+
+def crear_resumen_log(instancia, dim, mh, binarizacion, iteraciones, poblacion, extra_params, problemaActual, num_experimentos=1):
+    dimensiones_instancia = obtener_dimensiones(instancia[1], problemaActual)
+    return {
+        "Problema": problemaActual,
+        "Instancia": instancia[1],
+        "Dimensión": dimensiones_instancia if problemaActual != 'BEN' else dim,
+        "MH": mh,
+        "Iteraciones": iteraciones,
+        "Población": poblacion,
+        "Binarización": binarizacion if binarizacion else 'N/A',
+        "Extra Params": extra_params,
+        "Total Experimentos": num_experimentos
+    }
+
 def insertar_experimentos(instancias, dimensiones, mhs, num_experimentos, iteraciones, poblacion, problemaActual, extra_params=""):
     global cantidad, log_resumen
 
     for instancia in instancias:
-        dimensiones_instancia = obtener_dimensiones(instancia[1], problemaActual)
-
         for dim in dimensiones:
             for mh in mhs:
-                experimento = f'{instancia[1]} {dim}' if problemaActual == 'BEN' else f'{instancia[1]}'
-
-                data = {
-                    'experimento': experimento,
-                    'MH': mh,
-                    'paramMH': f'iter:{iteraciones},pop:{poblacion}{extra_params}',
-                    'ML': '',
-                    'paramML': '',
-                    'ML_FS': '',
-                    'paramML_FS': '',
-                    'estado': 'pendiente'
-                }
-
-                cantidad += num_experimentos
-                bd.insertarExperimentos(data, num_experimentos, instancia[0])
-
-                log_resumen.append({
-                    "Problema": problemaActual,
-                    "Instancia": instancia[1],
-                    "Dimensión": dimensiones_instancia if problemaActual != 'BEN' else dim,
-                    "MH": mh,
-                    "Iteraciones": iteraciones,
-                    "Población": poblacion,
-                    "Extra Params": extra_params,
-                    "Total Experimentos": num_experimentos
-                })
+                # Verifica si el problema actual requiere binarización
+                if problemaActual in ['SCP', 'USCP']:
+                    for binarizacion in config['DS_actions']:  # Solo iterar si el problema es discreto
+                        data = crear_data_experimento(instancia, dim, mh, binarizacion, iteraciones, poblacion, extra_params, problemaActual)
+                        bd.insertarExperimentos(data, num_experimentos, instancia[0])
+                        cantidad += num_experimentos
+                        log_resumen.append(crear_resumen_log(instancia, dim, mh, binarizacion, iteraciones, poblacion, extra_params, problemaActual, num_experimentos))
+                else:
+                    # No aplicar binarización a problemas BEN
+                    data = crear_data_experimento(instancia, dim, mh, None, iteraciones, poblacion, extra_params, problemaActual)
+                    bd.insertarExperimentos(data, num_experimentos, instancia[0])
+                    cantidad += num_experimentos
+                    log_resumen.append(crear_resumen_log(instancia, dim, mh, None, iteraciones, poblacion, extra_params, problemaActual, num_experimentos))
 
 def agregar_experimentos():
     if config.get('ben', False):
@@ -126,14 +143,16 @@ def agregar_experimentos():
 
             for instancia in instancias:
                 for mh in config['mhs']:
-                    for binarizacion in config['DS_actions']:
-                        extra_params = f',DS:{binarizacion},repair:complex,cros:0.4;mut:0.50'
-                        insertar_experimentos([instancia], [1], [mh], num_experimentos, iteraciones, poblacion, problemaActual=problema, extra_params=extra_params)
+                    extra_params = f',repair:complex,cros:0.4;mut:0.50'
+                    insertar_experimentos([instancia], [1], [mh], num_experimentos, iteraciones, poblacion, problemaActual=problema, extra_params=extra_params)
 
 # Resumen final
 if __name__ == '__main__':
     log_resumen = []
     cantidad = 0
     
-    agregar_experimentos()
+    # Connection pooling: mantener conexión abierta durante todas las inserciones
+    with bd:
+        agregar_experimentos()
+    
     resumen_experimentos(log_resumen, cantidad)
