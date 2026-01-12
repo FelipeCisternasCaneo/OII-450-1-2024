@@ -15,7 +15,7 @@ import os
 from BD.sqlite import BD
 from Util.log import resumen_experimentos
 from Util.util import cargar_configuracion
-from crearBD import crear_BD
+from Scripts.crearBD import crear_BD
 
 # Cargar configuración desde JSON
 config = cargar_configuracion('util/json/experiments_config.json')

@@ -27,15 +27,15 @@ TRANSFER_FUNCTIONS = {
 
 BINARIZATION_FUNCTIONS = {
     "STD": lambda step1, bestBin, indBin, chaotic_vals: np.where(
-        step1 >= np.random.rand(len(step1)) if chaotic_vals is None else chaotic_vals[:len(step1)], 
+        step1 >= (np.random.rand(len(step1)) if chaotic_vals is None else chaotic_vals[:len(step1)]),
         1, 0
     ),
     "COM": lambda step1, bestBin, indBin, chaotic_vals: np.where(
-        step1 >= np.random.rand(len(step1)) if chaotic_vals is None else chaotic_vals[:len(step1)], 
+        step1 >= (np.random.rand(len(step1)) if chaotic_vals is None else chaotic_vals[:len(step1)]),
         1 - np.array(indBin), 0
     ),
     "ELIT": lambda step1, bestBin, indBin, chaotic_vals: np.where(
-        step1 >= np.random.rand(len(step1)) if chaotic_vals is None else chaotic_vals[:len(step1)], 
+        step1 >= (np.random.rand(len(step1)) if chaotic_vals is None else chaotic_vals[:len(step1)]),
         np.array(bestBin), 0
     ),
     "PS": lambda step1, bestBin, indBin, chaotic_vals: np.where(
@@ -93,7 +93,7 @@ def aplicarBinarizacion(ind, ds, bestSolutionBin, indBin, chaotic_map=None, chao
                     chaotic_map[start_idx:],
                     chaotic_map[:end_idx]
                 ])
-        
+
         individuoBin = BINARIZATION_FUNCTIONS[binarizationFunction](step1, bestSolutionBin, indBin, chaotic_vals)
         
     except Exception as e:

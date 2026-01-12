@@ -82,7 +82,10 @@ def ejecutar_problema_scp_uscp(id, instancia, ds, parametros, solver_func, unico
     else:
         # Usar solver estándar (original)
         if chaotic_map and not CHAOTIC_AVAILABLE:
-            print(f"[WARN] Mapa caótico '{chaotic_map}' solicitado pero no disponible. Usando estándar.")
+            print(
+                f"[WARN] Solver caótico no disponible (falló la importación). "
+                f"Ignorando mapa '{chaotic_map}' y usando estándar."
+            )
         
         solver_func(
             id, parametros["mh"], int(parametros["iter"]),

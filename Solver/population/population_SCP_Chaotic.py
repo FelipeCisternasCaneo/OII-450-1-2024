@@ -218,7 +218,7 @@ def binarize_and_evaluate_chaotic(mh, population, fitness, DS, best, matrixBin, 
         for i in range(n_pop):
             # 🌀 INDEXACIÓN CAÓTICA (fórmula del paper original)
             # Cada individuo en cada iteración tiene un índice único
-            chaotic_index = (iter * pop_size * dim) + (i * dim)
+            chaotic_index = ((iter - 1) * pop_size * dim) + (i * dim)
             
             # Aplicar binarización con valores caóticos
             population[i] = b.aplicarBinarizacion(
