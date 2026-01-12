@@ -13,7 +13,7 @@ from Metaheuristics.imports import iterarFLO, iterarHLOABen, iterarLOA, iterarNO
 from Metaheuristics.imports import IterarPO, iterarWOM, iterarQSO
 
 from Problem.Benchmark.Problem import fitness as f
-from util import util
+from Util import util
 from BD.sqlite import BD
 
 def generarPoblacionInicial(pop, dim, lb, ub):

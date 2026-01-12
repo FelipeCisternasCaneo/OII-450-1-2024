@@ -2,3 +2,8 @@ env
 __pycache__/
 *.pyc
 .venv
+
+# Instaladores/paquetes locales
+Miniconda3-latest-Linux-x86_64.sh
+*Miniconda*.sh
+*Anaconda*.sh

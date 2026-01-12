@@ -3,6 +3,56 @@ import json
 
 from Util.log import log_error
 
+
+def _workspace_root() -> str:
+    """Devuelve la raíz del proyecto asumiendo que este archivo vive en /Util/."""
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
+
+def _resolver_ruta_existente(ruta: str) -> str:
+    """Resuelve una ruta a un archivo existente.
+
+    Acepta rutas relativas (respecto al CWD o a la raíz del proyecto) y maneja
+    el caso común de usar 'util/' cuando el directorio real es 'Util/'.
+    """
+    if not ruta:
+        raise ValueError("La ruta de configuración está vacía.")
+
+    candidatos: list[str] = []
+
+    # 1) Tal cual (relativa al CWD o absoluta)
+    candidatos.append(ruta)
+
+    # 2) Relativa a la raíz del workspace
+    root = _workspace_root()
+    candidatos.append(os.path.join(root, ruta.lstrip("./")))
+
+    # 3) Normalización por caso (util -> Util) para Linux
+    normalizada = ruta.replace("\\", "/")
+    prefijos = ("util/", "./util/")
+    for prefijo in prefijos:
+        if normalizada.startswith(prefijo):
+            resto = normalizada[len(prefijo):]
+            candidatos.append(os.path.join(root, "Util", resto))
+
+    # 4) Variantes directas del CWD
+    if normalizada.startswith("./util/"):
+        candidatos.append(normalizada.replace("./util/", "./Util/", 1))
+    if normalizada.startswith("util/"):
+        candidatos.append(normalizada.replace("util/", "Util/", 1))
+
+    # Devolver el primero que exista
+    for candidato in candidatos:
+        if os.path.exists(candidato):
+            return candidato
+
+    # Mensaje útil con pistas
+    candidatos_str = "\n".join(f"- {c}" for c in candidatos)
+    raise FileNotFoundError(
+        f"El archivo de configuración '{ruta}' no existe.\n"
+        f"Rutas intentadas:\n{candidatos_str}"
+    )
+
 def selectionSort(lista):
     posiciones = []
     
@@ -35,20 +85,12 @@ def writeTofile(data, filename):
         file.write(data)
         
 def cargar_configuracion(ruta_config):
-    if not os.path.exists(ruta_config):
-        raise FileNotFoundError(f"El archivo de configuración '{ruta_config}' no existe.")
-    
-    with open(ruta_config, 'r') as archivo:
+    ruta_resuelta = _resolver_ruta_existente(ruta_config)
+    with open(ruta_resuelta, 'r', encoding='utf-8') as archivo:
         return json.load(archivo)
     
 def cargar_directorios():
-    ruta_directorios = './util/json/dir.json'
-    
-    if not os.path.exists(ruta_directorios):
-        raise FileNotFoundError(f"El archivo de directorios '{ruta_directorios}' no existe.")
-    
-    with open(ruta_directorios, 'r') as archivo:
-        return json.load(archivo)
+    return cargar_configuracion('./util/json/dir.json')
     
 def cargar_configuracion_exp(CONFIG_FILE, EXPERIMENTS_FILE):
     """Carga la configuración y los experimentos desde archivos JSON."""
