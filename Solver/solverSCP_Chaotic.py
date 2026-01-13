@@ -83,8 +83,8 @@ def solverSCP_Chaotic(id, mh, maxIter, pop, instances, DS, repairType, param, un
             "solverSCP_Chaotic requiere un mapa caótico. "
             "Usa solverSCP.py estándar si no quieres mapas caóticos."
         )
-    
-    valid_maps = ['LOG', 'SINE', 'TENT', 'CIRCLE', 'SINGER', 'SINU', 'PIECE']
+
+    valid_maps = ['LOG', 'SINE', 'TENT', 'CIRCLE', 'SINGER', 'SINU', 'PIECE', 'CHEB', 'GAUS']
     if chaotic_map_name not in valid_maps:
         raise ValueError(
             f"Mapa caótico '{chaotic_map_name}' inválido. "
@@ -111,7 +111,7 @@ def solverSCP_Chaotic(id, mh, maxIter, pop, instances, DS, repairType, param, un
         chaotic_func = get_chaotic_map(chaotic_map_name)
         chaotic_map = chaotic_func(x0=0.7, quantity=quantity_elements)
         
-        print(f"[✓] Secuencia caótica generada: {quantity_elements:,} valores")
+        print(f"[] Secuencia caótica generada: {quantity_elements:,} valores")
         print(f"    Rango: [{chaotic_map.min():.6f}, {chaotic_map.max():.6f}]")
     
     except Exception as e:
@@ -284,4 +284,4 @@ def solverSCP_Chaotic(id, mh, maxIter, pop, instances, DS, repairType, param, un
     os.remove(results_path)
     os.remove(results_divj_path)
     
-    print(f"[✓] Experimento completado: {fileName}")
+    print(f"[] Experimento completado: {fileName}")

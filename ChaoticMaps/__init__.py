@@ -14,6 +14,8 @@ from .chaoticMaps import (  # noqa: F401
 	singerMap,
 	sinusoidalMap,
 	tentMap,
+    chebyshevMap,
+    gaussMap
 )
 
 __all__ = [
@@ -26,4 +28,6 @@ __all__ = [
 	"sinusoidalMap",
 	"tentMap",
 	"circleMap",
+    "chebyshevMap",
+	"gaussMap"
 ]

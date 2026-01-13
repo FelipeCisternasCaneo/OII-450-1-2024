@@ -9,8 +9,8 @@
         "dimensiones": "Mapea cada función BEN a las dimensiones que utiliza.",
         "experimentos": "Parámetros globales de iteraciones y población para cada problema.",
         "instancias": "Identificadores de los instancias de los problemas que se van a procesar.",
-        "mapas_caoticos": "🌀 NUEVO: Configuración de mapas caóticos para experimentos",
-        "usar_mapas_caoticos": "🌀 NUEVO: Activar/desactivar mapas caóticos globalmente"
+        "mapas_caoticos": " NUEVO: Configuración de mapas caóticos para experimentos",
+        "usar_mapas_caoticos": " NUEVO: Activar/desactivar mapas caóticos globalmente"
     },
 
     "ben": false,
@@ -18,9 +18,9 @@
     "uscp": false,
     "kp": false,
 
-    "mhs": ["TJO", "CLO"],
+    "mhs": ["TJO"],
 
-    "DS_actions": ["V3-ELIT"],
+    "DS_actions": ["V1-ELIT"],
 
     "_comentario_mapas_caoticos": "========== CONFIGURACIÓN DE MAPAS CAÓTICOS ==========",
     
@@ -37,8 +37,8 @@
             "manual": "Usa la lista 'binarizaciones_manuales' definida abajo"
         },
         
-        "mapas_activos": ["LOG", "SINE"],
-        "_mapas_disponibles": ["LOG", "SINE", "TENT", "CIRCLE", "SINGER", "SINU", "PIECE"],
+        "mapas_activos": ["LOG", "SINE", "TENT", "CIRCLE", "SINGER", "SINU", "PIECE", "CHEB", "GAUS"],
+        "_mapas_disponibles": ["LOG", "SINE", "TENT", "CIRCLE", "SINGER", "SINU", "PIECE", "CHEB", "GAUS"],
         
         "USCP": {
             "usar_caoticos": false,
@@ -50,7 +50,7 @@
         "SCP": {
             "usar_caoticos": true,
             "modo": "comparacion",
-            "mapas": ["LOG", "SINE"],
+            "mapas": ["LOG", "SINE", "TENT", "CIRCLE", "SINGER", "SINU", "PIECE", "CHEB", "GAUS"],
             "_comentario": "Solo usa binarización estándar"
         },
         
@@ -95,7 +95,7 @@
 
     "experimentos": {
         "BEN": {"iteraciones": 500, "poblacion": 50, "num_experimentos": 1},
-        "SCP": {"iteraciones": 10, "poblacion": 10, "num_experimentos": 1},
+        "SCP": {"iteraciones": 100, "poblacion": 10, "num_experimentos": 1},
         "USCP": {"iteraciones": 100, "poblacion": 10, "num_experimentos": 1},
         "KP": {"iteraciones": 5, "poblacion": 10, "num_experimentos": 1}
     },

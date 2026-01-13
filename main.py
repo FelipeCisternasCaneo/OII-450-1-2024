@@ -22,7 +22,7 @@ from Util.util import parse_parametros, verificar_y_crear_carpetas
 
 def detectar_mapa_caotico(ds_string):
 
-    mapas_validos = ['LOG', 'SINE', 'TENT', 'CIRCLE', 'SINGER', 'SINU', 'PIECE']
+    mapas_validos = ['LOG', 'SINE', 'TENT', 'CIRCLE', 'SINGER', 'SINU', 'PIECE', 'CHEB', 'GAUS']
     
     # Dividir por '_'
     partes = ds_string.split('_')
