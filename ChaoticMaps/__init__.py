@@ -6,7 +6,9 @@ importar directamente desde `ChaoticMaps`.
 
 from .chaoticMaps import (  # noqa: F401
 	CHAOTIC_MAP_NAMES,
+	chebyshevMap,
 	circleMap,
+	gaussMap,
 	get_chaotic_map,
 	logisticMap,
 	piecewiseMap,
@@ -28,6 +30,6 @@ __all__ = [
 	"sinusoidalMap",
 	"tentMap",
 	"circleMap",
-    "chebyshevMap",
-	"gaussMap"
+	"chebyshevMap",
+	"gaussMap",
 ]

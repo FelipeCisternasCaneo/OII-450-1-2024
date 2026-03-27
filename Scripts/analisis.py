@@ -15,7 +15,7 @@ import uuid
 import time
 import psutil
 
-from Util.util import cargar_configuracion_exp, writeTofile
+from Util.util import cargar_configuracion, cargar_configuracion_exp, writeTofile
 from BD.sqlite import BD
 from Util.log import escribir_resumenes
 import json
@@ -23,6 +23,7 @@ import json
 # ========= CACHÉ DE BD (Versión picklable) =========
 _CACHE_BLOB = {}
 _CACHE_INSTANCIAS = {}
+_CACHE_BINARIZACIONES = {}
 
 def _obtener_blob_cached(instancia_id: str, incluir_binarizacion: bool):
     """Cachea los resultados de obtenerArchivos."""
@@ -57,11 +58,23 @@ def _obtener_instancias_cached(lista_instancias_str: str):
     
     return result
 
+def _obtener_binarizaciones_cached(instancia_id: str):
+    """Cachea binarizaciones disponibles por instancia."""
+    if instancia_id in _CACHE_BINARIZACIONES:
+        return _CACHE_BINARIZACIONES[instancia_id]
+
+    bd_local = BD()
+    bins = bd_local.obtenerBinarizaciones(instancia_id)
+    result = tuple(bins) if bins else tuple()
+    _CACHE_BINARIZACIONES[instancia_id] = result
+    return result
+
 def limpiar_cache_bd():
     """Limpia el caché de BD."""
-    global _CACHE_BLOB, _CACHE_INSTANCIAS
+    global _CACHE_BLOB, _CACHE_INSTANCIAS, _CACHE_BINARIZACIONES
     _CACHE_BLOB.clear()
     _CACHE_INSTANCIAS.clear()
+    _CACHE_BINARIZACIONES.clear()
     print("[INFO] Caché de BD limpiado")
 
 def _mostrar_estadisticas_cache():
@@ -69,6 +82,38 @@ def _mostrar_estadisticas_cache():
     print(f"\n[CACHÉ] Estadísticas:")
     print(f"  Blobs en caché: {len(_CACHE_BLOB)}/{CACHE_MAX_SIZE}")
     print(f"  Instancias en caché: {len(_CACHE_INSTANCIAS)}")
+    print(f"  Binarizaciones en caché: {len(_CACHE_BINARIZACIONES)}")
+
+
+def _seleccionar_binarizaciones_disponibles(instancia_id: str, ds_actions):
+    """Selecciona binarizaciones a analizar para una instancia.
+
+    - Si `ds_actions` está configurado, se incluyen:
+      - coincidencias exactas con una acción base
+      - variantes caóticas que empiezan con "<accion>_" (por ejemplo: "S2_Logistic")
+    - Si `ds_actions` está vacío, se usan todas las binarizaciones detectadas en la BD.
+    """
+    disponibles = [str(b).strip() for b in _obtener_binarizaciones_cached(instancia_id) if str(b).strip()]
+    if not disponibles:
+        return list(ds_actions) if ds_actions else []
+
+    ds_actions = [str(a).strip() for a in (ds_actions or []) if str(a).strip()]
+    if not ds_actions:
+        return disponibles
+
+    base_set = set(ds_actions)
+    selected = []
+    for b in disponibles:
+        if b in base_set:
+            selected.append(b)
+            continue
+        for a in ds_actions:
+            if b.startswith(f"{a}_"):
+                selected.append(b)
+                break
+
+    # Fallback: si nada matchea, mantener DS_actions para no romper flujos viejos
+    return selected if selected else list(ds_actions)
 
 # ========= Config =========
 CONFIG_FILE = './util/json/dir.json'
@@ -76,9 +121,8 @@ EXPERIMENTS_FILE = './util/json/experiments_config.json'
 ANALYSIS_FILE = './util/json/analysis.json'
 CONFIG, EXPERIMENTS = cargar_configuracion_exp(CONFIG_FILE, EXPERIMENTS_FILE)
 
-# Cargar configuración de análisis
-with open(ANALYSIS_FILE, 'r', encoding='utf-8') as f:
-    ANALYSIS_CONFIG = json.load(f)
+# Cargar configuración de análisis (robusto a util/ vs Util/)
+ANALYSIS_CONFIG = cargar_configuracion(ANALYSIS_FILE)
 
 # Configuración de performance
 BATCH_SIZE = ANALYSIS_CONFIG['performance']['batch_size']
@@ -277,6 +321,21 @@ def _parse_result_filename(nombre_archivo: str):
     if base.lower().endswith(".csv"):
         base = base[:-4]
 
+    # Caso 0 (preferido): si el nombre empieza con una MH conocida, inferir mh por prefijo.
+    # Esto soporta nombres como:
+    #   - TJO_scp41
+    #   - TJO_scp41_LOG
+    #   - PSO_mealpy_scpa1_PIECE
+    # sin confundir el sufijo del mapa caótico con la instancia.
+    for mh_name in sorted(MHS_LIST, key=len, reverse=True):
+        prefix = f"{mh_name}_"
+        if base.startswith(prefix):
+            tail = base[len(prefix):]
+            tail_parts = [p for p in tail.split("_") if p]
+            instancia = tail_parts[0] if len(tail_parts) >= 1 else None
+            corrida = tail_parts[1] if len(tail_parts) >= 2 and tail_parts[1].isdigit() else None
+            return mh_name, instancia, corrida
+
     parts = base.split("_")
 
     # Caso 1: nombre almacenado en BD (sin corrida): <mh>_<instancia>
@@ -300,7 +359,7 @@ def _graficar_por_corrida(iteraciones, fitness, xpl, xpt, tiempo, mh, problem_id
     os.makedirs(out, exist_ok=True)
 
     # Convergencia con modo logarítmico según configuración
-    fpath = os.path.join(out, f'Convergence_{mh}_{subfolder}_{problem_id}_{corrida}' + (f'_{binarizacion}' if binarizacion else '') + '.pdf')
+    fpath = os.path.join(out, f'Convergence_{mh}_{subfolder}_{problem_id}_{corrida}.pdf')
     _, ax = plt.subplots()
     
     # Determinar modo de visualización
@@ -334,7 +393,7 @@ def _graficar_por_corrida(iteraciones, fitness, xpl, xpt, tiempo, mh, problem_id
     plt.tight_layout(); plt.savefig(fpath); plt.close()
 
     # XPL vs XPT (sin cambios)
-    fpath = os.path.join(out, f'Percentage_{mh}_{subfolder}_{problem_id}_{corrida}' + (f'_{binarizacion}' if binarizacion else '') + '.pdf')
+    fpath = os.path.join(out, f'Percentage_{mh}_{subfolder}_{problem_id}_{corrida}.pdf')
     _, ax = plt.subplots()
     ax.plot(iteraciones, xpl, color="r", label=rf"$\overline{{XPL}}$: {np.round(np.mean(xpl), 2)}%")
     ax.plot(iteraciones, xpt, color="b", label=rf"$\overline{{XPT}}$: {np.round(np.mean(xpt), 2)}%")
@@ -345,7 +404,7 @@ def _graficar_por_corrida(iteraciones, fitness, xpl, xpt, tiempo, mh, problem_id
     plt.tight_layout(); plt.savefig(fpath); plt.close()
 
     # Tiempo por iteración (sin cambios)
-    fpath = os.path.join(out, f'Time_{mh}_{subfolder}_{problem_id}_{corrida}' + (f'_{binarizacion}' if binarizacion else '') + '.pdf')
+    fpath = os.path.join(out, f'Time_{mh}_{subfolder}_{problem_id}_{corrida}.pdf')
     _, ax = plt.subplots()
     ax.plot(iteraciones, tiempo, label='Time per Iteration')
     ax.set_title(f'Time per Iteration {mh}\n{problem_id} - Run {corrida}' + (f' - ({binarizacion})' if binarizacion else ''))
@@ -354,7 +413,7 @@ def _graficar_por_corrida(iteraciones, fitness, xpl, xpt, tiempo, mh, problem_id
     ax.grid(True, alpha=0.3)
     plt.tight_layout(); plt.savefig(fpath); plt.close()
 
-def _graficar_box_violin(instancia_id, subfolder, binarizacion=None, title_prefix="", num_experimentos=1):
+def _graficar_box_violin(instancia_id, subfolder, binarizacion=None, title_prefix="", num_experimentos=1, out_fit_dir=None):
     """
     Genera boxplot y violinplot solo si hay múltiples experimentos.
     """
@@ -362,8 +421,9 @@ def _graficar_box_violin(instancia_id, subfolder, binarizacion=None, title_prefi
     if num_experimentos <= 1:
         return
     
-    suf = f'_{binarizacion}' if binarizacion else ''
-    datos_path = os.path.join(DIR_FITNESS, f'{subfolder}/fitness_{subfolder}_{instancia_id}{suf}.csv')
+    # Leer desde el directorio real de fitness (puede incluir binarización)
+    base_fit_dir = out_fit_dir or os.path.join(DIR_FITNESS, subfolder)
+    datos_path = os.path.join(base_fit_dir, f'fitness_{subfolder}_{instancia_id}.csv')
     try:
         df = pd.read_csv(datos_path)
         df.columns = df.columns.str.strip()
@@ -388,7 +448,10 @@ def _graficar_box_violin(instancia_id, subfolder, binarizacion=None, title_prefi
 
     # Boxplot
     out = os.path.join(DIR_BOXPLOT, subfolder); os.makedirs(out, exist_ok=True)
-    fpath = os.path.join(out, f'boxplot_fitness_{subfolder}_{instancia_id}{suf}.pdf')
+    if binarizacion:
+        out = os.path.join(DIR_BOXPLOT, subfolder, str(binarizacion))
+        os.makedirs(out, exist_ok=True)
+    fpath = os.path.join(out, f'boxplot_fitness_{subfolder}_{instancia_id}.pdf')
     plt.figure(figsize=(10, 6))
     sns.boxplot(x='MH', y='FITNESS', data=df, hue='MH', palette='Set2', legend=False)
     if use_log_y:
@@ -404,7 +467,10 @@ def _graficar_box_violin(instancia_id, subfolder, binarizacion=None, title_prefi
 
     # Violin
     out = os.path.join(DIR_VIOLIN, subfolder); os.makedirs(out, exist_ok=True)
-    fpath = os.path.join(out, f'violinplot_fitness_{subfolder}_{instancia_id}{suf}.pdf')
+    if binarizacion:
+        out = os.path.join(DIR_VIOLIN, subfolder, str(binarizacion))
+        os.makedirs(out, exist_ok=True)
+    fpath = os.path.join(out, f'violinplot_fitness_{subfolder}_{instancia_id}.pdf')
     plt.figure(figsize=(10, 6))
     # Nota: para que el violín se vea "normal", lo dejamos en escala lineal.
     # En escala log (con outliers enormes) suele verse contraintuitivo.
@@ -417,6 +483,17 @@ def _graficar_box_violin(instancia_id, subfolder, binarizacion=None, title_prefi
     plt.tight_layout(); plt.savefig(fpath); plt.close()
 
 def _graficar_best(instancia_id, mhs_instances, subfolder, title_prefix="", binarizacion=None):
+    # Si no hay ninguna serie disponible, no generar PDFs vacíos
+    has_any_fitness = any(len(mhs_instances[name].bestFitness) for name in MHS_LIST)
+    has_any_time = any(len(mhs_instances[name].bestTime) for name in MHS_LIST)
+    has_any_xplxpt = any(
+        (mhs_instances[name].xpl_iter is not None and mhs_instances[name].xpt_iter is not None)
+        for name in MHS_LIST
+    )
+    if not (has_any_fitness or has_any_time or has_any_xplxpt):
+        print(f"      [WARN] Sin series para graficar: {subfolder} {instancia_id}" + (f" ({binarizacion})" if binarizacion else ""))
+        return
+
     # detectar mejores
     best_f, best_t, best_f_mh, best_t_mh = np.inf, np.inf, "", ""
     for name in MHS_LIST:
@@ -426,8 +503,11 @@ def _graficar_best(instancia_id, mhs_instances, subfolder, title_prefix="", bina
         if min_f < best_f: best_f, best_f_mh = min_f, name
         if min_t < best_t: best_t, best_t_mh = min_t, name
 
-    out = os.path.join(DIR_BEST, subfolder); os.makedirs(out, exist_ok=True)
-    suf = f'_{binarizacion}' if binarizacion else ''
+    out = os.path.join(DIR_BEST, subfolder)
+    if binarizacion:
+        out = os.path.join(out, str(binarizacion))
+    os.makedirs(out, exist_ok=True)
+    suf = ''
     title_id = f'{title_prefix}{instancia_id}' + (f' - {binarizacion}' if binarizacion else '')
 
     # Fitness con modo logarítmico según configuración
@@ -482,10 +562,13 @@ def _graficar_best(instancia_id, mhs_instances, subfolder, title_prefix="", bina
     
     ax.set_title(f'Best Fitness per MH\n{title_id}\nBest: {best_f_mh} ({best_f:.4e})', fontsize=13)
     ax.set_xlabel("Iteration", fontsize=12)
-    ax.legend(loc='best', fontsize=10)
+    handles, labels = ax.get_legend_handles_labels()
+    if handles:
+        ax.legend(loc='best', fontsize=10)
     ax.grid(True, alpha=0.3)
     plt.tight_layout()
-    plt.savefig(os.path.join(out, f'fitness_{subfolder}_{instancia_id}{suf}.pdf'))
+    if has_any_fitness:
+        plt.savefig(os.path.join(out, f'fitness_{subfolder}_{instancia_id}{suf}.pdf'))
     plt.close()
 
     # Time (sin cambios en escala)
@@ -498,10 +581,13 @@ def _graficar_best(instancia_id, mhs_instances, subfolder, title_prefix="", bina
     ax.set_title(f'Best Time per MH\n{title_id}\nBest: {best_t_mh} ({best_t:.2f} s)', fontsize=13)
     ax.set_ylabel("Time (s)", fontsize=12)
     ax.set_xlabel("Iteration", fontsize=12)
-    ax.legend(loc='best', fontsize=10)
+    handles, labels = ax.get_legend_handles_labels()
+    if handles:
+        ax.legend(loc='best', fontsize=10)
     ax.grid(True, alpha=0.3)
     plt.tight_layout()
-    plt.savefig(os.path.join(out, f'time_{subfolder}_{instancia_id}{suf}.pdf'))
+    if has_any_time:
+        plt.savefig(os.path.join(out, f'time_{subfolder}_{instancia_id}{suf}.pdf'))
     plt.close()
 
     # XPL vs XPT combinado (sin cambios)
@@ -711,17 +797,33 @@ def _procesar_instancia_binarizacion(inst, binarizacion, cfg, uses_bin, title_pr
     
     out_res = os.path.join(DIR_RESUMEN, sub)
     out_fit = os.path.join(DIR_FITNESS, sub)
+    if uses_bin and binarizacion is not None:
+        out_res = os.path.join(out_res, str(binarizacion))
+        out_fit = os.path.join(out_fit, str(binarizacion))
     os.makedirs(out_res, exist_ok=True)
     os.makedirs(out_fit, exist_ok=True)
-    
-    suf = f"_{binarizacion}" if uses_bin else ""
+
+    # Subcarpetas por tipo de resumen
+    out_res_fitness = os.path.join(out_res, "fitness")
+    out_res_times = os.path.join(out_res, "times")
+    out_res_percentage = os.path.join(out_res, "percentage")
+    out_res_diversity = os.path.join(out_res, "diversity")
+    out_res_gap = os.path.join(out_res, "gap")
+    os.makedirs(out_res_fitness, exist_ok=True)
+    os.makedirs(out_res_times, exist_ok=True)
+    os.makedirs(out_res_percentage, exist_ok=True)
+    os.makedirs(out_res_diversity, exist_ok=True)
+    os.makedirs(out_res_gap, exist_ok=True)
+
+    # Con separación por carpeta, no hace falta sufijo en el nombre de archivo
+    suf = ""
     
     fh_fit  = open(os.path.join(out_fit, f'fitness_{sub}_{instancia_id}{suf}.csv'), 'w')
-    fh_rf   = open(os.path.join(out_res, f'resumen_fitness_{sub}_{instancia_id}{suf}.csv'), 'w')
-    fh_rt   = open(os.path.join(out_res, f'resumen_times_{sub}_{instancia_id}{suf}.csv'), 'w')
-    fh_rp   = open(os.path.join(out_res, f'resumen_percentage_{sub}_{instancia_id}{suf}.csv'), 'w')
-    fh_div  = open(os.path.join(out_res, f'resumen_diversity_{sub}_{instancia_id}{suf}.csv'), 'w')
-    fh_gap  = open(os.path.join(out_res, f'resumen_gap_{sub}_{instancia_id}{suf}.csv'), 'w')
+    fh_rf   = open(os.path.join(out_res_fitness, f'resumen_fitness_{sub}_{instancia_id}{suf}.csv'), 'w')
+    fh_rt   = open(os.path.join(out_res_times, f'resumen_times_{sub}_{instancia_id}{suf}.csv'), 'w')
+    fh_rp   = open(os.path.join(out_res_percentage, f'resumen_percentage_{sub}_{instancia_id}{suf}.csv'), 'w')
+    fh_div  = open(os.path.join(out_res_diversity, f'resumen_diversity_{sub}_{instancia_id}{suf}.csv'), 'w')
+    fh_gap  = open(os.path.join(out_res_gap, f'resumen_gap_{sub}_{instancia_id}{suf}.csv'), 'w')
     
     fh_fit.write("MH, FITNESS\n")
     fh_rf.write("MH, min best, avg. best, std. best\n")
@@ -732,6 +834,16 @@ def _procesar_instancia_binarizacion(inst, binarizacion, cfg, uses_bin, title_pr
     
     _procesar_archivos(cfg, instancia_id, blob, fh_fit, mhs_map, bin_actual=binarizacion)
 
+    # Si no se obtuvo ningún dato útil, evitar generar resúmenes/gráficos vacíos
+    has_any_data = any(
+        (len(mhs_map[name].fitness) > 0) or (len(mhs_map[name].time) > 0)
+        for name in MHS_LIST
+    )
+    if not has_any_data:
+        print(f"      [WARN] Sin datos para {pid}{suf} - se omite escritura de resúmenes/gráficos")
+        fh_fit.close(); fh_rf.close(); fh_rt.close(); fh_rp.close(); fh_div.close(); fh_gap.close()
+        return None
+
     # Avisar si alguna MH no aportó datos para esta instancia
     faltantes = [name for name in MHS_LIST if len(mhs_map[name].fitness) == 0 and len(mhs_map[name].time) == 0]
     if faltantes:
@@ -739,8 +851,14 @@ def _procesar_instancia_binarizacion(inst, binarizacion, cfg, uses_bin, title_pr
     
     escribir_resumenes(mhs_map, fh_rf, fh_rt, fh_rp, MHS_LIST)
     _graficar_best(instancia_id, mhs_map, subfolder=sub, title_prefix=title_prefix, binarizacion=binarizacion)
-    _graficar_box_violin(instancia_id, subfolder=sub, binarizacion=binarizacion, 
-                        title_prefix=title_prefix, num_experimentos=num_experimentos)  # ← AGREGAR PARÁMETRO
+    _graficar_box_violin(
+        instancia_id,
+        subfolder=sub,
+        binarizacion=binarizacion,
+        title_prefix=title_prefix,
+        num_experimentos=num_experimentos,
+        out_fit_dir=out_fit,
+    )
     _escribir_div_gap(cfg, instancia_id, mhs_map, binarizacion, fh_div, fh_gap)
     
     fh_fit.close(); fh_rf.close(); fh_rt.close(); fh_rp.close(); fh_div.close(); fh_gap.close()
@@ -786,10 +904,19 @@ def analizar_problema(problem_name: str, n_jobs=-1):
     print(f"[INFO] Caché pre-cargado: {len(_CACHE_BLOB)} blobs")
     print("-"*50, "\nIniciando procesamiento de instancias...\n")
     
-    bin_list = EXPERIMENTS["DS_actions"] if uses_bin else [None]
-    tareas = [(inst, bin_val, cfg, uses_bin, title_prefix, num_experimentos)  # ← AGREGAR num_experimentos
-              for inst in instancias 
-              for bin_val in bin_list]
+    ds_actions = EXPERIMENTS.get("DS_actions", []) if uses_bin else []
+    tareas = []
+    for inst in instancias:
+        instancia_id = inst[1]
+        if uses_bin:
+            bins_inst = _seleccionar_binarizaciones_disponibles(instancia_id, ds_actions)
+            if not bins_inst:
+                print(f"[WARN] {sub} {instancia_id}: sin binarizaciones detectadas")
+                continue
+            for bin_val in bins_inst:
+                tareas.append((inst, bin_val, cfg, uses_bin, title_prefix, num_experimentos))
+        else:
+            tareas.append((inst, None, cfg, uses_bin, title_prefix, num_experimentos))
     
     resultados = Parallel(n_jobs=n_jobs, verbose=10)(
         delayed(_procesar_instancia_binarizacion)(*tarea) 

@@ -11,6 +11,8 @@
         "instancias": "Identificadores de los instancias de los problemas que se van a procesar.",
         "mapas_caoticos": " NUEVO: Configuración de mapas caóticos para experimentos",
         "usar_mapas_caoticos": " NUEVO: Activar/desactivar mapas caóticos globalmente"
+        "mapas_caoticos": " NUEVO: Configuración de mapas caóticos para experimentos",
+        "usar_mapas_caoticos": " NUEVO: Activar/desactivar mapas caóticos globalmente"
     },
 
     "ben": false,
@@ -18,9 +20,9 @@
     "uscp": false,
     "kp": false,
 
-    "mhs": ["TJO"],
+    "mhs": ["TJO", "CLO", "GWO"],
 
-    "DS_actions": ["V1-ELIT"],
+    "DS_actions": ["V1-ELIT", "Z1-ELIT", "V2-ELIT", "Z2-ELIT"],
 
     "_comentario_mapas_caoticos": "========== CONFIGURACIÓN DE MAPAS CAÓTICOS ==========",
     
@@ -39,6 +41,8 @@
         
         "mapas_activos": ["LOG", "SINE", "TENT", "CIRCLE", "SINGER", "SINU", "PIECE", "CHEB", "GAUS"],
         "_mapas_disponibles": ["LOG", "SINE", "TENT", "CIRCLE", "SINGER", "SINU", "PIECE", "CHEB", "GAUS"],
+        "mapas_activos": ["LOG", "SINE", "TENT", "CIRCLE", "SINGER", "SINU", "PIECE", "CHEB", "GAUS"],
+        "_mapas_disponibles": ["LOG", "SINE", "TENT", "CIRCLE", "SINGER", "SINU", "PIECE", "CHEB", "GAUS"],
         
         "USCP": {
             "usar_caoticos": false,
@@ -50,6 +54,7 @@
         "SCP": {
             "usar_caoticos": true,
             "modo": "comparacion",
+            "mapas": ["LOG", "SINE", "TENT", "CIRCLE", "SINGER", "SINU", "PIECE", "CHEB", "GAUS"],
             "mapas": ["LOG", "SINE", "TENT", "CIRCLE", "SINGER", "SINU", "PIECE", "CHEB", "GAUS"],
             "_comentario": "Solo usa binarización estándar"
         },
@@ -95,7 +100,7 @@
 
     "experimentos": {
         "BEN": {"iteraciones": 500, "poblacion": 50, "num_experimentos": 1},
-        "SCP": {"iteraciones": 100, "poblacion": 10, "num_experimentos": 1},
+        "SCP": {"iteraciones": 100, "poblacion": 10, "num_experimentos": 10},
         "USCP": {"iteraciones": 100, "poblacion": 10, "num_experimentos": 1},
         "KP": {"iteraciones": 5, "poblacion": 10, "num_experimentos": 1}
     },
@@ -106,7 +111,7 @@
             "F13CEC2017", "F14CEC2017", "F15CEC2017", "F16CEC2017", "F17CEC2017", "F18CEC2017",
             "F19CEC2017", "F20CEC2017", "F21CEC2017", "F22CEC2017", "F23CEC2017", "F24CEC2017",
             "F25CEC2017", "F26CEC2017", "F27CEC2017", "F28CEC2017", "F29CEC2017", "F30CEC2017"],
-        "SCP": ["41"],
+        "SCP": ["41", "51", "61", "a1", "b1", "c1", "d1", "nre1", "nrf1", "nrg1", "nrh1"],
         "USCP": ["u41", "u51", "u61"],
         "KP": []
     }

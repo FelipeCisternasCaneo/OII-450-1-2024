@@ -14,7 +14,8 @@ from collections import defaultdict
 from typing import List, Any
 
 # --- CONFIGURACIÓN ---
-DB_FILE = './BD/resultados.db'
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+DB_FILE = os.path.join(PROJECT_ROOT, 'BD', 'resultados.db')
 TABLA_INSTANCIAS = 'instancias'
 TABLA_EXPERIMENTOS = 'experimentos'
 

@@ -94,9 +94,12 @@ def cargar_directorios():
     
 def cargar_configuracion_exp(CONFIG_FILE, EXPERIMENTS_FILE):
     """Carga la configuración y los experimentos desde archivos JSON."""
-    with open(CONFIG_FILE, 'r') as config_file:
+    config_path = _resolver_ruta_existente(CONFIG_FILE)
+    experiments_path = _resolver_ruta_existente(EXPERIMENTS_FILE)
+
+    with open(config_path, 'r', encoding='utf-8') as config_file:
         config = json.load(config_file)
-    with open(EXPERIMENTS_FILE, 'r') as experiments_file:
+    with open(experiments_path, 'r', encoding='utf-8') as experiments_file:
         experiments = json.load(experiments_file)
     return config, experiments
     
@@ -128,7 +131,9 @@ def verificar_y_crear_carpetas():
     Si no existen, las crea automáticamente.
     """
     
-    base_dir = "./Resultados"
+    root_dir = _workspace_root()
+
+    base_dir = os.path.join(root_dir, "Resultados")
     
     # Definir las subcarpetas necesarias
     subcarpetas = [
@@ -141,11 +146,14 @@ def verificar_y_crear_carpetas():
         "fitness"
     ]
 
-    # Crear las carpetas si no existen
+    # Crear las carpetas (seguro en paralelo)
     for subcarpeta in subcarpetas:
         ruta_completa = os.path.join(base_dir, subcarpeta)
-        if not os.path.exists(ruta_completa):
-            os.makedirs(ruta_completa)
+        os.makedirs(ruta_completa, exist_ok=True)
+
+    # Logs (incluye salida Slurm definida en run_main.sh)
+    os.makedirs(os.path.join(root_dir, "Logs"), exist_ok=True)
+    os.makedirs(os.path.join(root_dir, "Logs", "SSH"), exist_ok=True)
 
 def asegurar_directorio(path):
     os.makedirs(os.path.dirname(path), exist_ok=True)

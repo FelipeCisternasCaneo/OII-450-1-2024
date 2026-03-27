@@ -1,16 +1,119 @@
 import sqlite3
 import os
+import time
+import glob
+
+
+def _current_batch_id() -> str | None:
+    """Obtiene un batch_id desde variables de entorno (Slurm/usuario)."""
+    batch = os.environ.get("OII_BATCH_ID")
+    if batch:
+        return batch
+
+    slurm_job = os.environ.get("SLURM_JOB_ID")
+    slurm_task = os.environ.get("SLURM_ARRAY_TASK_ID")
+    if slurm_job and slurm_task:
+        return f"{slurm_job}_{slurm_task}"
+    if slurm_job:
+        return slurm_job
+    return None
 
 from Problem.SCP.problem import obtenerOptimo
 from Problem.USCP.problem import obtenerOptimoUSCP
 
 class BD:
     def __init__(self):
-        self.__dataBase = './BD/resultados.db'
+        # Ruta por defecto robusta (no depende del CWD)
+        # Permite override vía variable de entorno OII_DB_PATH
+        self.__project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        env_db = os.environ.get("OII_DB_PATH")
+        if env_db:
+            self.__dataBase = env_db
+        else:
+            self.__dataBase = os.path.join(self.__project_root, "BD", "resultados.db")
         self.__conexion = None
         self.__cursor   = None
         self.__pooling_active = False  # Flag para connection pooling
         self.__pooling_depth = 0       # Contador de contextos anidados
+        self.__experimentos_cols_aseguradas = False
+        self.__shards_cache = None
+        self.__base_iteraciones_vacias = None
+
+    def _listar_shards(self):
+        """Lista shards disponibles en BD/shards/resultados_*.db (ordenados)."""
+        if self.__shards_cache is not None:
+            return self.__shards_cache
+
+        shards_dir = self._abs_repo_path("BD", "shards")
+        pattern = os.path.join(shards_dir, "resultados_*.db")
+        paths = sorted([p for p in glob.glob(pattern) if os.path.isfile(p)])
+        self.__shards_cache = paths
+        return paths
+
+    def _iteraciones_vacias_en_base(self):
+        """Devuelve True si la BD actual (resultados.db) no tiene iteraciones."""
+        if self.__base_iteraciones_vacias is not None:
+            return self.__base_iteraciones_vacias
+
+        try:
+            conn = sqlite3.connect(self.getDataBase(), timeout=10)
+            cur = conn.cursor()
+            cur.execute("SELECT COUNT(*) FROM iteraciones")
+            n = int(cur.fetchone()[0])
+            conn.close()
+            self.__base_iteraciones_vacias = (n == 0)
+        except Exception:
+            # Si no se puede chequear, asumir que NO está vacía para no cambiar comportamiento.
+            self.__base_iteraciones_vacias = False
+
+        return self.__base_iteraciones_vacias
+
+    def _deberia_consultar_shards(self):
+        """Heurística: si estamos usando resultados.db sin iteraciones, leer desde shards."""
+        try:
+            is_base = os.path.basename(self.getDataBase()) == "resultados.db"
+        except Exception:
+            is_base = False
+        if not is_base:
+            return False
+        if not self._iteraciones_vacias_en_base():
+            return False
+        return len(self._listar_shards()) > 0
+
+    @staticmethod
+    def _configurar_sqlite(conn: sqlite3.Connection) -> None:
+        """Configura pragmas de SQLite con enfoque en robustez bajo concurrencia.
+
+        Nota: Cambiar `journal_mode` puede requerir locks; por eso se hace best-effort.
+        Se puede forzar vía env `OII_SQLITE_JOURNAL_MODE` (por ejemplo: WAL, DELETE).
+        """
+        # Espera si la BD está ocupada (también se puede setear por connect(timeout=...))
+        try:
+            conn.execute("PRAGMA busy_timeout = 30000;")
+        except Exception:
+            pass
+
+        # Pragmas seguros / de rendimiento moderado
+        try:
+            conn.execute("PRAGMA synchronous=NORMAL;")
+        except Exception:
+            pass
+        try:
+            conn.execute("PRAGMA cache_size = -8000;")
+        except Exception:
+            pass
+
+        # journal_mode: por defecto DELETE (más compatible en FS de red).
+        journal_mode = (os.environ.get("OII_SQLITE_JOURNAL_MODE") or "DELETE").strip().upper()
+        if journal_mode:
+            try:
+                conn.execute(f"PRAGMA journal_mode={journal_mode};")
+            except sqlite3.OperationalError:
+                # Si hay lock/busy, no reventar: se puede seguir con el modo actual.
+                pass
+
+    def _abs_repo_path(self, *parts: str) -> str:
+        return os.path.join(self.__project_root, *parts)
 
     def getDataBase(self):
         return self.__dataBase
@@ -35,11 +138,49 @@ class BD:
         if self.__pooling_active and self.__conexion is not None:
             return
         
-        conn = sqlite3.connect(self.getDataBase())
+        # Asegurar que exista el directorio de la BD
+        db_path = self.getDataBase()
+        db_dir = os.path.dirname(db_path)
+        if db_dir:
+            os.makedirs(db_dir, exist_ok=True)
+
+        conn = sqlite3.connect(db_path, timeout=30)
+        self._configurar_sqlite(conn)
+        
         cursor = conn.cursor()
         
         self.setConexion(conn)
         self.setCursor(cursor)
+
+        # Asegurar columnas nuevas en BD existentes (retrocompatible)
+        try:
+            self._asegurar_columnas_experimentos(cursor)
+            conn.commit()
+        except Exception:
+            # No bloquear el flujo si la tabla aún no existe u ocurre un error menor.
+            pass
+
+    @staticmethod
+    def _tabla_info_columnas(cursor, table_name: str):
+        cursor.execute(f"PRAGMA table_info({table_name})")
+        return {row[1] for row in cursor.fetchall()}  # row[1] = nombre columna
+
+    @classmethod
+    def _asegurar_columnas_experimentos(cls, cursor):
+        """Agrega columnas de monitoreo si faltan (idempotente)."""
+        cols = cls._tabla_info_columnas(cursor, "experimentos")
+
+        if "batch_id" not in cols:
+            cursor.execute("ALTER TABLE experimentos ADD COLUMN batch_id TEXT")
+            cols.add("batch_id")
+
+        if "ts_inicio" not in cols:
+            cursor.execute("ALTER TABLE experimentos ADD COLUMN ts_inicio TEXT")
+            cols.add("ts_inicio")
+
+        if "ts_fin" not in cols:
+            cursor.execute("ALTER TABLE experimentos ADD COLUMN ts_fin TEXT")
+            cols.add("ts_fin")
     
     def desconectar(self):
         # Si pooling está activo, no cerrar la conexión aún
@@ -99,6 +240,9 @@ class BD:
                 paramML_FS TEXT,
                 estado TEXT,
                 fk_id_instancia INTEGER,
+                batch_id TEXT,
+                ts_inicio TEXT,
+                ts_fin TEXT,
                 FOREIGN KEY (fk_id_instancia) REFERENCES instancias (id_instancia)
             )'''
         )
@@ -139,6 +283,10 @@ class BD:
         )
         
         self.commit()
+
+        # Asegurar columnas nuevas si la tabla existía previamente sin ellas
+        self._asegurar_columnas_experimentos(self.getCursor())
+        self.commit()
         
         self.insertarInstanciasBEN()
         self.insertarInstanciasCEC2017()
@@ -150,7 +298,12 @@ class BD:
     def insertarExperimentos(self, data, corridas, id):
         self.conectar()
 
+        # Asegurar columnas nuevas en BD existentes
+        self._asegurar_columnas_experimentos(self.getCursor())
+
         # Bulk insert usando executemany
+        batch_id = data.get("batch_id") if isinstance(data, dict) else None
+
         valores = [
             (
                 str(data["experimento"]),
@@ -162,14 +315,20 @@ class BD:
                 str(data["ML_FS"]),
                 str(data["paramML_FS"]),
                 str(data["estado"]),
-                id
+                id,
+                batch_id,
+                None,
+                None,
             )
             for _ in range(corridas)
         ]
-        
+
         self.getCursor().executemany(
-            '''INSERT INTO experimentos VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-            valores
+            '''INSERT INTO experimentos (
+                   experimento, MH, binarizacion, paramMH, ML, paramML, ML_FS, paramML_FS,
+                   estado, fk_id_instancia, batch_id, ts_inicio, ts_fin
+               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+            valores,
         )
         
         self.commit()
@@ -367,8 +526,9 @@ class BD:
         
     def insertarInstanciasSCP(self):
         self.conectar()
-        
-        data = os.listdir('./Problem/SCP/Instances/')
+
+        instances_dir = self._abs_repo_path('Problem', 'SCP', 'Instances')
+        data = os.listdir(instances_dir)
         
         for d in data:
             tipoProblema = 'SCP'
@@ -384,8 +544,9 @@ class BD:
         
     def insertarInstanciasUSCP(self):
         self.conectar()
-        
-        data = os.listdir('./Problem/USCP/Instances/')        
+
+        instances_dir = self._abs_repo_path('Problem', 'USCP', 'Instances')
+        data = os.listdir(instances_dir)
         for d in data:
             
             tipoProblema = 'USCP'
@@ -402,25 +563,100 @@ class BD:
         self.desconectar()
     
     def obtenerExperimento(self):
-        conn = sqlite3.connect(self.getDataBase())
-        conn.execute('BEGIN EXCLUSIVE')
-        cursor = conn.cursor()
-        cursor.execute(''' SELECT * FROM experimentos WHERE estado = 'pendiente' LIMIT 1''')
-        data = cursor.fetchall()
-        
-        if data:
-            experimento_id = data[0][0]
-            cursor.execute(f''' UPDATE experimentos SET estado = 'ejecutando' WHERE id_experimento =  {experimento_id} ''')
-            conn.commit()
+        """Obtiene y marca 1 experimento como 'ejecutando' de forma tolerante a locks."""
+        db_path = self.getDataBase()
+        max_reintentos = int(os.environ.get("OII_SQLITE_MAX_RETRIES", "30"))
+        sleep_base = float(os.environ.get("OII_SQLITE_RETRY_SLEEP", "0.05"))
+
+        conn = sqlite3.connect(db_path, timeout=30, isolation_level=None)
+        try:
+            self._configurar_sqlite(conn)
+
+            while True:
+                for intento in range(max_reintentos):
+                    try:
+                        # BEGIN IMMEDIATE: reserva lock de escritura sin ser tan agresivo como EXCLUSIVE.
+                        conn.execute("BEGIN IMMEDIATE;")
+                        cursor = conn.cursor()
+
+                        if not self.__experimentos_cols_aseguradas:
+                            try:
+                                self._asegurar_columnas_experimentos(cursor)
+                                self.__experimentos_cols_aseguradas = True
+                            except sqlite3.OperationalError as e:
+                                # Si está locked/busy, seguimos con reintentos.
+                                msg = str(e).lower()
+                                conn.execute("ROLLBACK;")
+                                if "locked" in msg or "busy" in msg:
+                                    time.sleep(min(1.0, sleep_base * (1 + intento)))
+                                    continue
+                                raise
+                            except Exception:
+                                # No bloquear el flujo si la tabla aún no existe u ocurre un error menor.
+                                self.__experimentos_cols_aseguradas = True
+
+                        row = cursor.execute(
+                            "SELECT * FROM experimentos WHERE estado = 'pendiente' LIMIT 1"
+                        ).fetchone()
+
+                        if row is None:
+                            conn.execute("COMMIT;")
+                            return None
+
+                        experimento_id = row[0]
+                        batch_id = _current_batch_id()
+
+                        cursor.execute(
+                            """UPDATE experimentos
+                               SET estado = 'ejecutando',
+                                   ts_inicio = COALESCE(ts_inicio, CURRENT_TIMESTAMP),
+                                   batch_id = COALESCE(batch_id, ?)
+                               WHERE id_experimento = ? AND estado = 'pendiente'""",
+                            (batch_id, experimento_id),
+                        )
+
+                        if cursor.rowcount != 1:
+                            # Carrera: otro proceso tomó el experimento entre SELECT y UPDATE.
+                            conn.execute("ROLLBACK;")
+                            time.sleep(min(1.0, sleep_base * (1 + intento)))
+                            continue
+
+                        conn.execute("COMMIT;")
+                        return [row]
+
+                    except sqlite3.OperationalError as e:
+                        msg = str(e).lower()
+                        try:
+                            conn.execute("ROLLBACK;")
+                        except Exception:
+                            pass
+                        if "locked" in msg or "busy" in msg:
+                            time.sleep(min(1.0, sleep_base * (1 + intento)))
+                            continue
+                        print(f"Error en BD al obtener experimento: {e}")
+                        return None
+                    except Exception as e:
+                        try:
+                            conn.execute("ROLLBACK;")
+                        except Exception:
+                            pass
+                        print(f"Error en BD al obtener experimento: {e}")
+                        return None
+
+                # Si llegamos aquí, fue demasiada contención. Confirmar si aún hay pendientes.
+                try:
+                    pendiente = conn.execute(
+                        "SELECT 1 FROM experimentos WHERE estado = 'pendiente' LIMIT 1"
+                    ).fetchone()
+                except sqlite3.OperationalError:
+                    pendiente = (1,)
+
+                if not pendiente:
+                    return None
+
+                time.sleep(0.5)
+        finally:
             conn.close()
-            
-            return data
-        
-        else:
-            conn.commit()
-            conn.close()
-            
-            return None
     
     def obtenerExperimentos(self):
         self.conectar()
@@ -448,9 +684,50 @@ class BD:
     
     def actualizarExperimento(self, id, estado):
         self.conectar()
+
+        # Asegurar columnas nuevas en BD existentes
+        self._asegurar_columnas_experimentos(self.getCursor())
         
         cursor = self.getCursor()
-        cursor.execute('''UPDATE experimentos SET estado = ? WHERE id_experimento = ?''', (estado, id))
+        batch_id = _current_batch_id()
+        if estado == "ejecutando":
+            if batch_id:
+                cursor.execute(
+                    '''UPDATE experimentos
+                       SET estado = ?,
+                           ts_inicio = COALESCE(ts_inicio, CURRENT_TIMESTAMP),
+                           batch_id = COALESCE(batch_id, ?)
+                       WHERE id_experimento = ?''',
+                    (estado, batch_id, id),
+                )
+            else:
+                cursor.execute(
+                    '''UPDATE experimentos
+                       SET estado = ?,
+                           ts_inicio = COALESCE(ts_inicio, CURRENT_TIMESTAMP)
+                       WHERE id_experimento = ?''',
+                    (estado, id),
+                )
+        elif estado in ("terminado", "error"):
+            if batch_id:
+                cursor.execute(
+                    '''UPDATE experimentos
+                       SET estado = ?,
+                           ts_fin = COALESCE(ts_fin, CURRENT_TIMESTAMP),
+                           batch_id = COALESCE(batch_id, ?)
+                       WHERE id_experimento = ?''',
+                    (estado, batch_id, id),
+                )
+            else:
+                cursor.execute(
+                    '''UPDATE experimentos
+                       SET estado = ?,
+                           ts_fin = COALESCE(ts_fin, CURRENT_TIMESTAMP)
+                       WHERE id_experimento = ?''',
+                    (estado, id),
+                )
+        else:
+            cursor.execute('''UPDATE experimentos SET estado = ? WHERE id_experimento = ?''', (estado, id))
         
         self.commit()
         self.desconectar()
@@ -481,6 +758,44 @@ class BD:
         self.desconectar()
         
     def obtenerArchivos(self, instancia, incluir_binarizacion=True):
+        # Si la BD base no tiene iteraciones pero existen shards, consultar shards.
+        if self._deberia_consultar_shards():
+            data_total = []
+            if incluir_binarizacion:
+                query = '''
+                    SELECT i.nombre, i.archivo, e.binarizacion
+                    FROM experimentos e
+                    INNER JOIN iteraciones i ON e.id_experimento = i.fk_id_experimento
+                    INNER JOIN instancias i2 ON e.fk_id_instancia = i2.id_instancia
+                    WHERE i2.nombre = ?
+                    ORDER BY i2.nombre DESC, e.MH DESC
+                '''
+            else:
+                query = '''
+                    SELECT i.nombre, i.archivo
+                    FROM experimentos e
+                    INNER JOIN iteraciones i ON e.id_experimento = i.fk_id_experimento
+                    INNER JOIN instancias i2 ON e.fk_id_instancia = i2.id_instancia
+                    WHERE i2.nombre = ?
+                    ORDER BY i2.nombre DESC, e.MH DESC
+                '''
+
+            for shard_path in self._listar_shards():
+                try:
+                    conn = sqlite3.connect(shard_path, timeout=30)
+                    cur = conn.cursor()
+                    cur.execute(query, (instancia,))
+                    rows = cur.fetchall() or []
+                    data_total.extend(rows)
+                    conn.close()
+                except Exception:
+                    try:
+                        conn.close()
+                    except Exception:
+                        pass
+            return data_total
+
+        # Comportamiento normal: consultar BD configurada.
         self.conectar()
         cursor = self.getCursor()
 
@@ -508,6 +823,30 @@ class BD:
 
         self.desconectar()
         
+        return data
+
+    def obtenerBinarizaciones(self, instancia):
+        """Obtiene las binarizaciones distintas registradas para una instancia.
+
+        Nota: en este proyecto, cuando se usan mapas caóticos, el nombre suele venir
+        codificado como "<base>_<mapa>" en la columna `experimentos.binarizacion`.
+        """
+        self.conectar()
+        cursor = self.getCursor()
+
+        query = '''
+            SELECT DISTINCT e.binarizacion
+            FROM experimentos e
+            INNER JOIN instancias i2 ON e.fk_id_instancia = i2.id_instancia
+            WHERE i2.nombre = ?
+            ORDER BY e.binarizacion ASC
+        '''
+
+        cursor.execute(query, (instancia,))
+        rows = cursor.fetchall() or []
+        data = [r[0] for r in rows if r and r[0] is not None]
+
+        self.desconectar()
         return data
     
     def obtenerInstancias(self, problema):

@@ -10,7 +10,7 @@ try:
     CHAOTIC_AVAILABLE = True
 except ImportError:
     CHAOTIC_AVAILABLE = False
-    print("[INFO] Mapas caóticos no disponibles. Usando solo solver estándar.")
+    # No imprimir en import (este módulo se reutiliza desde otros entrypoints).
 
 from BD.sqlite import BD
 
@@ -48,7 +48,6 @@ def ejecutar_ben(id, experimento, parametrosInstancia, parametros):
         id, parametros["mh"], int(parametros["iter"]),
         int(parametros["pop"]), parametros["instancia"], lb, ub, dim
     )
-
 
 def ejecutar_problema_scp_uscp(id, instancia, ds, parametros, solver_func, unicost):
     """
@@ -185,3 +184,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    

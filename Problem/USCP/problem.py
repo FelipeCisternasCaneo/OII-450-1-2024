@@ -1,4 +1,5 @@
 import random
+import os
 import numpy as np
 from scipy.sparse import csr_matrix
 
@@ -115,14 +116,14 @@ class USCP:
         self.__optimum = optimum
 
     def readInstance(self, instance):
-        
-        dirSCP = './Problem/USCP/Instances/'
-        
-        instance = dirSCP + instance + ".txt" 
-        
-        self.setOptimum(self.obtenerOptimoUSCP(instance))
-        
-        file = open(instance, 'r')
+
+        instances_dir = os.path.join(os.path.dirname(__file__), 'Instances')
+
+        instance_path = os.path.join(instances_dir, instance + ".txt")
+
+        self.setOptimum(self.obtenerOptimoUSCP(instance_path))
+
+        file = open(instance_path, 'r')
 
         # Lectura de las dimensiones del problema
         line = file.readline().split()

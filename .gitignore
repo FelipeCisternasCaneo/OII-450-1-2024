@@ -7,3 +7,6 @@ __pycache__/
 Miniconda3-latest-Linux-x86_64.sh
 *Miniconda*.sh
 *Anaconda*.sh
+BD/backups/
+BD/shards/
+*.log

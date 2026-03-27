@@ -83,7 +83,7 @@ def solverSCP_Chaotic(id, mh, maxIter, pop, instances, DS, repairType, param, un
             "solverSCP_Chaotic requiere un mapa caótico. "
             "Usa solverSCP.py estándar si no quieres mapas caóticos."
         )
-
+    
     valid_maps = ['LOG', 'SINE', 'TENT', 'CIRCLE', 'SINGER', 'SINU', 'PIECE', 'CHEB', 'GAUS']
     if chaotic_map_name not in valid_maps:
         raise ValueError(
