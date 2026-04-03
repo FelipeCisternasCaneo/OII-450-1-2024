@@ -8,15 +8,13 @@ from .chaoticMaps import (  # noqa: F401
 	CHAOTIC_MAP_NAMES,
 	chebyshevMap,
 	circleMap,
-	gaussMap,
 	get_chaotic_map,
 	logisticMap,
 	piecewiseMap,
 	sineMap,
 	singerMap,
 	sinusoidalMap,
-	tentMap,
-    chebyshevMap,
+	tentMap,	
     gaussMap
 )
 

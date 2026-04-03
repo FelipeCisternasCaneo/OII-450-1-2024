@@ -11,8 +11,6 @@
         "instancias": "Identificadores de los instancias de los problemas que se van a procesar.",
         "mapas_caoticos": " NUEVO: Configuración de mapas caóticos para experimentos",
         "usar_mapas_caoticos": " NUEVO: Activar/desactivar mapas caóticos globalmente"
-        "mapas_caoticos": " NUEVO: Configuración de mapas caóticos para experimentos",
-        "usar_mapas_caoticos": " NUEVO: Activar/desactivar mapas caóticos globalmente"
     },
 
     "ben": false,
@@ -41,8 +39,6 @@
         
         "mapas_activos": ["LOG", "SINE", "TENT", "CIRCLE", "SINGER", "SINU", "PIECE", "CHEB", "GAUS"],
         "_mapas_disponibles": ["LOG", "SINE", "TENT", "CIRCLE", "SINGER", "SINU", "PIECE", "CHEB", "GAUS"],
-        "mapas_activos": ["LOG", "SINE", "TENT", "CIRCLE", "SINGER", "SINU", "PIECE", "CHEB", "GAUS"],
-        "_mapas_disponibles": ["LOG", "SINE", "TENT", "CIRCLE", "SINGER", "SINU", "PIECE", "CHEB", "GAUS"],
         
         "USCP": {
             "usar_caoticos": false,
@@ -54,7 +50,6 @@
         "SCP": {
             "usar_caoticos": true,
             "modo": "comparacion",
-            "mapas": ["LOG", "SINE", "TENT", "CIRCLE", "SINGER", "SINU", "PIECE", "CHEB", "GAUS"],
             "mapas": ["LOG", "SINE", "TENT", "CIRCLE", "SINGER", "SINU", "PIECE", "CHEB", "GAUS"],
             "_comentario": "Solo usa binarización estándar"
         },

@@ -1,5 +1,6 @@
 import time
 import shutil
+import os
 
 from Solver.solverBEN import solverBEN
 from Solver.solverSCP import solverSCP
@@ -141,6 +142,11 @@ def procesar_experimento(data, bd):
         log_error(id, f"Error general: {str(e)}")
         bd.actualizarExperimento(id, "error")
 
+    except (KeyboardInterrupt, SystemExit):
+        print(f"\n[!] Ejecución interrumpida manualmente (Ctrl+C). Devolviendo experimento {id} a estado 'pendiente'...")
+        bd.actualizarExperimento(id, "pendiente")
+        raise
+
 
 def main():
     """Función principal que gestiona la ejecución de los experimentos."""
@@ -180,7 +186,7 @@ def main():
     log_fecha_hora("Fin de la ejecución")
     log_final(total_time)
     
-    shutil.rmtree("Resultados\\transitorio", ignore_errors=True)
+    shutil.rmtree(os.path.join("Resultados", "transitorio"), ignore_errors=True)
 
 if __name__ == "__main__":
     main()

@@ -53,25 +53,6 @@ def _resolver_ruta_existente(ruta: str) -> str:
         f"Rutas intentadas:\n{candidatos_str}"
     )
 
-def selectionSort(lista):
-    posiciones = []
-    
-    for i in range(len(lista)):
-        posiciones.append(i) 
-        
-    for i in range(len(lista)):
-        lowest_value_index = i
-        
-        for j in range(i + 1, len(lista)):
-            if lista[j] < lista[lowest_value_index]:
-                lowest_value_index = j
-            
-        lista[i], lista[lowest_value_index] = lista[lowest_value_index], lista[i]
-        
-        posiciones[i], posiciones[lowest_value_index] = posiciones[lowest_value_index], posiciones[i]
-        
-    return posiciones
-
 # Create a function that converts a digital file into binary
 def convert_into_binary(file_path):
     with open(file_path, 'rb') as file:

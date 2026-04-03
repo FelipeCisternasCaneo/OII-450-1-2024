@@ -373,105 +373,43 @@ class BD:
         # Filtrar solo funciones clásicas (F1-F23), excluir CEC2017
         funciones_clasicas = [f for f in self.data if not f.endswith('CEC2017')]
         
+        config_ben = {
+            'F1': ('-100', '100', 0),
+            'F2': ('-10', '10', 0),
+            'F3': ('-100', '100', 0),
+            'F4': ('-100', '100', 0),
+            'F5': ('-30', '30', 0),
+            'F6': ('-100', '100', 0),
+            'F7': ('-1.28', '1.28', 0),
+            'F8': ('-500', '500', -418.9829),
+            'F9': ('-5.12', '5.12', 0),
+            'F10': ('-32', '32', 0),
+            'F11': ('-600', '600', 0),
+            'F12': ('-50', '50', 0),
+            'F13': ('-50', '50', 0),
+            'F14': ('-65.536', '65.536', 1),
+            'F15': ('-5', '5', 0.00030),
+            'F16': ('-5', '5', -1.0316),
+            'F17': ('-5', '5', 0.398),
+            'F18': ('-2', '2', 3),
+            'F19': ('0', '1', -3.86),
+            'F20': ('0', '1', -3.32),
+            'F21': ('0', '10', -10.1532),
+            'F22': ('0', '10', -10.4028),
+            'F23': ('0', '10', -10.5363)
+        }
+
         for instancia in funciones_clasicas:
-            param = ''
+            if instancia not in config_ben:
+                raise ValueError(f"Advertencia: La función '{instancia}' no está definida en la configuración de BEN.")
             
-            if instancia == 'F1':
-                param     = f'lb:-100,ub:100'
-                optimo = 0
+            lb, ub, optimo = config_ben[instancia]
+            param = f'lb:{lb},ub:{ub}'
             
-            if instancia == 'F2':
-                param     = f'lb:-10,ub:10'
-                optimo = 0
-                
-            if instancia == 'F3':
-                param     = f'lb:-100,ub:100'
-                optimo = 0
-                
-            if instancia == 'F4':
-                param     = f'lb:-100,ub:100'
-                optimo = 0
-                
-            if instancia == 'F5':
-                param     = f'lb:-30,ub:30'
-                optimo = 0
-                
-            if instancia == 'F6':
-                param     = f'lb:-100,ub:100'
-                optimo = 0
-                
-            if instancia == 'F7':
-                param     = f'lb:-1.28,ub:1.28'
-                optimo = 0
-                
-            if instancia == 'F8':
-                param     = f'lb:-500,ub:500'
-                optimo = -418.9829
-                
-            if instancia == 'F9':
-                param     = f'lb:-5.12,ub:5.12'
-                optimo = 0
-                
-            if instancia == 'F10':
-                param     = f'lb:-32,ub:32'
-                optimo = 0
-                
-            if instancia == 'F11':
-                param     = f'lb:-600,ub:600'
-                optimo = 0
-                
-            if instancia == "F12":
-                param     = f'lb:-50,ub:50'
-                optimo = 0
-                
-            if instancia == "F13":
-                param     = f'lb:-50,ub:50'
-                optimo = 0
-                
-            if instancia == "F14":
-                param     = f'lb:-65.536,ub:65.536'
-                optimo = 1
-                
-            if instancia == "F15":
-                param     = f'lb:-5,ub:5'
-                optimo = 0.00030
-                
-            if instancia == "F16":
-                param     = f'lb:-5,ub:5'
-                optimo = -1.0316
-                
-            if instancia == "F17":
-                param     = f'lb:-5,ub:5'
-                optimo = 0.398
-                
-            if instancia == "F18":
-                param     = f'lb:-2,ub:2'
-                optimo = 3
-                
-            if instancia == "F19":
-                param     = f'lb:0,ub:1'
-                optimo = -3.86
-                
-            if instancia == "F20":
-                param     = f'lb:0,ub:1'
-                optimo = -3.32
-                   
-            if instancia == "F21":
-                param     = f'lb:0,ub:10'
-                optimo = -10.1532
-                
-            if instancia == "F22":
-                param     = f'lb:0,ub:10'
-                optimo = -10.4028
-                
-            if instancia == "F23":
-                param     = f'lb:0,ub:10'
-                optimo = -10.5363
-
-            if param == '':
-                raise ValueError(f"Advertencia: La función '{instancia}' no está definida.")
-
-            self.getCursor().execute(f'''  INSERT INTO instancias (tipo_problema, nombre, optimo, param) VALUES(?, ?, ?, ?) ''', (tipoProblema, instancia, optimo, param))
+            self.getCursor().execute(
+                '''INSERT INTO instancias (tipo_problema, nombre, optimo, param) VALUES(?, ?, ?, ?)''', 
+                (tipoProblema, instancia, optimo, param)
+            )
 
         for instancia in self.opfunu_cec_data:
             
@@ -746,13 +684,11 @@ class BD:
         
         cursor = self.getCursor()
         
-        cursor.execute(f''' INSERT INTO resultados VALUES (
-            NULL,
-            {BestFitness},
-            {round(tiempoEjecucion,3)},
-            '{str(Best.tolist())}',
-            {id}
-        )''')
+        cursor.execute(
+    '''INSERT INTO resultados VALUES (NULL, ?, ?, ?, ?)''',
+    (BestFitness, round(tiempoEjecucion, 3), str(Best.tolist()), id)
+)
+
         
         self.commit()
         self.desconectar()
@@ -849,11 +785,25 @@ class BD:
         self.desconectar()
         return data
     
-    def obtenerInstancias(self, problema):
+    def obtenerInstancias(self, nombres):
+        """Obtiene instancias por nombre(s).
+        
+        Args:
+            nombres: lista de strings con nombres de instancias,
+                     o un solo string con un nombre.
+        """
         self.conectar()
         
         cursor = self.getCursor()
-        cursor.execute(f''' select DISTINCT id_instancia, nombre from instancias i where nombre in ({problema})   ''')
+        
+        if isinstance(nombres, str):
+            nombres = [nombres]
+        
+        placeholders = ','.join('?' for _ in nombres)
+        cursor.execute(
+            f'SELECT DISTINCT id_instancia, nombre FROM instancias WHERE nombre IN ({placeholders})',
+            nombres
+        )
         
         data = cursor.fetchall()
         
@@ -865,7 +815,7 @@ class BD:
         self.conectar()
         
         cursor = self.getCursor()
-        cursor.execute(f''' SELECT optimo  from instancias i where nombre = '{instancia}'  ''')
+        cursor.execute('SELECT optimo FROM instancias WHERE nombre = ?', (instancia,))
         data = cursor.fetchall()
         
         self.desconectar()

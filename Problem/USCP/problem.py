@@ -181,7 +181,7 @@ class USCP:
     
     def obtenerInstancia(self, archivoInstancia):
     # Extraemos el nombre de la instancia, eliminando la extensión .txt
-        instancia = archivoInstancia.split('/')[-1].replace('.txt', '')
+        instancia = os.path.basename(archivoInstancia).replace('.txt', '')
         return instancia
 
     def obtenerOptimoUSCP(self, archivoInstancia):
@@ -263,7 +263,7 @@ class USCP:
         return matrix_dot_2(solution, self.getCost(), self.__block_size)
             
 def obtenerOptimoUSCP(archivoInstancia):
-    instancia = archivoInstancia.split('/')[-1].replace('.txt', '')
+    instancia = os.path.basename(archivoInstancia).replace('.txt', '')
     
     clave_instancia = f"{instancia}"
     

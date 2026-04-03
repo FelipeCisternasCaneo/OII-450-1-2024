@@ -46,15 +46,15 @@ def _obtener_blob_cached(instancia_id: str, incluir_binarizacion: bool):
     
     return result
 
-def _obtener_instancias_cached(lista_instancias_str: str):
-    """Cachea las consultas de instancias."""
-    if lista_instancias_str in _CACHE_INSTANCIAS:
-        return _CACHE_INSTANCIAS[lista_instancias_str]
+def _obtener_instancias_cached(nombres_tuple):
+    """Cachea las consultas de instancias. Recibe una tupla de nombres (hashable)."""
+    if nombres_tuple in _CACHE_INSTANCIAS:
+        return _CACHE_INSTANCIAS[nombres_tuple]
     
     bd_local = BD()
-    instancias = bd_local.obtenerInstancias(lista_instancias_str)
+    instancias = bd_local.obtenerInstancias(list(nombres_tuple))
     result = tuple(instancias) if instancias else tuple()
-    _CACHE_INSTANCIAS[lista_instancias_str] = result
+    _CACHE_INSTANCIAS[nombres_tuple] = result
     
     return result
 
@@ -883,8 +883,8 @@ def analizar_problema(problem_name: str, n_jobs=-1):
     
     os.makedirs(DIR_TRANSITORIO, exist_ok=True)
     
-    lista_inst = ', '.join([f'"{func}"' for func in EXPERIMENTS["instancias"][inst_key]])
-    instancias = list(_obtener_instancias_cached(lista_inst))
+    lista_inst = list(EXPERIMENTS["instancias"][inst_key])
+    instancias = list(_obtener_instancias_cached(tuple(lista_inst)))
     
     if not instancias:
         print(f"[INFO] No hay instancias para procesar en {sub}")

@@ -182,7 +182,7 @@ class SCP:
      
     def obtenerInstancia(self, archivoInstancia):
     # Extraemos el nombre de la instancia, eliminando la extensión .txt
-        instancia = archivoInstancia.split('/')[-1].replace('.txt', '')
+        instancia = os.path.basename(archivoInstancia).replace('.txt', '')
         return instancia
 
     def obtenerOptimo(self, archivoInstancia):
@@ -267,7 +267,7 @@ class SCP:
         return matrix_dot_2(solution, self.getCost(), self.__block_size)
     
 def obtenerOptimo(archivoInstancia):
-    instancia = archivoInstancia.split('/')[-1].replace('.txt', '')
+    instancia = os.path.basename(archivoInstancia).replace('.txt', '')
     
     clave_instancia = f"{instancia}"
     
