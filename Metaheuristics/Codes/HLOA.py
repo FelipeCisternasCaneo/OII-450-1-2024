@@ -3,141 +3,90 @@ import numpy as np
 
 # Horned Lizard Optimization Algorithm (HLOA)
 # https://doi.org/10.1007/s10462-023-10653-7
+# Vectorizado: elimina loops dim-level y samplea de forma vectorial.
 
 def iterarHLOAScp(dim, population, best, lb0, ub0):
-    """
-    HLOA Binario para resolver problemas combinatoriales.
+    # Asegurar que lb0 y ub0 sean arrays de las dimensiones correctas
+    if np.isscalar(lb0): lb0 = np.full(dim, lb0)
+    if np.isscalar(ub0): ub0 = np.full(dim, ub0)
+    
+    population = np.array(population, dtype=float)
+    lb0 = np.array(lb0, dtype=float)
+    ub0 = np.array(ub0, dtype=float)
+    best = np.array(best, dtype=float)
 
-    maxIter: Máximo número de iteraciones
-    it: Iteración actual
-    dim: Dimensión de las soluciones
-    population: Población actual (matriz binaria de tamaño N x dim)
-    bestSolution: Mejor solución encontrada (binaria)
-    lb: Límite inferior (usualmente 0)
-    ub: Límite superior (usualmente 1)
-    """
-    # Asegurarse de que lb y ub sean listas del tamaño de las dimensiones
-    if not isinstance(lb0, list):
-        lb0 = [lb0] * dim
-        
-    if not isinstance(ub0, list):
-        ub0 = [ub0] * dim
-
-    # Convertir la población a numpy array si no lo es
-    population = np.array(population)
-
-    # Parámetros de HLOA
-    alpha = 0.1  # Intensificación (oscurecer la piel)
-    beta = 0.3   # Diversificación (aclarar la piel)
-    epsilon = 1e-10  # Evitar divisiones por cero
-
-    # Tamaño de la población
+    alpha = 0.1
+    beta = 0.3
     N = len(population)
-
-    # Función sigmoide para binarización
+    
     def sigmoide(x):
+        # Clip para evitar overflow en exp
+        x = np.clip(x, -500, 500)
         return 1 / (1 + np.exp(-x))
-
-    for i in range(N):
-        for j in range(dim):
-            # Estrategia de Camuflaje (Crypsis)
-            r1 = random.random()
-            r2 = random.random()
-            local_search = (1 - r1) * best[j] + r2 * (population[i][j] - best[j])
-            
-            # Aplicar sigmoide y binarizar
-            if sigmoide(local_search) >= 0.5:
-                population[i][j] = 1
-                
-            else:
-                population[i][j] = 0
-
-            # Estrategia de Oscurecimiento o Aclaramiento de la piel
-            if random.random() < 0.5:
-                # Aclarar la piel (exploración global)
-                exploration = best[j] + beta * (population[i][j] - best[j])
-                
-            else:
-                # Oscurecer la piel (exploración local)
-                exploration = best[j] - alpha * (population[i][j] - lb0[j])
-                
-            # Aplicar sigmoide y binarizar
-            if sigmoide(exploration) >= 0.5:
-                population[i][j] = 1
-            
-            else:
-                population[i][j] = 0
-
-            # Estrategia de Expulsión de sangre (Blood-Squirting)
-            if random.random() < 0.1:
-                projectile_motion = best[j] + alpha * np.sin(random.random() * np.pi)
-                # Aplicar sigmoide y binarizar
-                if sigmoide(projectile_motion) >= 0.5:
-                    population[i][j] = 1
-                    
-                else:
-                    population[i][j] = 0
-
-            # Estrategia de Movimiento para escapar (Move-to-escape)
-            walk = random.uniform(-1, 1)
-            escape_motion = best[j] + walk * (population[i][j] - best[j])
-            # Aplicar sigmoide y binarizar
-            
-            if sigmoide(escape_motion) >= 0.5:
-                population[i][j] = 1
-                
-            else:
-                population[i][j] = 0
-
+        
+    # 1. Estrategia de Camuflaje (Crypsis)
+    r1 = np.random.rand(N, dim)
+    r2 = np.random.rand(N, dim)
+    local_search = (1 - r1) * best + r2 * (population - best)
+    population = np.where(sigmoide(local_search) >= 0.5, 1, 0)
+    
+    # 2. Estrategia de Oscurecimiento o Aclaramiento
+    mask = np.random.rand(N, dim) < 0.5
+    exploration = np.where(mask,
+        best + beta * (population - best),
+        best - alpha * (population - lb0)
+    )
+    population = np.where(sigmoide(exploration) >= 0.5, 1, 0)
+    
+    # 3. Estrategia de Expulsión de sangre
+    mask2 = np.random.rand(N, dim) < 0.1
+    r_val = np.random.rand(N, dim)
+    projectile_motion = best + alpha * np.sin(r_val * np.pi)
+    new_blood = np.where(sigmoide(projectile_motion) >= 0.5, 1, 0)
+    population = np.where(mask2, new_blood, population)
+    
+    # 4. Movimiento para escapar
+    walk = np.random.uniform(-1, 1, size=(N, dim))
+    escape_motion = best + walk * (population - best)
+    population = np.where(sigmoide(escape_motion) >= 0.5, 1, 0)
+    
     return population
 
 def iterarHLOABen(dim, population, best, lb, ub):
-    '''
-    maxIter: Máximo de iteraciones
-    iter: Iteración actual
-    dim: Dimensión de las soluciones
-    population: Población actual (lista de listas)
-    best: Mejor solución encontrada
-    lb: Límite inferior
-    ub: Límite superior
-    '''
-    
-    # Asegurarse de que population sea un numpy array
-    population = np.array(population)
-
-    # Parámetros de HLOA
-    alpha = 0.1  # Controla la intensificación
-    beta = 0.3   # Controla la diversificación
-
-    # Tamaño de la población
+    population = np.array(population, dtype=float)
     N = len(population)
+    lb = np.array(lb)
+    ub = np.array(ub)
+
+    alpha = 0.1
+    beta = 0.3
     
-    for i in range(N):
-        for j in range(dim):
-            # Estrategia de Camuflaje (Crypsis)
-            r1 = random.random()
-            r2 = random.random()
-            local_search = (1 - r1) * best[j] + r2 * (population[i][j] - best[j])
-            population[i][j] = np.clip(local_search, lb[j], ub[j])
-
-            # Estrategia de Oscurecimiento o Aclaramiento de la piel
-            if random.random() < 0.5:
-                # Aclarar la piel (exploración global)
-                population[i][j] = best[j] + beta * (population[i][j] - best[j])
-                
-            else:
-                # Oscurecer la piel (exploración local)
-                population[i][j] = best[j] - alpha * (population[i][j] - lb[j])
-            
-            # Expulsión de sangre (Blood-Squirting)
-            if random.random() < 0.1:
-                projectile_motion = best[j] + alpha * np.sin(random.random() * np.pi)
-                population[i][j] = np.clip(projectile_motion, lb[j], ub[j])
-            
-            # Movimiento para escapar (Move-to-escape)
-            walk = random.uniform(-1, 1)
-            escape_motion = best[j] + walk * (population[i][j] - best[j])
-            population[i][j] = np.clip(escape_motion, lb[j], ub[j])
-
-    # Devolver la población como numpy array (el solver espera un array, no una lista)
+    # 1. Estrategia de Camuflaje (Crypsis)
+    r1 = np.random.rand(N, dim)
+    r2 = np.random.rand(N, dim)
+    local_search = (1 - r1) * best + r2 * (population - best)
+    population = np.clip(local_search, lb, ub)
+    
+    # 2. Estrategia de Oscurecimiento o Aclaramiento
+    mask = np.random.rand(N, dim) < 0.5
+    exploration = np.where(mask, 
+        best + beta * (population - best),
+        best - alpha * (population - lb)
+    )
+    # En el original no hacian clip al salir del 2, pero sí asumo que es para población real, 
+    # aunque en su código dice "population[i][j] = best[j] ..." directamente
+    population = exploration
+    
+    # 3. Expulsión de sangre
+    mask2 = np.random.rand(N, dim) < 0.1
+    r_val = np.random.rand(N, dim)
+    proj_motion = best + alpha * np.sin(r_val * np.pi)
+    proj_motion = np.clip(proj_motion, lb, ub)
+    population = np.where(mask2, proj_motion, population)
+    
+    # 4. Movimiento para escapar
+    walk = np.random.uniform(-1, 1, size=(N, dim))
+    escape_motion = best + walk * (population - best)
+    population = np.clip(escape_motion, lb, ub)
+    
     return population

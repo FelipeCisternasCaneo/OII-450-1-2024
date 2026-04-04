@@ -176,13 +176,23 @@ def generar_binarizaciones_desde_json(problema):
 
 # ========== FUNCIONES DE INSERCIÓN ==========
 
-def crear_data_experimento(instancia, dim, mh, binarizacion, iteraciones, poblacion, extra_params, problemaActual):
+def crear_data_experimento(instancia, dim, mh, binarizacion, iteraciones, poblacion, extra_params, problemaActual, max_fe=None, modo_terminacion='iter'):
     """Crea diccionario de datos para un experimento."""
+    modo = (modo_terminacion or 'iter').lower()
+    param_parts = [f'pop:{poblacion}']
+
+    if modo in ('iter', 'both'):
+        param_parts.insert(0, f'iter:{iteraciones}')
+    if modo in ('fe', 'both') and max_fe is not None:
+        param_parts.append(f'max_fe:{max_fe}')
+
+    param_base = ','.join(param_parts)
+
     return {
         'experimento': f'{instancia[1]} {dim}' if problemaActual == 'BEN' else f'{instancia[1]}',
         'MH': mh,
         'binarizacion': binarizacion if binarizacion else 'N/A',
-        'paramMH': f'iter:{iteraciones},pop:{poblacion}{extra_params}',
+        'paramMH': f'{param_base}{extra_params}',
         'ML': '',
         'paramML': '',
         'ML_FS': '',
@@ -191,7 +201,7 @@ def crear_data_experimento(instancia, dim, mh, binarizacion, iteraciones, poblac
     }
 
 
-def crear_resumen_log(instancia, dim, mh, binarizacion, iteraciones, poblacion, extra_params, problemaActual, num_experimentos=1):
+def crear_resumen_log(instancia, dim, mh, binarizacion, iteraciones, poblacion, extra_params, problemaActual, num_experimentos=1, max_fe=None, modo_terminacion='iter'):
     """Crea entrada de log para resumen."""
     dimensiones_instancia = obtener_dimensiones(instancia[1], problemaActual)
     return {
@@ -199,7 +209,9 @@ def crear_resumen_log(instancia, dim, mh, binarizacion, iteraciones, poblacion, 
         "Instancia": instancia[1],
         "Dimensión": dimensiones_instancia if problemaActual != 'BEN' else dim,
         "MH": mh,
+        "Modo Terminación": modo_terminacion,
         "Iteraciones": iteraciones,
+        "Max FE": max_fe if max_fe is not None else '-',
         "Población": poblacion,
         "Binarización": binarizacion if binarizacion else 'N/A',
         "Extra Params": extra_params,
@@ -207,7 +219,7 @@ def crear_resumen_log(instancia, dim, mh, binarizacion, iteraciones, poblacion, 
     }
 
 
-def insertar_experimentos(instancias, dimensiones, mhs, num_experimentos, iteraciones, poblacion, problemaActual, extra_params=""):
+def insertar_experimentos(instancias, dimensiones, mhs, num_experimentos, iteraciones, poblacion, problemaActual, extra_params="", max_fe=None, modo_terminacion='iter'):
     """Inserta experimentos en la base de datos (versión optimizada con batch)."""
     global cantidad, log_resumen, _batch_valores
 
@@ -218,7 +230,11 @@ def insertar_experimentos(instancias, dimensiones, mhs, num_experimentos, iterac
         for dim in dimensiones:
             for mh in mhs:
                 for binarizacion in binarizaciones:
-                    data = crear_data_experimento(instancia, dim, mh, binarizacion, iteraciones, poblacion, extra_params, problemaActual)
+                    data = crear_data_experimento(
+                        instancia, dim, mh, binarizacion, iteraciones,
+                        poblacion, extra_params, problemaActual,
+                        max_fe=max_fe, modo_terminacion=modo_terminacion
+                    )
                     
                     batch_id = data.get("batch_id") if isinstance(data, dict) else None
                     fila = (
@@ -239,7 +255,11 @@ def insertar_experimentos(instancias, dimensiones, mhs, num_experimentos, iterac
                     # Agregar la misma fila N veces (num_experimentos corridas)
                     _batch_valores.extend([fila] * num_experimentos)
                     cantidad += num_experimentos
-                    log_resumen.append(crear_resumen_log(instancia, dim, mh, binarizacion, iteraciones, poblacion, extra_params, problemaActual, num_experimentos))
+                    log_resumen.append(crear_resumen_log(
+                        instancia, dim, mh, binarizacion, iteraciones, poblacion,
+                        extra_params, problemaActual, num_experimentos,
+                        max_fe=max_fe, modo_terminacion=modo_terminacion
+                    ))
 
 
 def agregar_experimentos():
@@ -248,6 +268,16 @@ def agregar_experimentos():
      Ahora lee la configuración de mapas caóticos del JSON.
     """
     
+    # Configuración global de terminación (aplica a todos los problemas)
+    exp_cfg = config.get('experimentos', {})
+    modo_terminacion_global = exp_cfg.get('modo_terminacion', 'iter')
+    max_fe_global = exp_cfg.get('max_fe', exp_cfg.get('fe'))
+
+    if modo_terminacion_global not in ('iter', 'fe', 'both'):
+        raise ValueError("experimentos.modo_terminacion debe ser 'iter', 'fe' o 'both'.")
+    if modo_terminacion_global in ('fe', 'both') and max_fe_global is None:
+        raise ValueError("modo_terminacion global en 'fe'/'both' requiere experiments.max_fe (o fe).")
+
     # ========== BEN ==========
     if config.get('ben', False):
         iteraciones = config['experimentos']['BEN']['iteraciones']
@@ -257,7 +287,11 @@ def agregar_experimentos():
         for funcion in config['instancias']['BEN']:
             instancias = bd.obtenerInstancias([funcion])
             dimensiones = obtener_dimensiones_ben(funcion)
-            insertar_experimentos(instancias, dimensiones, config['mhs'], num_experimentos, iteraciones, poblacion, problemaActual='BEN')
+            insertar_experimentos(
+                instancias, dimensiones, config['mhs'], num_experimentos,
+                iteraciones, poblacion, problemaActual='BEN',
+                max_fe=max_fe_global, modo_terminacion=modo_terminacion_global
+            )
 
     # ========== SCP/USCP ==========
     for problema in ['SCP', 'USCP']:
@@ -283,7 +317,12 @@ def agregar_experimentos():
                     extra_params = ''
                 
                 # Insertar experimentos (binarizaciones se generan automáticamente)
-                insertar_experimentos([instancia], [1], config['mhs'], num_experimentos, iteraciones, poblacion, problemaActual=problema, extra_params=extra_params)
+                insertar_experimentos(
+                    [instancia], [1], config['mhs'], num_experimentos,
+                    iteraciones, poblacion, problemaActual=problema,
+                    extra_params=extra_params, max_fe=max_fe_global,
+                    modo_terminacion=modo_terminacion_global
+                )
 
 
 # ========== MAIN ==========

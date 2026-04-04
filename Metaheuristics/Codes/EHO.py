@@ -62,15 +62,12 @@ def iterarEHO(maxIter, iter, dim, population, best, lb, ub, fitness, fo):
             h = np.random.randint(0, num_bulls)
             random_bull = bull_indices[h]
             
-            new_individual = []
-            for j in range(dim):
-                gamma = np.random.uniform(-2, 2)
-                #gamma = 1
-                #beta = np.random.uniform(0, 1)
-                beta = 1
-                new_val = individual[j] + beta * ((population[MaleIndex, j] - individual[j])) + gamma * ((population[random_bull, j] - individual[j]))
-                new_val = np.clip(new_val, lb[j], ub[j])
-                new_individual.append(new_val)
+            gamma_vec = np.random.uniform(-2, 2, size=dim)
+            beta = 1
+            new_individual = (individual 
+                              + beta * (population[MaleIndex] - individual) 
+                              + gamma_vec * (population[random_bull] - individual))
+            new_individual = np.clip(new_individual, lb, ub)
         
         offspring_population.append(new_individual)
 

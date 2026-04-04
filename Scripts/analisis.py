@@ -124,6 +124,13 @@ CONFIG, EXPERIMENTS = cargar_configuracion_exp(CONFIG_FILE, EXPERIMENTS_FILE)
 # Cargar configuración de análisis (robusto a util/ vs Util/)
 ANALYSIS_CONFIG = cargar_configuracion(ANALYSIS_FILE)
 
+MODO_TERMINACION = "iter"
+if isinstance(EXPERIMENTS, dict):
+    # EXPERIMENTS es el config JSON completo, así que debemos entrar a la llave "experimentos"
+    exp_seccion = EXPERIMENTS.get("experimentos", {})
+    MODO_TERMINACION = exp_seccion.get("modo_terminacion", "iter").lower()
+
+
 # Configuración de performance
 BATCH_SIZE = ANALYSIS_CONFIG['performance']['batch_size']
 GC_INTERVAL = ANALYSIS_CONFIG['performance']['gc_interval']
@@ -166,6 +173,8 @@ class InstancesMhs:
         # series representativas (para gráficos "best")
         self.xpl_iter = None
         self.xpt_iter = None
+        self.iter_vector = None
+
 
 # ========= Parametrización por problema =========
 PROBLEMS = {
@@ -388,7 +397,7 @@ def _graficar_por_corrida(iteraciones, fitness, xpl, xpt, tiempo, mh, problem_id
     ax.plot(iteraciones, y_data)
     ax.set_ylabel(ylabel)
     ax.set_title(f'Convergence {mh}\n{problem_id} - Run {corrida}' + (f' - ({binarizacion})' if binarizacion else ''))
-    ax.set_xlabel("Iteration")
+    ax.set_xlabel("Function Evaluations (FE)" if MODO_TERMINACION in ['fe', 'both'] else "Iteration")
     ax.grid(True, alpha=0.3)
     plt.tight_layout(); plt.savefig(fpath); plt.close()
 
@@ -398,7 +407,8 @@ def _graficar_por_corrida(iteraciones, fitness, xpl, xpt, tiempo, mh, problem_id
     ax.plot(iteraciones, xpl, color="r", label=rf"$\overline{{XPL}}$: {np.round(np.mean(xpl), 2)}%")
     ax.plot(iteraciones, xpt, color="b", label=rf"$\overline{{XPT}}$: {np.round(np.mean(xpt), 2)}%")
     ax.set_title(f'XPL% - XPT% {mh}\n{problem_id} - Run {corrida}' + (f' - ({binarizacion})' if binarizacion else ''))
-    ax.set_ylabel("Percentage"); ax.set_xlabel("Iteration")
+    ax.set_ylabel("Percentage")
+    ax.set_xlabel("Function Evaluations (FE)" if MODO_TERMINACION in ['fe', 'both'] else "Iteration")
     ax.legend(loc='upper right')
     ax.grid(True, alpha=0.3)
     plt.tight_layout(); plt.savefig(fpath); plt.close()
@@ -408,7 +418,8 @@ def _graficar_por_corrida(iteraciones, fitness, xpl, xpt, tiempo, mh, problem_id
     _, ax = plt.subplots()
     ax.plot(iteraciones, tiempo, label='Time per Iteration')
     ax.set_title(f'Time per Iteration {mh}\n{problem_id} - Run {corrida}' + (f' - ({binarizacion})' if binarizacion else ''))
-    ax.set_ylabel("Time (s)"); ax.set_xlabel("Iteration")
+    ax.set_ylabel("Time (s)")
+    ax.set_xlabel("Function Evaluations (FE)" if MODO_TERMINACION in ['fe', 'both'] else "Iteration")
     ax.legend(loc='upper right')
     ax.grid(True, alpha=0.3)
     plt.tight_layout(); plt.savefig(fpath); plt.close()
@@ -525,7 +536,8 @@ def _graficar_best(instancia_id, mhs_instances, subfolder, title_prefix="", bina
                 all_fitness_values.extend(fitness_vals)
                 # Aplicar ln, evitando log(0)
                 y_data = np.log(np.maximum(fitness_vals, 1e-10))
-                ax.plot(range(len(y_data)), y_data, label=name, linewidth=2)
+                x_data = mh.iter_vector if getattr(mh, 'iter_vector', None) is not None and len(getattr(mh, 'iter_vector', [])) == len(y_data) else range(len(y_data))
+                ax.plot(x_data, y_data, label=name, linewidth=2)
         ylabel = "Ln Objective function"
     else:
         # Graficar valores originales
@@ -534,7 +546,8 @@ def _graficar_best(instancia_id, mhs_instances, subfolder, title_prefix="", bina
             if len(mh.bestFitness):
                 fitness_vals = np.array(mh.bestFitness)
                 all_fitness_values.extend(fitness_vals)
-                ax.plot(range(len(fitness_vals)), fitness_vals, label=name, linewidth=2)
+                x_data = mh.iter_vector if getattr(mh, 'iter_vector', None) is not None and len(getattr(mh, 'iter_vector', [])) == len(fitness_vals) else range(len(fitness_vals))
+                ax.plot(x_data, fitness_vals, label=name, linewidth=2)
         
         # Determinar escala del eje
         if len(all_fitness_values) > 0:
@@ -561,7 +574,8 @@ def _graficar_best(instancia_id, mhs_instances, subfolder, title_prefix="", bina
     ax.set_ylabel(ylabel, fontsize=12)
     
     ax.set_title(f'Best Fitness per MH\n{title_id}\nBest: {best_f_mh} ({best_f:.4e})', fontsize=13)
-    ax.set_xlabel("Iteration", fontsize=12)
+    eje_x_lbl = "Function Evaluations (FE)" if MODO_TERMINACION in ['fe', 'both'] else "Iteration"
+    ax.set_xlabel(eje_x_lbl, fontsize=12)
     handles, labels = ax.get_legend_handles_labels()
     if handles:
         ax.legend(loc='best', fontsize=10)
@@ -576,11 +590,13 @@ def _graficar_best(instancia_id, mhs_instances, subfolder, title_prefix="", bina
     for name in MHS_LIST:
         mh = mhs_instances[name]
         if len(mh.bestTime):
-            ax.plot(range(len(mh.bestTime)), mh.bestTime, label=name, linewidth=2)
+            x_data = mh.iter_vector if getattr(mh, 'iter_vector', None) is not None and len(getattr(mh, 'iter_vector', [])) == len(mh.bestTime) else range(len(mh.bestTime))
+            ax.plot(x_data, mh.bestTime, label=name, linewidth=2)
     
     ax.set_title(f'Best Time per MH\n{title_id}\nBest: {best_t_mh} ({best_t:.2f} s)', fontsize=13)
     ax.set_ylabel("Time (s)", fontsize=12)
-    ax.set_xlabel("Iteration", fontsize=12)
+    eje_x_lbl = "Function Evaluations (FE)" if MODO_TERMINACION in ['fe', 'both'] else "Iteration"
+    ax.set_xlabel(eje_x_lbl, fontsize=12)
     handles, labels = ax.get_legend_handles_labels()
     if handles:
         ax.legend(loc='best', fontsize=10)
@@ -601,7 +617,7 @@ def _graficar_best(instancia_id, mhs_instances, subfolder, title_prefix="", bina
         mh = mhs_instances[name]
         if mh.xpl_iter is None or mh.xpt_iter is None: continue
         any_series = True
-        x = np.arange(len(mh.xpl_iter))
+        x = mh.iter_vector if getattr(mh, 'iter_vector', None) is not None and len(getattr(mh, 'iter_vector', [])) == len(mh.xpl_iter) else np.arange(len(mh.xpl_iter))
         c = cmap[name]
         plt.plot(x, mh.xpt_iter, linestyle='-',  linewidth=2,
                  label=f'{name} XPT% (avg {np.round(np.mean(mh.xpt_iter), 2)}%)', color=c)
@@ -612,7 +628,8 @@ def _graficar_best(instancia_id, mhs_instances, subfolder, title_prefix="", bina
     if any_series:
         plt.title(f'Exploration (XPL) vs Exploitation (XPT) per MH\n{title_id}', fontsize=13)
         plt.ylabel("Percentage (%)", fontsize=12)
-        plt.xlabel("Iteration", fontsize=12)
+        eje_x_lbl = "Function Evaluations (FE)" if MODO_TERMINACION in ['fe', 'both'] else "Iteration"
+        plt.xlabel(eje_x_lbl, fontsize=12)
         plt.ylim(0, 100)
         if max_len <= 1: plt.xlim(-0.5, 0.5)
         plt.legend(loc='upper right', fontsize=8)
@@ -726,12 +743,21 @@ def _procesar_archivos(problem_cfg, instancia_id, blob, archivo_fitness, mhs_ins
                     mhs_instances[mh].xpl_iter = data['XPL']
                 if 'XPT' in data.columns:
                     mhs_instances[mh].xpt_iter = data['XPT']
+                
+                if 'nfe' in data.columns and MODO_TERMINACION in ['fe', 'both']:
+                    mhs_instances[mh].iter_vector = pd.to_numeric(data['nfe'], errors='coerce')
+                    mhs_instances[mh].iter_vector.name = 'nfe'
+                elif 'iter' in data.columns:
+                    mhs_instances[mh].iter_vector = pd.to_numeric(data['iter'], errors='coerce')
+                    mhs_instances[mh].iter_vector.name = 'iter'
             
             # Gráficos por corrida (opcional)
             if GRAFICOS_POR_CORRIDA and 'iter' in data.columns and 'XPL' in data.columns and 'XPT' in data.columns:
                 pid = problem_cfg["title_prefix"] + str(instancia_id) if problem_cfg["title_prefix"] else str(instancia_id)
+                col_x_raw = data['nfe'] if ('nfe' in data.columns and MODO_TERMINACION in ['fe', 'both']) else data['iter']
+                col_x = pd.to_numeric(col_x_raw, errors='coerce')
                 _graficar_por_corrida(
-                    data['iter'], data['best_fitness'],
+                    col_x, data['best_fitness'],
                     data['XPL'], data['XPT'], data['time'],
                     mh, pid, corrida, problem_cfg["sub"], binarizacion
                 )

@@ -127,7 +127,7 @@ def resumen_experimentos(log_resumen, cantidad):
     print("-" * 100)
 
     print(f"{'Problema':<10} {'Instancia':<12} {'Dimensión':<15} {'MH':<10} "
-          f"{'Iteraciones':<12} {'Población':<10} {'DS':<10} {'# Experimentos':<15}")
+          f"{'Iter / FE':<12} {'Población':<10} {'DS':<10} {'# Experimentos':<15}")
     print("-" * 100)
 
     for log in log_resumen:
@@ -135,8 +135,17 @@ def resumen_experimentos(log_resumen, cantidad):
         if 'Binarización' in log and log["Problema"] != "BEN":
             ds_value = log['Binarización']
 
+        # Ajusta el valor a mostrar basado en el modo de terminación
+        modo = log.get("Modo Terminación", "iter")
+        if modo == "fe":
+            stop_val = f"FE:{log.get('Max FE', '-')}"
+        elif modo == "both":
+            stop_val = f"I:{log.get('Iteraciones', '-')} F:{log.get('Max FE', '-')}"
+        else:
+            stop_val = str(log.get('Iteraciones', '-'))
+
         print(f"{log['Problema']:<10} {log['Instancia']:<12} {log['Dimensión']:<15} {log['MH']:<10} "
-              f"{log['Iteraciones']:<12} {log['Población']:<10} {ds_value:<10} {log['Total Experimentos']:<15}")
+              f"{stop_val:<12} {log['Población']:<10} {ds_value:<10} {log['Total Experimentos']:<15}")
 
     print("-" * 100)
     print(f"TOTAL EXPERIMENTOS INGRESADOS: {cantidad}")

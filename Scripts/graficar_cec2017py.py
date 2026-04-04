@@ -306,9 +306,9 @@ def generar_todos_graficos(n_jobs=-1, resolucion=200):
     saltados = sum(1 for r in resultados if '[SKIP]' in r)
     errores = sum(1 for r in resultados if '[ERROR]' in r)
     
-    print(f"\n✓ Gráficos creados: {exitosos}")
+    print(f"\n Gráficos creados: {exitosos}")
     print(f"⊘ Saltados (ya existen): {saltados}")
-    print(f"✗ Errores: {errores}")
+    print(f" Errores: {errores}")
     
     if errores > 0:
         print("\n[ERRORES ENCONTRADOS]:")

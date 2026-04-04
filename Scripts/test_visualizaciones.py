@@ -25,7 +25,7 @@ from Util.visualizaciones import (
 
 def simular_ejecucion_2d(mh, funcion, maxIter=100, pop_size=30):
     """Simula una ejecución en 2D y retorna datos."""
-    print(f"\n🔄 Simulando ejecución de {mh} en {funcion} (2D)...")
+    print(f"\n Simulando ejecución de {mh} en {funcion} (2D)...")
     
     # Obtener óptimo real de la función
     optimo_fitness = obtener_optimo(funcion)
@@ -95,7 +95,7 @@ def simular_ejecucion_2d(mh, funcion, maxIter=100, pop_size=30):
 
 def simular_ejecucion_nd(mh, funcion, dim=30, maxIter=200, pop_size=50):
     """Simula una ejecución en alta dimensión."""
-    print(f"\n🔄 Simulando ejecución de {mh} en {funcion} ({dim}D)...")
+    print(f"\n Simulando ejecución de {mh} en {funcion} ({dim}D)...")
     
     # Obtener óptimo real
     optimo_fitness = obtener_optimo(funcion)
@@ -155,7 +155,7 @@ def test_search_history_completo():
     Muestra TODOS los puntos visitados en una sola imagen.
     """
     print("\n" + "="*70)
-    print("🧪 TEST: Search History Completo (Todos los Puntos)")
+    print(" TEST: Search History Completo (Todos los Puntos)")
     print("="*70)
     
     funciones = ['F1', 'F8', 'F9']  # Sphere, Schwefel, Rastrigin
@@ -172,13 +172,13 @@ def test_search_history_completo():
         # Gráfico con snapshots (para comparar)
         graficar_search_history_2d(mh, funcion, hist, lb, ub)
     
-    print("\n✅ Test Search History Completo terminado")
+    print("\n Test Search History Completo terminado")
 
 
 def test_trayectoria_dimensional():
     """Test: Trayectoria Dimensional"""
     print("\n" + "="*70)
-    print("🧪 TEST: Trayectoria Dimensional")
+    print(" TEST: Trayectoria Dimensional")
     print("="*70)
     
     casos = [
@@ -194,13 +194,13 @@ def test_trayectoria_dimensional():
         graficar_trayectoria_dimensional(mh, funcion, trajectory, dim)
         print(f"   Óptimo teórico de {funcion}: {obtener_optimo(funcion)}")
     
-    print("\n✅ Test Trayectoria Dimensional completado")
+    print("\n Test Trayectoria Dimensional completado")
 
 
 def test_completo():
     """Test completo con todas las visualizaciones."""
     print("\n" + "="*70)
-    print("🧪 TEST COMPLETO: Todas las Visualizaciones")
+    print(" TEST COMPLETO: Todas las Visualizaciones")
     print("="*70)
     
     # Caso 2D con Schwefel (óptimo != 0)
@@ -231,7 +231,7 @@ def test_completo():
     graficar_trayectoria_dimensional(mh_nd, func_nd, traj, dim_nd)
     graficar_search_history_slice(mh_nd, func_nd, hist, 0, 1, lb, ub, dim_nd)
     
-    print("\n✅ Test Completo terminado")
+    print("\n Test Completo terminado")
 
 
 def simular_ejecucion_cec2017_2d(mh, funcion_cec, maxIter=100, pop_size=30):
@@ -247,7 +247,7 @@ def simular_ejecucion_cec2017_2d(mh, funcion_cec, maxIter=100, pop_size=30):
     Returns:
         Tupla con (trajectory, fitness_traj, search_history, all_positions, lb, ub, dim)
     """
-    print(f"\n🔄 Simulando ejecución de {mh} en CEC2017-{funcion_cec.__name__} (2D)...")
+    print(f"\n Simulando ejecución de {mh} en CEC2017-{funcion_cec.__name__} (2D)...")
     
     dim = 2
     lb = np.array([-100] * dim)
@@ -311,7 +311,7 @@ def simular_ejecucion_cec2017_2d(mh, funcion_cec, maxIter=100, pop_size=30):
 def test_cec2017():
     """Test con funciones CEC2017."""
     print("\n" + "="*70)
-    print("🧪 TEST: Visualizaciones con CEC2017")
+    print(" TEST: Visualizaciones con CEC2017")
     print("="*70)
     
     # Probar con funciones simples y híbridas (algunas no están definidas para D=2)
@@ -338,7 +338,7 @@ def test_cec2017():
         graficar_trayectoria_dimensional(mh, nombre_func, traj, dim)
         
         # Visualizaciones 2D con paisaje de fondo
-        print(f"📊 Graficando trayectoria histórica 2D para {nombre_func}...")
+        print(f" Graficando trayectoria histórica 2D para {nombre_func}...")
         print("   Evaluando función en grid 2D...")
         
         # Crear grid para el paisaje
@@ -386,10 +386,10 @@ def test_cec2017():
         filename = f"Graficos/SearchHistory/{mh}_{nombre_func}_completo.png"
         plt.savefig(filename, dpi=300, bbox_inches='tight')
         plt.close()
-        print(f"   ✅ Guardado: {filename}")
+        print(f"    Guardado: {filename}")
     
-    print("\n✅ Test CEC2017 completado")
-    print("📁 Gráficos guardados en ./Graficos/")
+    print("\n Test CEC2017 completado")
+    print(" Gráficos guardados en ./Graficos/")
 
 
 def simular_ejecucion_cec2017_30d(mh, funcion_cec, maxIter=100, pop_size=30, dim=30):
@@ -406,7 +406,7 @@ def simular_ejecucion_cec2017_30d(mh, funcion_cec, maxIter=100, pop_size=30, dim
     Returns:
         Tupla con (trajectory, fitness_traj, all_positions, best_solution, lb, ub, dim)
     """
-    print(f"\n🔄 Simulando ejecución de {mh} en CEC2017-{funcion_cec.__name__} ({dim}D)...")
+    print(f"\n Simulando ejecución de {mh} en CEC2017-{funcion_cec.__name__} ({dim}D)...")
     
     lb = np.array([-100] * dim)
     ub = np.array([100] * dim)
@@ -460,7 +460,7 @@ def simular_ejecucion_cec2017_30d(mh, funcion_cec, maxIter=100, pop_size=30, dim
 def test_cec2017_30d():
     """Test con funciones CEC2017 en 30D."""
     print("\n" + "="*70)
-    print("🧪 TEST: Visualizaciones con CEC2017 (30D)")
+    print(" TEST: Visualizaciones con CEC2017 (30D)")
     print("="*70)
     
     mh = 'PSO'
@@ -501,7 +501,7 @@ def test_cec2017_30d():
         graficar_trayectoria_dimensional(mh, nombre_func, traj, dim)
         
         # Search history con slice 2D usando la función CEC directamente
-        print(f"📊 Graficando search history completo 2D para {mh} en {nombre_func} ({dim}D)...")
+        print(f" Graficando search history completo 2D para {mh} en {nombre_func} ({dim}D)...")
         print(f"   Total de puntos: {len(all_pos)}")
         print("   Evaluando función en grid 2D puro (sin dimensiones extras)...")
         
@@ -567,21 +567,21 @@ def test_cec2017_30d():
         filename = f"Graficos/SearchHistory/{mh}_{nombre_func}_completo_30D.png"
         plt.savefig(filename, dpi=300, bbox_inches='tight')
         plt.close()
-        print(f"   ✅ Guardado: {filename}")
+        print(f"    Guardado: {filename}")
     
-    print("\n✅ Test CEC2017 30D completado")
-    print("📁 Gráficos guardados en ./Graficos/")
+    print("\n Test CEC2017 30D completado")
+    print(" Gráficos guardados en ./Graficos/")
 
 
 if __name__ == "__main__":
     print("="*70)
-    print("🚀 PRUEBAS DE VISUALIZACIONES (VERSIÓN CORREGIDA V2)")
+    print(" PRUEBAS DE VISUALIZACIONES (VERSIÓN CORREGIDA V2)")
     print("="*70)
     print("\nCORRECCIONES:")
-    print("  ✅ Search history completo (todos los puntos)")
-    print("  ✅ Óptimos correctos (F8 = -418.9829*dim, no 0)")
-    print("  ✅ Convergencia hacia óptimos reales")
-    print("  ✅ Soporte para CEC2017")
+    print("   Search history completo (todos los puntos)")
+    print("   Óptimos correctos (F8 = -418.9829*dim, no 0)")
+    print("   Convergencia hacia óptimos reales")
+    print("   Soporte para CEC2017")
     print("="*70)
     
     try:
@@ -601,14 +601,14 @@ if __name__ == "__main__":
         test_cec2017_30d()
         
         print("\n" + "="*70)
-        print("✅ TODAS LAS PRUEBAS COMPLETADAS")
+        print(" TODAS LAS PRUEBAS COMPLETADAS")
         print("="*70)
-        print("\n📁 Gráficos guardados en:")
+        print("\n Gráficos guardados en:")
         print("   - ./Graficos/Trayectorias/")
         print("   - ./Graficos/SearchHistory/")
         print("="*70)
         
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\n Error: {e}")
         import traceback
         traceback.print_exc()

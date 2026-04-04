@@ -36,7 +36,7 @@ from .Codes.DLO import iterarDLO
 from .Codes.DOA import iterarDOA
 from .Codes.EHO import iterarEHO
 from .Codes.DRA import iterarDRA
-from .Codes.SRO import iterarSRO
+# from .Codes.SRO import iterarSRO  # REMOVIDO: implementación no fiel al paper
 from .Codes.WO import iterarWO
 from .Codes.DHOA import iterarDHOA
 from .Codes.CLO import iterarCLO
@@ -77,7 +77,7 @@ metaheuristics = {
     "DOA": iterarDOA,
     "EHO": iterarEHO,
     "DRA": iterarDRA,
-    "SRO": iterarSRO,
+    # "SRO": iterarSRO,  # REMOVIDO: implementación no fiel al paper
     "CCMGO": iterarCCMGO,
     "WO": iterarWO,
     "GOAT": iterarGOAT,
@@ -150,7 +150,7 @@ MH_ARG_MAP = {
     'SCA':   ('maxIter', 'iter', 'population', 'best'),
     'SHO':   ('maxIter', 'iter', 'dim', 'population', 'best', 'fo', 'objective_type'),
     'SSO':   ('maxIter', 'iter', 'dim', 'population', 'fitness', 'best', 'fo', 'lb', 'ub'),
-    'SRO':   ('maxIter', 'iter', 'dim', 'population', 'best', 'fo', 'vel', 'userData'),
+    # 'SRO':   REMOVIDO — implementación no fiel al paper
 
     # T
     'TDO':   ('maxIter', 'iter', 'dim', 'population', 'fitness', 'fo', 'objective_type'),

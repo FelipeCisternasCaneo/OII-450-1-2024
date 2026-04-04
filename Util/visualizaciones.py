@@ -63,7 +63,7 @@ def graficar_trayectoria_dimensional(mh, funcion, trajectory, dim):
         trajectory: array [n_iterations, dim] - Mejor solución en cada iteración
         dim: Número de dimensiones
     """
-    print(f"📊 Graficando trayectoria dimensional para {mh} en {funcion} ({dim}D)...")
+    print(f" Graficando trayectoria dimensional para {mh} en {funcion} ({dim}D)...")
     
     iterations = np.arange(len(trajectory))
     
@@ -83,7 +83,7 @@ def graficar_trayectoria_dimensional(mh, funcion, trajectory, dim):
     os.makedirs('./Graficos/Trayectorias', exist_ok=True)
     plt.savefig(f'./Graficos/Trayectorias/{mh}_{funcion}_trajectory_dims.png', dpi=300, bbox_inches='tight')
     plt.close()
-    print(f"✅ Guardado: ./Graficos/Trayectorias/{mh}_{funcion}_trajectory_dims.png")
+    print(f" Guardado: ./Graficos/Trayectorias/{mh}_{funcion}_trajectory_dims.png")
 
 
 def graficar_search_history_2d_completo(mh, funcion, all_positions, lb, ub, best_solution=None, dim=2):
@@ -100,7 +100,7 @@ def graficar_search_history_2d_completo(mh, funcion, all_positions, lb, ub, best
         best_solution: array [dim] - Mejor solución (usado como base para slice en alta dim)
         dim: Número de dimensiones
     """
-    print(f"📊 Graficando search history completo 2D para {mh} en {funcion} ({dim}D)...")
+    print(f" Graficando search history completo 2D para {mh} en {funcion} ({dim}D)...")
     print(f"   Total de puntos: {len(all_positions)}")
     
     # Crear grid para el paisaje (siempre en dimensiones 0 y 1)
@@ -165,7 +165,7 @@ def graficar_search_history_2d_completo(mh, funcion, all_positions, lb, ub, best
     plt.savefig(f'./Graficos/SearchHistory/{mh}_{funcion}_search_history_complete.png', 
                 dpi=300, bbox_inches='tight')
     plt.close()
-    print(f"✅ Guardado: ./Graficos/SearchHistory/{mh}_{funcion}_search_history_complete.png")
+    print(f" Guardado: ./Graficos/SearchHistory/{mh}_{funcion}_search_history_complete.png")
 
 
 def graficar_search_history_2d(mh, funcion, search_history, lb, ub):
@@ -179,7 +179,7 @@ def graficar_search_history_2d(mh, funcion, search_history, lb, ub):
         search_history: Lista de dicts con {'iter': int, 'population': array[pop_size, 2]}
         lb, ub: Límites de la función
     """
-    print(f"📊 Graficando search history 2D (snapshots) para {mh} en {funcion}...")
+    print(f" Graficando search history 2D (snapshots) para {mh} en {funcion}...")
     
     # Crear grid para el paisaje
     x = np.linspace(lb[0], ub[0], 200)
@@ -234,7 +234,7 @@ def graficar_search_history_2d(mh, funcion, search_history, lb, ub):
     plt.savefig(f'./Graficos/SearchHistory/{mh}_{funcion}_search_history_snapshots.png', 
                 dpi=300, bbox_inches='tight')
     plt.close()
-    print(f"✅ Guardado: ./Graficos/SearchHistory/{mh}_{funcion}_search_history_snapshots.png")
+    print(f" Guardado: ./Graficos/SearchHistory/{mh}_{funcion}_search_history_snapshots.png")
 
 
 def graficar_search_history_slice(mh, funcion, search_history, dim1, dim2, lb, ub, dim):
@@ -246,7 +246,7 @@ def graficar_search_history_slice(mh, funcion, search_history, dim1, dim2, lb, u
         dim1, dim2: Índices de las dimensiones a visualizar
         Resto de dimensiones se fijan en el valor promedio del último snapshot
     """
-    print(f"📊 Graficando search history slice [{dim1}, {dim2}] para {mh} en {funcion}...")
+    print(f" Graficando search history slice [{dim1}, {dim2}] para {mh} en {funcion}...")
     
     # Valores fijos para otras dimensiones (usar población final promedio)
     last_pop = search_history[-1]['population']
@@ -309,4 +309,4 @@ def graficar_search_history_slice(mh, funcion, search_history, dim1, dim2, lb, u
     plt.savefig(f'./Graficos/SearchHistory/{mh}_{funcion}_search_slice_{dim1}_{dim2}.png', 
                 dpi=300, bbox_inches='tight')
     plt.close()
-    print(f"✅ Guardado: ./Graficos/SearchHistory/{mh}_{funcion}_search_slice_{dim1}_{dim2}.png")
+    print(f" Guardado: ./Graficos/SearchHistory/{mh}_{funcion}_search_slice_{dim1}_{dim2}.png")

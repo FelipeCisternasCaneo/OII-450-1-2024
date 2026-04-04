@@ -2,16 +2,17 @@ import time
 import shutil
 import os
 
-from Solver.solverBEN import solverBEN
-from Solver.solverSCP import solverSCP
+from Solver.universal_solver import universal_solver
+from Solver.domain_managers.ben_domain import BenDomainManager
+from Solver.domain_managers.scp_domain import ScpDomainManager
+from Solver.termination_manager import TerminationCriteria
 
-#  NUEVO: Importar solver caótico (opcional, no rompe si no existe)
+#  Solver caótico (no migrado al universal todavía)
 try:
     from Solver.solverSCP_Chaotic import solverSCP_Chaotic
     CHAOTIC_AVAILABLE = True
-except ImportError:
+except Exception:
     CHAOTIC_AVAILABLE = False
-    # No imprimir en import (este módulo se reutiliza desde otros entrypoints).
 
 from BD.sqlite import BD
 
@@ -19,78 +20,117 @@ from Util.log import log_experimento, log_error, log_final, log_fecha_hora
 from Util.util import parse_parametros, verificar_y_crear_carpetas
 
 
-# ========== NUEVA FUNCIÓN (20 líneas) ==========
+# ========== DETECCIÓN DE MAPAS CAÓTICOS ==========
 
 def detectar_mapa_caotico(ds_string):
-
     mapas_validos = ['LOG', 'SINE', 'TENT', 'CIRCLE', 'SINGER', 'SINU', 'PIECE', 'CHEB', 'GAUS']
-    
-    # Dividir por '_'
     partes = ds_string.split('_')
-    
     if len(partes) == 2:
         ds_base, sufijo = partes
         if sufijo.upper() in mapas_validos:
             return ds_base, sufijo.upper()
-    
-    # Sin sufijo o sufijo inválido → estándar
     return ds_string, None
 
 
-# ========== FUNCIONES ORIGINALES (SIN CAMBIOS) ==========
+def obtener_max_fe(parametros):
+    """Retorna max_fe opcional desde paramMH (acepta 'max_fe' o 'fe')."""
+    raw = parametros.get("max_fe", parametros.get("fe"))
+    if raw is None or raw == "":
+        return None
+
+    max_fe = int(raw)
+    if max_fe <= 0:
+        raise ValueError("El número de evaluaciones de función (max_fe) debe ser mayor a 0.")
+    return max_fe
+
+
+def obtener_max_iter(parametros):
+    """Retorna iteraciones opcionales desde paramMH."""
+    raw = parametros.get("iter")
+    if raw is None or raw == "":
+        return None
+
+    max_iter = int(raw)
+    if max_iter < 4:
+        raise ValueError(
+            "El número de iteraciones (iter) debe ser al menos 4 cuando se usa terminación por iteraciones."
+        )
+    return max_iter
+
+
+def construir_termination(parametros):
+    """Construye TerminationCriteria con iteraciones, FE o ambos."""
+    max_iter = obtener_max_iter(parametros)
+    max_fe = obtener_max_fe(parametros)
+
+    if max_iter is None and max_fe is None:
+        raise ValueError(
+            "Debe definirse al menos un criterio de término: 'iter' o 'max_fe' (también se acepta 'fe')."
+        )
+
+    return TerminationCriteria(max_iter=max_iter, max_fe=max_fe)
+
+
+# ========== FUNCIONES DE EJECUCIÓN (USANDO UNIVERSAL SOLVER) ==========
 
 def ejecutar_ben(id, experimento, parametrosInstancia, parametros):
-    """Ejecuta el problema tipo BEN."""
+    """Ejecuta un problema Benchmark usando el Universal Solver."""
     dim = int(experimento.split(" ")[1])
     lb = float(parametrosInstancia.split(",")[0].split(":")[1])
     ub = float(parametrosInstancia.split(",")[1].split(":")[1])
-    
-    solverBEN(
-        id, parametros["mh"], int(parametros["iter"]),
-        int(parametros["pop"]), parametros["instancia"], lb, ub, dim
-    )
 
-def ejecutar_problema_scp_uscp(id, instancia, ds, parametros, solver_func, unicost):
-    """
-    Ejecuta problemas de tipo SCP o USCP.
-    
-     MODIFICADO: Detecta automáticamente si usar solver caótico.
-    """
+    mh_name = parametros["mh"]
+    pop_size = int(parametros["pop"])
+    function_name = parametros["instancia"]
+
+    domain = BenDomainManager(function_name, dim, pop_size, lb, ub)
+    termination = construir_termination(parametros)
+
+    universal_solver(id, mh_name, domain, termination)
+
+
+def ejecutar_problema_scp_uscp(id, instancia, ds, parametros, unicost):
+    """Ejecuta un problema SCP/USCP usando el Universal Solver o el solver caótico."""
     repair = parametros["repair"]
     parMH = parametros["cros"]
-    
-    #  NUEVO: Detectar si el DS tiene sufijo caótico
-    # ds es un string como 'V3-ELIT' o 'V3-ELIT_LOG'
+    mh_name = parametros["mh"]
+    pop_size = int(parametros["pop"])
+
+    # Detectar si el DS tiene sufijo caótico
     ds_base, chaotic_map = detectar_mapa_caotico(ds)
-    
-    #  NUEVO: Decidir qué solver usar
+
     if chaotic_map and CHAOTIC_AVAILABLE:
-        # Usar solver caótico
+        # Solver caótico (todavía usa el legacy — migración pendiente)
         print(f"[] Usando solver caótico: {ds_base} + {chaotic_map}")
         solverSCP_Chaotic(
             id=id,
-            mh=parametros["mh"],
-            maxIter=int(parametros["iter"]),
-            pop=int(parametros["pop"]),
+            mh=mh_name,
+            maxIter=obtener_max_iter(parametros) or 100,
+            pop=pop_size,
             instances=instancia,
-            DS=ds_base,  # Sin sufijo
+            DS=ds_base,
             repairType=repair,
             param=parMH,
             unicost=unicost,
             chaotic_map_name=chaotic_map
         )
     else:
-        # Usar solver estándar (original)
         if chaotic_map and not CHAOTIC_AVAILABLE:
             print(
-                f"[WARN] Solver caótico no disponible (falló la importación). "
+                f"[WARN] Solver caótico no disponible. "
                 f"Ignorando mapa '{chaotic_map}' y usando estándar."
             )
-        
-        solver_func(
-            id, parametros["mh"], int(parametros["iter"]),
-            int(parametros["pop"]), instancia, ds_base, repair, parMH, unicost
-        )
+
+        # Universal Solver para SCP/USCP estándar
+        domain = ScpDomainManager(instancia, pop_size, repair, ds_base, unicost)
+        termination = construir_termination(parametros)
+
+        # Parámetros extra para GA
+        extra_params = None
+        if mh_name == 'GA' and parMH:
+            extra_params = {'param_raw': parMH}
+
+        universal_solver(id, mh_name, domain, termination, extra_params=extra_params)
 
 
 def procesar_experimento(data, bd):
@@ -100,17 +140,19 @@ def procesar_experimento(data, bd):
     datosInstancia = bd.obtenerInstancia(id_instancia)
 
     parametros = parse_parametros(data[0][4])
-    
+
     parametros.update({
         "mh": data[0][2],
         "instancia": datosInstancia[0][2],
     })
-    
+
     problema = datosInstancia[0][1]
-    
-    # Validación de iteraciones
-    if int(parametros["iter"]) < 4:
-        log_error(id, "El número de iteraciones (iter) debe ser al menos 4. Marcado como error.")
+
+    # Validación de criterio de término
+    try:
+        construir_termination(parametros)
+    except ValueError as ve:
+        log_error(id, str(ve))
         bd.actualizarExperimento(id, "error")
         return
 
@@ -122,22 +164,22 @@ def procesar_experimento(data, bd):
 
         elif problema == "SCP":
             ejecutar_problema_scp_uscp(
-                id, f"scp{datosInstancia[0][2]}", 
-                data[0][3],  # Este es el DS (e.g., 'V3-ELIT' o 'V3-ELIT_LOG')
-                parametros, solverSCP, unicost=False
+                id, f"scp{datosInstancia[0][2]}",
+                data[0][3],
+                parametros, unicost=False
             )
 
         elif problema == "USCP":
             ejecutar_problema_scp_uscp(
-                id, f"uscp{datosInstancia[0][2][1:]}", 
-                data[0][3],  # Este es el DS
-                parametros, solverSCP, unicost=True
+                id, f"uscp{datosInstancia[0][2][1:]}",
+                data[0][3],
+                parametros, unicost=True
             )
-    
+
     except ValueError as ve:
         log_error(id, f"Error de valor: {str(ve)}")
         bd.actualizarExperimento(id, "error")
-    
+
     except Exception as e:
         log_error(id, f"Error general: {str(e)}")
         bd.actualizarExperimento(id, "error")
@@ -150,31 +192,28 @@ def procesar_experimento(data, bd):
 
 def main():
     """Función principal que gestiona la ejecución de los experimentos."""
-    
+
     verificar_y_crear_carpetas()
-    
+
     bd = BD()
-    
+
     start_time = time.time()
-    
+
     log_fecha_hora("Inicio de la ejecución")
-    
-    #  NUEVO: Mostrar info de solvers disponibles
+
     print("\n" + "="*70)
-    print(" SISTEMA DE SOLVERS")
+    print(" SISTEMA DE SOLVERS (Universal Solver)")
     print("="*70)
-    print("   solverBEN (Benchmark)")
-    print("   solverSCP (Estándar)")
+    print("    Universal Solver (BEN + SCP/USCP)")
     if CHAOTIC_AVAILABLE:
-        print("   solverSCP_Chaotic (Mapas Caóticos) ")
+        print("    solverSCP_Chaotic (Mapas Caóticos)")
     else:
-        print("   solverSCP_Chaotic (No disponible)")
+        print("   ⬚  solverSCP_Chaotic (No disponible)")
     print("="*70 + "\n")
 
-    # Connection pooling: mantener conexión abierta durante todo el procesamiento
     with bd:
         data = bd.obtenerExperimento()
-        
+
         while data is not None:
             log_experimento(data)
             procesar_experimento(data, bd)
@@ -182,12 +221,11 @@ def main():
 
     end_time = time.time()
     total_time = end_time - start_time
-    
+
     log_fecha_hora("Fin de la ejecución")
     log_final(total_time)
-    
+
     shutil.rmtree(os.path.join("Resultados", "transitorio"), ignore_errors=True)
 
 if __name__ == "__main__":
     main()
-    

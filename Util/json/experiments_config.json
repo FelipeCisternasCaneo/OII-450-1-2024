@@ -7,28 +7,27 @@
         "mhs": "Lista de metaheurísticas que se van a procesar.",
         "DS_actions": "Lista de acciones de binarización de la población.",
         "dimensiones": "Mapea cada función BEN a las dimensiones que utiliza.",
-        "experimentos": "Parámetros globales de iteraciones y población para cada problema.",
+        "experimentos": "Parámetros globales y por problema de iteraciones/población.",
+        "modo_terminacion": "Criterio de término global: iter, fe o both.",
+        "max_fe": "Límite global opcional de Function Evaluations (null para desactivar).",
         "instancias": "Identificadores de los instancias de los problemas que se van a procesar.",
         "mapas_caoticos": " NUEVO: Configuración de mapas caóticos para experimentos",
         "usar_mapas_caoticos": " NUEVO: Activar/desactivar mapas caóticos globalmente"
     },
-
-    "ben": false,
-    "scp": true,
+    "ben": true,
+    "scp": false,
     "uscp": false,
     "kp": false,
-
-    "mhs": ["TJO", "CLO", "GWO"],
-
-    "DS_actions": ["V1-ELIT", "Z1-ELIT", "V2-ELIT", "Z2-ELIT"],
-
+    "mhs": [
+        "SBOA"
+    ],
+    "DS_actions": [
+        "V3-ELIT"
+    ],
     "_comentario_mapas_caoticos": "========== CONFIGURACIÓN DE MAPAS CAÓTICOS ==========",
-    
-    "usar_mapas_caoticos": true,
-    
+    "usar_mapas_caoticos": false,
     "mapas_caoticos": {
         "_comentario": "Configuración de mapas caóticos. Cada problema puede tener su propia configuración.",
-        
         "modo": "comparacion",
         "_modos_disponibles": {
             "solo_estandar": "No usa mapas caóticos (como antes)",
@@ -36,30 +35,57 @@
             "comparacion": "Genera experimentos estándar Y caóticos para comparar",
             "manual": "Usa la lista 'binarizaciones_manuales' definida abajo"
         },
-        
-        "mapas_activos": ["LOG", "SINE", "TENT", "CIRCLE", "SINGER", "SINU", "PIECE", "CHEB", "GAUS"],
-        "_mapas_disponibles": ["LOG", "SINE", "TENT", "CIRCLE", "SINGER", "SINU", "PIECE", "CHEB", "GAUS"],
-        
+        "mapas_activos": [
+            "LOG",
+            "SINE",
+            "TENT",
+            "CIRCLE",
+            "SINGER",
+            "SINU",
+            "PIECE",
+            "CHEB",
+            "GAUS"
+        ],
+        "_mapas_disponibles": [
+            "LOG",
+            "SINE",
+            "TENT",
+            "CIRCLE",
+            "SINGER",
+            "SINU",
+            "PIECE",
+            "CHEB",
+            "GAUS"
+        ],
         "USCP": {
             "usar_caoticos": false,
             "modo": "comparacion",
-            "mapas": ["LOG"],
+            "mapas": [
+                "LOG"
+            ],
             "_comentario": "Genera: V3-ELIT (estándar) + V3-ELIT_LOG (caótico)"
         },
-        
         "SCP": {
             "usar_caoticos": true,
             "modo": "comparacion",
-            "mapas": ["LOG", "SINE", "TENT", "CIRCLE", "SINGER", "SINU", "PIECE", "CHEB", "GAUS"],
+            "mapas": [
+                "LOG",
+                "SINE",
+                "TENT",
+                "CIRCLE",
+                "SINGER",
+                "SINU",
+                "PIECE",
+                "CHEB",
+                "GAUS"
+            ],
             "_comentario": "Solo usa binarización estándar"
         },
-        
         "KP": {
             "usar_caoticos": false,
             "modo": "solo_estandar",
             "mapas": []
         },
-        
         "binarizaciones_manuales": {
             "_comentario": "Solo se usa si modo='manual'. Lista exacta de binarizaciones a usar.",
             "USCP": [],
@@ -67,47 +93,216 @@
             "KP": []
         }
     },
-
     "dimensiones": {
         "BEN": {
-            "F1": [30], "F2": [30], "F3": [30], "F4": [30], "F5": [30], "F6": [30], "F7": [30],
-            "F8": [30], "F9": [30], "F10": [30], "F11": [30], "F12": [30], "F13": [30],
-            "F14": [2], "F15": [4], "F16": [2], "F17": [2], "F18": [2], "F19": [3], "F20": [6],
-            "F21": [4], "F22": [4], "F23": [4],
-
-            "F1CEC2017": [30], "F2CEC2017": [30],
-            "F3CEC2017": [30], "F4CEC2017": [30],
-            "F5CEC2017": [30], "F6CEC2017": [30],
-            "F7CEC2017": [30], "F8CEC2017": [30],
-            "F9CEC2017": [30], "F10CEC2017": [30],
-            "F11CEC2017": [30], "F12CEC2017": [30],
-            "F13CEC2017": [30], "F14CEC2017": [30],
-            "F15CEC2017": [30], "F16CEC2017": [30],
-            "F17CEC2017": [30], "F18CEC2017": [30],
-            "F19CEC2017": [30], "F20CEC2017": [30],
-            "F21CEC2017": [30], "F22CEC2017": [30],
-            "F23CEC2017": [30], "F24CEC2017": [30],
-            "F25CEC2017": [30], "F26CEC2017": [30],
-            "F27CEC2017": [30], "F28CEC2017": [30],
-            "F29CEC2017": [30], "F30CEC2017": [30]
+            "F1": [
+                30
+            ],
+            "F2": [
+                30
+            ],
+            "F3": [
+                30
+            ],
+            "F4": [
+                30
+            ],
+            "F5": [
+                30
+            ],
+            "F6": [
+                30
+            ],
+            "F7": [
+                30
+            ],
+            "F8": [
+                30
+            ],
+            "F9": [
+                30
+            ],
+            "F10": [
+                30
+            ],
+            "F11": [
+                30
+            ],
+            "F12": [
+                30
+            ],
+            "F13": [
+                30
+            ],
+            "F14": [
+                2
+            ],
+            "F15": [
+                4
+            ],
+            "F16": [
+                2
+            ],
+            "F17": [
+                2
+            ],
+            "F18": [
+                2
+            ],
+            "F19": [
+                3
+            ],
+            "F20": [
+                6
+            ],
+            "F21": [
+                4
+            ],
+            "F22": [
+                4
+            ],
+            "F23": [
+                4
+            ],
+            "F1CEC2017": [
+                30
+            ],
+            "F2CEC2017": [
+                30
+            ],
+            "F3CEC2017": [
+                30
+            ],
+            "F4CEC2017": [
+                30
+            ],
+            "F5CEC2017": [
+                30
+            ],
+            "F6CEC2017": [
+                30
+            ],
+            "F7CEC2017": [
+                30
+            ],
+            "F8CEC2017": [
+                30
+            ],
+            "F9CEC2017": [
+                30
+            ],
+            "F10CEC2017": [
+                30
+            ],
+            "F11CEC2017": [
+                30
+            ],
+            "F12CEC2017": [
+                30
+            ],
+            "F13CEC2017": [
+                30
+            ],
+            "F14CEC2017": [
+                30
+            ],
+            "F15CEC2017": [
+                30
+            ],
+            "F16CEC2017": [
+                30
+            ],
+            "F17CEC2017": [
+                30
+            ],
+            "F18CEC2017": [
+                30
+            ],
+            "F19CEC2017": [
+                30
+            ],
+            "F20CEC2017": [
+                30
+            ],
+            "F21CEC2017": [
+                30
+            ],
+            "F22CEC2017": [
+                30
+            ],
+            "F23CEC2017": [
+                30
+            ],
+            "F24CEC2017": [
+                30
+            ],
+            "F25CEC2017": [
+                30
+            ],
+            "F26CEC2017": [
+                30
+            ],
+            "F27CEC2017": [
+                30
+            ],
+            "F28CEC2017": [
+                30
+            ],
+            "F29CEC2017": [
+                30
+            ],
+            "F30CEC2017": [
+                30
+            ]
         }
     },
-
     "experimentos": {
-        "BEN": {"iteraciones": 500, "poblacion": 50, "num_experimentos": 1},
-        "SCP": {"iteraciones": 100, "poblacion": 10, "num_experimentos": 10},
-        "USCP": {"iteraciones": 100, "poblacion": 10, "num_experimentos": 1},
-        "KP": {"iteraciones": 5, "poblacion": 10, "num_experimentos": 1}
+        "modo_terminacion": "fe",
+        "max_fe": 50000,
+        "BEN": {
+            "iteraciones": 500,
+            "poblacion": 50,
+            "num_experimentos": 1
+        },
+        "SCP": {
+            "iteraciones": 100,
+            "poblacion": 10,
+            "num_experimentos": 1
+        },
+        "USCP": {
+            "iteraciones": 100,
+            "poblacion": 10,
+            "num_experimentos": 1
+        },
+        "KP": {
+            "iteraciones": 5,
+            "poblacion": 10,
+            "num_experimentos": 1
+        }
     },
-
     "instancias": {
-        "BEN": ["F1CEC2017", "F2CEC2017", "F3CEC2017", "F4CEC2017", "F5CEC2017", "F6CEC2017",
-            "F7CEC2017", "F8CEC2017", "F9CEC2017", "F10CEC2017", "F11CEC2017", "F12CEC2017",
-            "F13CEC2017", "F14CEC2017", "F15CEC2017", "F16CEC2017", "F17CEC2017", "F18CEC2017",
-            "F19CEC2017", "F20CEC2017", "F21CEC2017", "F22CEC2017", "F23CEC2017", "F24CEC2017",
-            "F25CEC2017", "F26CEC2017", "F27CEC2017", "F28CEC2017", "F29CEC2017", "F30CEC2017"],
-        "SCP": ["41", "51", "61", "a1", "b1", "c1", "d1", "nre1", "nrf1", "nrg1", "nrh1"],
-        "USCP": ["u41", "u51", "u61"],
+        "BEN": [
+            "F1CEC2017",
+            "F2CEC2017",
+            "F3CEC2017",
+            "F4CEC2017",
+            "F5CEC2017",
+            "F6CEC2017",
+            "F7CEC2017",
+            "F8CEC2017",
+            "F9CEC2017",
+            "F10CEC2017"
+        ],
+        "SCP": [
+            "41",
+            "51",
+            "61"
+        ],
+        "USCP": [
+            "u41",
+            "u51",
+            "u61"
+        ],
         "KP": []
     }
 }

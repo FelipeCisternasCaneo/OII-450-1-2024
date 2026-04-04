@@ -1,0 +1,65 @@
+﻿python : E:\OII-450-1-2024\tests\..\Metaheuristics\Codes
+\NO.py:32: RuntimeWarning: divide by zero encountered 
+in divide
+En línea: 1 Carácter: 75
++ ... ps1"; $env:OMP_NUM_THREADS=1; python -m 
+tests.profile_mh 2>&1 | Out-F ...
++                                   
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (E:\OII-450 
+   -1-20...tered in divide:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  PR = np.exp(-dist_hamming**2 / (2 * sigma_t**2))
+      MH    Avg (ms)    Std (ms)    Status
+---------------------------------------------
+     GWO       ERROR  'charmap' codec can'
+     PSO       ERROR  'charmap' codec can'
+     WOA       ERROR  'charmap' codec can'
+     SCA       ERROR  'charmap' codec can'
+     FOX       ERROR  'charmap' codec can'
+      NO       ERROR  'charmap' codec can'
+     PSA       ERROR  'charmap' codec can'
+     AOA       ERROR  'charmap' codec can'
+     EOO       ERROR  'charmap' codec can'
+   EBWOA       ERROR  'charmap' codec can'
+     RSA       ERROR  'charmap' codec can'
+     LOA       ERROR  'charmap' codec can'
+     QSO       ERROR  'charmap' codec can'
+     WOM       ERROR  'charmap' codec can'
+     HBA       ERROR  'charmap' codec can'
+     GOA       ERROR  'charmap' codec can'
+     FLO       ERROR  'charmap' codec can'
+     POA       ERROR  'charmap' codec can'
+     TDO       ERROR  'charmap' codec can'
+    SBOA       ERROR  'charmap' codec can'
+     SHO       ERROR  'charmap' codec can'
+     PGA       ERROR  'charmap' codec can'
+     SSO       ERROR  'charmap' codec can'
+     DLO       ERROR  'charmap' codec can'
+     DOA       ERROR  'charmap' codec can'
+     EHO       ERROR  'charmap' codec can'
+     DRA       ERROR  'charmap' codec can'
+      WO       ERROR  'charmap' codec can'
+    DHOA       ERROR  'charmap' codec can'
+     ALA       ERROR  'charmap' codec can'
+   CCMGO       ERROR  'charmap' codec can'
+     APO       ERROR  'charmap' codec can'
+     CLO       ERROR  'charmap' codec can'
+     TJO       ERROR  'charmap' codec can'
+    GOAT       ERROR  "Argumento 'jump_pro
+    HLOA       ERROR  'charmap' codec can'
+
+=============================================
+  TOP 10 M┴S LENTAS (candidatas a vectorizar)
+=============================================
+     EBWOA: 217.83 ms/iter
+      HLOA: 27.15 ms/iter
+       EHO: 14.17 ms/iter
+       SHO: 8.87 ms/iter
+       AOA: 7.70 ms/iter
+       PSA: 6.56 ms/iter
+        WO: 5.83 ms/iter
+       TDO: 4.07 ms/iter
+      DHOA: 3.82 ms/iter
+       SSO: 2.35 ms/iter
