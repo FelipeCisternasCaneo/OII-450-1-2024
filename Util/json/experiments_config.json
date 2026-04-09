@@ -14,8 +14,8 @@
         "mapas_caoticos": " NUEVO: Configuración de mapas caóticos para experimentos",
         "usar_mapas_caoticos": " NUEVO: Activar/desactivar mapas caóticos globalmente"
     },
-    "ben": true,
-    "scp": false,
+    "ben": false,
+    "scp": true,
     "uscp": false,
     "kp": false,
     "mhs": [
@@ -25,7 +25,7 @@
         "V3-ELIT"
     ],
     "_comentario_mapas_caoticos": "========== CONFIGURACIÓN DE MAPAS CAÓTICOS ==========",
-    "usar_mapas_caoticos": false,
+    "usar_mapas_caoticos": true,
     "mapas_caoticos": {
         "_comentario": "Configuración de mapas caóticos. Cada problema puede tener su propia configuración.",
         "modo": "comparacion",
@@ -37,14 +37,7 @@
         },
         "mapas_activos": [
             "LOG",
-            "SINE",
-            "TENT",
-            "CIRCLE",
-            "SINGER",
-            "SINU",
-            "PIECE",
-            "CHEB",
-            "GAUS"
+            "SINE"
         ],
         "_mapas_disponibles": [
             "LOG",
@@ -69,17 +62,9 @@
             "usar_caoticos": true,
             "modo": "comparacion",
             "mapas": [
-                "LOG",
-                "SINE",
-                "TENT",
-                "CIRCLE",
-                "SINGER",
-                "SINU",
-                "PIECE",
-                "CHEB",
-                "GAUS"
+                "LOG"
             ],
-            "_comentario": "Solo usa binarización estándar"
+            "_comentario": "Genera: V3-ELIT (estándar) + V3-ELIT_LOG (caótico)"
         },
         "KP": {
             "usar_caoticos": false,
@@ -258,14 +243,14 @@
     },
     "experimentos": {
         "modo_terminacion": "fe",
-        "max_fe": 50000,
+        "max_fe": 400,
         "BEN": {
             "iteraciones": 500,
             "poblacion": 50,
             "num_experimentos": 1
         },
         "SCP": {
-            "iteraciones": 100,
+            "iteraciones": 20,
             "poblacion": 10,
             "num_experimentos": 1
         },
@@ -294,9 +279,7 @@
             "F10CEC2017"
         ],
         "SCP": [
-            "41",
-            "51",
-            "61"
+            "41"
         ],
         "USCP": [
             "u41",

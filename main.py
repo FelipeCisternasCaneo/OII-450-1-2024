@@ -5,7 +5,7 @@ import os
 from Solver.universal_solver import universal_solver
 from Solver.domain_managers.ben_domain import BenDomainManager
 from Solver.domain_managers.scp_domain import ScpDomainManager
-from Solver.termination_manager import TerminationCriteria
+from Solver.termination_manager import TerminationCriteria, resolve_effective_max_iter
 
 from BD.sqlite import BD
 
@@ -125,6 +125,7 @@ def ejecutar_problema_scp_uscp(id, instancia, ds, parametros, unicost):
         print(
             f"[chaotic] {ds_base} + {chaotic_map} → universal_solver via ScpDomainManager"
         )
+        chaotic_max_iter = resolve_effective_max_iter(termination, pop_size, mh_name)
         domain = ScpDomainManager(
             instancia,
             pop_size,
@@ -132,7 +133,7 @@ def ejecutar_problema_scp_uscp(id, instancia, ds, parametros, unicost):
             ds_base,
             unicost,
             chaotic_map_name=chaotic_map,
-            chaotic_max_iter=termination.max_iter,
+            chaotic_max_iter=chaotic_max_iter,
         )
         universal_solver(id, mh_name, domain, termination, extra_params=extra_params)
     else:

@@ -32,14 +32,18 @@ import time
 import random
 import numpy as np
 
-from Solver.termination_manager import TerminationCriteria
+from Solver.termination_manager import TerminationCriteria, resolve_effective_max_iter
 from Solver.metaheuristic_adapter import MetaheuristicAdapter, MH_NEEDS_PBEST
 from Solver.domain_managers.base_domain import BaseDomainManager
 from Solver.domain_managers.ben_domain import BenDomainManager
 from Solver.domain_managers.scp_domain import ScpDomainManager
 
 from Diversity.Codes.diversity import initialize_diversity, calculate_diversity
-from Diversity.imports import compute_gap_rdp, diversity_per_dimension, population_entropy
+from Diversity.imports import (
+    compute_gap_rdp,
+    diversity_per_dimension,
+    population_entropy,
+)
 from Metaheuristics.imports import IterarPO
 from Util.console_logging import print_initial, print_iteration, print_final
 from Util.util import convert_into_binary
@@ -49,7 +53,7 @@ from BD.sqlite import BD
 def universal_solver(id, mh_name, domain, termination, extra_params=None):
     """
     Solver universal para cualquier combinación de MH + dominio.
-    
+
     Args:
         id:           ID del experimento en la base de datos.
         mh_name:      Nombre de la metaheurística ('PSO', 'GWO', 'TJO', etc.).
@@ -61,16 +65,16 @@ def universal_solver(id, mh_name, domain, termination, extra_params=None):
     """
     # ==================== SETUP ====================
     bd = BD()
-    dirResult = './Resultados/Transitorio/'
+    dirResult = "./Resultados/Transitorio/"
     os.makedirs(dirResult, exist_ok=True)
 
     # Determinar tipo de dominio para resolución de variantes
     is_scp = isinstance(domain, ScpDomainManager)
-    domain_type = 'SCP' if is_scp else 'BEN'
+    domain_type = "SCP" if is_scp else "BEN"
 
     # Nombre base para archivos CSV y BD
     if is_scp:
-        instance_label = domain.instance_name.split('.')[0]
+        instance_label = domain.instance_name.split(".")[0]
         file_base = f"{mh_name}_{instance_label}"
     else:
         file_base = f"{mh_name}_{domain.function_name}"
@@ -83,11 +87,9 @@ def universal_solver(id, mh_name, domain, termination, extra_params=None):
 
     # Iteraciones efectivas para MH que requieren maxIter internamente
     # (para coeficientes como w en PSO, a en GWO, etc.)
-    effective_max_iter = termination.max_iter
-    if effective_max_iter is None:
-        # Estimar desde max_fe si solo se usa FE (SBOA hace 2 rondas internamente)
-        fe_mult = 2 if mh_name in ['SBOA', 'SSO', 'TDO'] else 1
-        effective_max_iter = max(1, (termination.max_fe or 10000) // (domain.pop_size * fe_mult))
+    effective_max_iter = resolve_effective_max_iter(
+        termination, domain.pop_size, mh_name
+    )
 
     # ==================== RNG SEEDING ====================
     # Semilla determinista derivada del ID del experimento.
@@ -126,14 +128,14 @@ def universal_solver(id, mh_name, domain, termination, extra_params=None):
             fitness[i] = domain.evaluate(population[i])
 
     # Inicializar pBest con evaluación inicial
-    if mh_name == 'PSO' and mh_state['pBestScore'] is not None:
+    if mh_name == "PSO" and mh_state["pBestScore"] is not None:
         for i in range(domain.pop_size):
-            if fitness[i] < mh_state['pBestScore'][i]:
-                mh_state['pBestScore'][i] = fitness[i]
-                mh_state['pBest'][i] = population[i].copy()
+            if fitness[i] < mh_state["pBestScore"][i]:
+                mh_state["pBestScore"][i] = fitness[i]
+                mh_state["pBest"][i] = population[i].copy()
 
-    if mh_name == 'TJO' and mh_state['pBest'] is not None:
-        mh_state['pBest'] = population.copy()
+    if mh_name == "TJO" and mh_state["pBest"] is not None:
+        mh_state["pBest"] = population.copy()
 
     # Encontrar mejor solución inicial
     best, bestFitness = domain.find_best(population, fitness)
@@ -157,20 +159,22 @@ def universal_solver(id, mh_name, domain, termination, extra_params=None):
         "Divj_mean,Divj_min,Divj_max\n"
     ]
 
-    divj_header = ",".join([f"Divj_{j+1}" for j in range(domain.dim)])
+    divj_header = ",".join([f"Divj_{j + 1}" for j in range(domain.dim)])
     lines_divj = [f"iter,{divj_header}\n"]
 
     try:
         # ==================== ITERACIÓN 0 (Métricas iniciales) ====================
         maxDiversity, XPL, XPT = initialize_diversity(population)
+        lb_list = domain.lb.tolist()
+        ub_list = domain.ub.tolist()
 
         meanFitness0 = float(np.mean(fitness))
         stdFitness0 = float(np.std(fitness))
         gap0, rdp0 = compute_gap_rdp(bestFitness, optimum)
-        divj_vec0, divj_mean0, divj_min0, divj_max0 = diversity_per_dimension(population)
-        ent_avg0, _ = population_entropy(
-            population, bins=20, lb=domain.lb.tolist(), ub=domain.ub.tolist()
+        divj_vec0, divj_mean0, divj_min0, divj_max0 = diversity_per_dimension(
+            population
         )
+        ent_avg0, _ = population_entropy(population, bins=20, lb=lb_list, ub=ub_list)
         time0 = initializationTime2 - initializationTime1
 
         lines_results.append(
@@ -182,34 +186,42 @@ def universal_solver(id, mh_name, domain, termination, extra_params=None):
         lines_divj.append("0," + ",".join([f"{v:.6f}" for v in divj_vec0]) + "\n")
 
         # Logging de consola
-        label = f"{domain}" if is_scp else f"{domain.function_name} | dim: {domain.dim} | {mh_name}"
+        label = (
+            f"{domain}"
+            if is_scp
+            else f"{domain.function_name} | dim: {domain.dim} | {mh_name}"
+        )
         print_initial(label, bestFitness)
 
         # ==================== SETUP ESPECIAL POR MH ====================
         # PO: Crear instancia de clase
         iterarPO = None
-        if mh_name == 'PO':
+        if mh_name == "PO":
             iterarPO = IterarPO(
-                domain.fo, domain.dim, domain.pop_size,
-                effective_max_iter, domain.lb[0], domain.ub[0]
+                domain.fo,
+                domain.dim,
+                domain.pop_size,
+                effective_max_iter,
+                domain.lb[0],
+                domain.ub[0],
             )
 
         # userData para MH que lo requieren
         userData = {}
         if extra_params:
             userData.update(extra_params)
-        if mh_name == 'GOAT':
-            userData.setdefault('jump_prob', 0.3)
-            userData.setdefault('filter_ratio', 0.5)
+        if mh_name == "GOAT":
+            userData.setdefault("jump_prob", 0.3)
+            userData.setdefault("filter_ratio", 0.5)
 
         # GA (SCP): parsear parámetros de crossover/mutación
-        if mh_name == 'GA' and is_scp and extra_params and 'param_raw' in extra_params:
-            param_raw = extra_params['param_raw']
+        if mh_name == "GA" and is_scp and extra_params and "param_raw" in extra_params:
+            param_raw = extra_params["param_raw"]
             partes = param_raw.split(";")
             cross = float(partes[0])
             muta = float(partes[1].split(":")[1])
-            userData['cross'] = cross
-            userData['muta'] = muta
+            userData["cross"] = cross
+            userData["muta"] = muta
 
         # ==================== BUCLE PRINCIPAL ====================
         while not termination.is_met():
@@ -219,14 +231,18 @@ def universal_solver(id, mh_name, domain, termination, extra_params=None):
 
             # --- 1. Iteración de la MH: mover la población ---
             population, fitness, mh_state = adapter.run_iteration(
-                population, fitness, mh_state, iter_num,
-                effective_max_iter, best,
+                population,
+                fitness,
+                mh_state,
+                iter_num,
+                effective_max_iter,
+                best,
                 fo=domain.fo,
-                userData=userData if userData else None
+                userData=userData if userData else None,
             )
 
             # --- 2. PO: manejo especial (clase propia) ---
-            if mh_name == 'PO':
+            if mh_name == "PO":
                 iterarPO.pob(population, iter_num)
                 population = iterarPO.optimizer(iter_num)
                 if not isinstance(population, np.ndarray):
@@ -258,10 +274,10 @@ def universal_solver(id, mh_name, domain, termination, extra_params=None):
             meanFitness = float(np.mean(fitness))
             stdFitness = float(np.std(fitness))
             gap, rdp = compute_gap_rdp(bestFitness, optimum)
-            divj_vec, divj_mean, divj_min, divj_max = diversity_per_dimension(population)
-            ent_avg, _ = population_entropy(
-                population, bins=20, lb=domain.lb.tolist(), ub=domain.ub.tolist()
+            divj_vec, divj_mean, divj_min, divj_max = diversity_per_dimension(
+                population
             )
+            ent_avg, _ = population_entropy(population, bins=20, lb=lb_list, ub=ub_list)
             timerFinal = time.time()
             dt = timerFinal - timerStart
 
@@ -278,13 +294,19 @@ def universal_solver(id, mh_name, domain, termination, extra_params=None):
             )
 
             # --- 10. Consola ---
-            is_fe_mode = (termination.max_iter is None and termination.max_fe is not None)
+            is_fe_mode = termination.max_iter is None and termination.max_fe is not None
             print_iteration(
-                iter_num, effective_max_iter, bestFitness, optimum,
-                dt, XPT, XPL, div_t,
-                progress_mode='fe' if is_fe_mode else 'iter',
+                iter_num,
+                effective_max_iter,
+                bestFitness,
+                optimum,
+                dt,
+                XPT,
+                XPL,
+                div_t,
+                progress_mode="fe" if is_fe_mode else "iter",
                 fe=domain.nfe,
-                max_fe=termination.max_fe
+                max_fe=termination.max_fe,
             )
 
             # --- 11. Sincronizar NFE con el criterio de parada ---
@@ -307,7 +329,7 @@ def universal_solver(id, mh_name, domain, termination, extra_params=None):
     binary = convert_into_binary(results_path)
     bd.insertarIteraciones(file_base, binary, id)
     bd.insertarResultados(bestFitness, finalTime - initialTime, best, id)
-    bd.actualizarExperimento(id, 'terminado')
+    bd.actualizarExperimento(id, "terminado")
 
     # Limpieza de archivos temporales
     os.remove(results_path)

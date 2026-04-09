@@ -362,8 +362,8 @@ class ScpDomainManager(BaseDomainManager):
         else:
             x_bin = self.binarize(x, best, prev_binary)
 
-        _, fitness = self.evaluate_and_repair(x_bin)
-        return x, fitness
+        x_repaired, fitness = self.evaluate_and_repair(x_bin)
+        return x_repaired, fitness
 
     # ──────────────────────────────────────────────────────────────────────────
     # process_new_population(): binarización + reparación de toda la población
@@ -421,9 +421,9 @@ class ScpDomainManager(BaseDomainManager):
         mejoras = mh_state.get("posibles_mejoras")
         if mejoras is not None:
             for i in range(mejoras.shape[0]):
-                _, mejora_fit = self.fo(mejoras[i])
+                mejora_bin, mejora_fit = self.fo(mejoras[i])
                 if mejora_fit < fitness[i]:
-                    population[i] = mejoras[i]
+                    population[i] = mejora_bin
                     fitness[i] = mejora_fit
 
         # Actualizar matrixBin con la población procesada
