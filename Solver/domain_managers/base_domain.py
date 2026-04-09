@@ -20,14 +20,14 @@ from Diversity.imports import diversidadHussain
 class BaseDomainManager(ABC):
     """
     Contrato base para todos los dominios de optimización.
-    
+
     Responsabilidades:
         - Definir las dimensiones y límites del problema.
         - Generar la población inicial.
         - Evaluar el fitness de un individuo o de toda la población.
         - Reparar soluciones infactibles (si aplica).
         - Obtener el valor óptimo conocido (si aplica).
-    
+
     Attributes:
         dim (int):         Número de dimensiones del problema.
         pop_size (int):    Tamaño de la población.
@@ -53,9 +53,37 @@ class BaseDomainManager(ABC):
             lb = np.array(lb) if isinstance(lb, list) else np.full(dim, lb)
         if not isinstance(ub, np.ndarray):
             ub = np.array(ub) if isinstance(ub, list) else np.full(dim, ub)
-        
+
         self.lb = lb
         self.ub = ub
+
+    # ==================== PROPIEDADES ABSTRACTAS ====================
+
+    @property
+    @abstractmethod
+    def label(self):
+        """
+        Identificador legible para nombres de archivo CSV y BD.
+
+        Ejemplos: ``'scp41'``, ``'F1_d30'``.
+
+        Returns:
+            str
+        """
+        pass
+
+    @property
+    @abstractmethod
+    def domain_type(self):
+        """
+        Tipo de dominio para resolución de variantes en el adaptador.
+
+        Valores esperados: ``'SCP'``, ``'BEN'``.
+
+        Returns:
+            str
+        """
+        pass
 
     # ==================== MÉTODOS ABSTRACTOS ====================
 
@@ -63,7 +91,7 @@ class BaseDomainManager(ABC):
     def initialize_population(self):
         """
         Genera la población inicial según la naturaleza del dominio.
-        
+
         Returns:
             np.ndarray: Población de forma (pop_size, dim).
         """
@@ -74,10 +102,10 @@ class BaseDomainManager(ABC):
         """
         Evalúa el fitness de un individuo.
         Debe incrementar self.nfe internamente.
-        
+
         Args:
             individual (np.ndarray): Solución candidata de forma (dim,).
-        
+
         Returns:
             float: Valor de fitness del individuo.
         """
@@ -88,10 +116,10 @@ class BaseDomainManager(ABC):
         """
         Función objetivo para MH que evalúan internamente (TJO, GOAT, etc.).
         Debe retornar la solución procesada y su fitness.
-        
+
         Args:
             x (np.ndarray): Solución candidata.
-        
+
         Returns:
             tuple: (solución_procesada, fitness_value).
         """
@@ -103,15 +131,28 @@ class BaseDomainManager(ABC):
         Procesa la población completa después de la iteración de la MH.
         Incluye: clip/binarización, reparación, evaluación de fitness,
         y manejo de mejoras alternativas (LOA).
-        
+
         Args:
             population: Población nueva del MH.
             fitness:    Vector de fitness (puede estar desactualizado).
             mh_name:    Nombre de la MH activa.
             mh_state:   Estado interno de la MH (contiene posibles_mejoras, etc.).
-        
+
         Returns:
             tuple: (population_procesada, fitness_actualizado).
+        """
+        pass
+
+    @abstractmethod
+    def get_console_label(self, mh_name):
+        """
+        Genera la etiqueta de consola para el logging de inicio.
+
+        Args:
+            mh_name (str): Nombre de la metaheurística activa.
+
+        Returns:
+            str: Etiqueta legible para la consola.
         """
         pass
 
@@ -120,10 +161,10 @@ class BaseDomainManager(ABC):
     def evaluate_population(self, population):
         """
         Evalúa el fitness de toda la población.
-        
+
         Args:
             population (np.ndarray): Población de forma (pop_size, dim).
-        
+
         Returns:
             np.ndarray: Vector de fitness de forma (pop_size,).
         """
@@ -135,10 +176,10 @@ class BaseDomainManager(ABC):
     def clip_bounds(self, population):
         """
         Aplica los límites del dominio a la población.
-        
+
         Args:
             population (np.ndarray): Población a limitar.
-        
+
         Returns:
             np.ndarray: Población con valores dentro de [lb, ub].
         """
@@ -147,11 +188,11 @@ class BaseDomainManager(ABC):
     def find_best(self, population, fitness):
         """
         Encuentra la mejor solución de la población.
-        
+
         Args:
             population (np.ndarray): Población actual.
             fitness (np.ndarray):    Fitness de cada individuo.
-        
+
         Returns:
             tuple: (best_solution, best_fitness)
         """
@@ -161,13 +202,13 @@ class BaseDomainManager(ABC):
     def update_best(self, population, fitness, current_best, current_best_fitness):
         """
         Actualiza la mejor solución global si se encontró una mejor.
-        
+
         Args:
             population:            Población actual.
             fitness:               Vector de fitness.
             current_best:          Mejor solución conocida hasta ahora.
             current_best_fitness:  Mejor fitness conocido hasta ahora.
-        
+
         Returns:
             tuple: (best_solution, best_fitness) actualizados.
         """
@@ -179,10 +220,10 @@ class BaseDomainManager(ABC):
     def compute_diversity(self, population):
         """
         Calcula la diversidad de Hussain de la población.
-        
+
         Args:
             population (np.ndarray): Población actual.
-        
+
         Returns:
             float: Índice de diversidad.
         """
@@ -192,10 +233,10 @@ class BaseDomainManager(ABC):
         """
         Repara una solución infactible. Por defecto solo aplica clip.
         Los dominios con restricciones complejas (SCP, KP) deben sobreescribirlo.
-        
+
         Args:
             individual (np.ndarray): Solución a reparar.
-        
+
         Returns:
             np.ndarray: Solución reparada.
         """
@@ -204,11 +245,55 @@ class BaseDomainManager(ABC):
     def get_optimum(self):
         """
         Retorna el valor óptimo conocido del problema (si existe).
-        
+
         Returns:
             float or None: Valor óptimo, o None si no se conoce.
         """
         return None
+
+    def set_iteration_state(self, best, population_bin):
+        """
+        Actualiza el estado mutable que el dominio necesita en cada iteración.
+
+        Por defecto no-op. Los dominios con estado por iteración (e.g. SCP con
+        ``matrixBin``) sobreescriben este método.
+
+        Args:
+            best:            Mejor solución global actual.
+            population_bin:  Copia de la población (binaria o continua).
+        """
+
+    def evaluate_and_repair(self, individual):
+        """
+        Evalúa un individuo, reparándolo si es necesario, y retorna
+        la solución procesada junto con su fitness.
+
+        Implementación por defecto: evalúa sin reparar.
+        Los dominios con restricciones complejas (SCP) sobreescriben esto.
+
+        Args:
+            individual (np.ndarray): Solución candidata.
+
+        Returns:
+            tuple: (individuo_procesado, fitness).
+        """
+        return individual, self.evaluate(individual)
+
+    def prepare_extra_params(self, mh_name, extra_params):
+        """
+        Preprocesa parámetros extra de la MH según las necesidades del dominio.
+
+        Implementación por defecto: pass-through (retorna sin cambios).
+        Los dominios que necesitan parseo especial (e.g. SCP + GA) lo sobreescriben.
+
+        Args:
+            mh_name (str):       Nombre de la metaheurística.
+            extra_params (dict): Parámetros extra proporcionados por el caller.
+
+        Returns:
+            dict: Parámetros procesados para ``userData``.
+        """
+        return extra_params or {}
 
     def reset_nfe(self):
         """Reinicia el contador de evaluaciones de función."""

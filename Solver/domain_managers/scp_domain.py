@@ -14,12 +14,11 @@ Características:
 import numpy as np
 
 from Solver.domain_managers.base_domain import BaseDomainManager
-from Problem.SCP.problem import SCP
-from Problem.USCP.problem import USCP
+from Problem.SCP.problem import SetCoveringProblem
 from Discretization import discretization as b
 
 
-# Mapas caóticos válidos (misma lista que solverSCP_Chaotic.py)
+# Mapas caóticos válidos
 _VALID_CHAOTIC_MAPS = {
     "LOG",
     "SINE",
@@ -72,7 +71,7 @@ class ScpDomainManager(BaseDomainManager):
         chaotic_x0=0.7,
     ):
         # Cargar la instancia del problema
-        self.instance = USCP(instance_name) if unicost else SCP(instance_name)
+        self.instance = SetCoveringProblem(instance_name, unicost=unicost)
 
         dim = self.instance.getColumns()
         lb = np.zeros(dim)
@@ -135,6 +134,36 @@ class ScpDomainManager(BaseDomainManager):
             self._chaotic_sequence_len = 0
             self._chaotic_iter_counter = 0
             self._chaotic_last_base_index = 0
+
+    # ──────────────────────────────────────────────────────────────────────────
+    # Propiedades de identidad (contrato BaseDomainManager)
+    # ──────────────────────────────────────────────────────────────────────────
+
+    @property
+    def label(self):
+        """Identificador para nombres de archivo CSV y BD."""
+        return self.instance_name.split(".")[0]
+
+    @property
+    def domain_type(self):
+        """Tipo de dominio para resolución de variantes."""
+        return "SCP"
+
+    def get_console_label(self, mh_name):
+        """Etiqueta de consola: usa __repr__ del dominio."""
+        return f"{self}"
+
+    def prepare_extra_params(self, mh_name, extra_params):
+        """Parsea param_raw para GA en SCP (crossover;mutacion:valor)."""
+        userData = extra_params.copy() if extra_params else {}
+        if mh_name == "GA" and extra_params and "param_raw" in extra_params:
+            param_raw = extra_params["param_raw"]
+            partes = param_raw.split(";")
+            cross = float(partes[0])
+            muta = float(partes[1].split(":")[1])
+            userData["cross"] = cross
+            userData["muta"] = muta
+        return userData
 
     # ──────────────────────────────────────────────────────────────────────────
     # Métodos de población
@@ -279,7 +308,7 @@ class ScpDomainManager(BaseDomainManager):
         Útil para acceder a métodos específicos de la instancia.
 
         Returns:
-            SCP or USCP: Instancia del problema.
+            SetCoveringProblem: Instancia del problema (SCP o USCP según unicost).
         """
         return self.instance
 

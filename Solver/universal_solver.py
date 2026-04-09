@@ -1,21 +1,22 @@
 """
 Universal Solver
 ================
-Reemplazo unificado de solverBEN.py, solverSCP.py y solverSCP_Chaotic.py.
-
-Orquesta la ejecución de CUALQUIER metaheurística sobre CUALQUIER dominio
+Solver unificado que orquesta CUALQUIER metaheurística sobre CUALQUIER dominio
 de problema usando Inyección de Dependencias:
 
-    domain      → BenDomainManager / ScpDomainManager / (futuro: KpDomainManager)
+    domain      → Cualquier subclase de BaseDomainManager
     adapter     → MetaheuristicAdapter (envuelve la MH elegida)
     termination → TerminationCriteria (iter, FE, o ambos)
 
+El solver interactúa EXCLUSIVAMENTE con la interfaz BaseDomainManager,
+sin conocer subclases concretas (ScpDomainManager, BenDomainManager, etc.).
+
 Flujo del bucle principal:
-    1. adapter.run_iteration()      → Mueve la población
+    1. adapter.run_iteration()         → Mueve la población
     2. domain.process_new_population() → Evalúa según el dominio
-    3. adapter.update_pbest()       → Actualiza memoria personal (PSO/TJO)
-    4. domain.update_best()         → Actualiza mejor global
-    5. Métricas + logging           → Diversidad, Gap, Entropía, CSV
+    3. adapter.update_pbest()          → Actualiza memoria personal (PSO/TJO)
+    4. domain.update_best()            → Actualiza mejor global
+    5. Métricas + logging              → Diversidad, Gap, Entropía, CSV
 
 Uso:
     from Solver.universal_solver import universal_solver
@@ -35,8 +36,6 @@ import numpy as np
 from Solver.termination_manager import TerminationCriteria, resolve_effective_max_iter
 from Solver.metaheuristic_adapter import MetaheuristicAdapter, MH_NEEDS_PBEST
 from Solver.domain_managers.base_domain import BaseDomainManager
-from Solver.domain_managers.ben_domain import BenDomainManager
-from Solver.domain_managers.scp_domain import ScpDomainManager
 
 from Diversity.Codes.diversity import initialize_diversity, calculate_diversity
 from Diversity.imports import (
@@ -68,22 +67,14 @@ def universal_solver(id, mh_name, domain, termination, extra_params=None):
     dirResult = "./Resultados/Transitorio/"
     os.makedirs(dirResult, exist_ok=True)
 
-    # Determinar tipo de dominio para resolución de variantes
-    is_scp = isinstance(domain, ScpDomainManager)
-    domain_type = "SCP" if is_scp else "BEN"
-
-    # Nombre base para archivos CSV y BD
-    if is_scp:
-        instance_label = domain.instance_name.split(".")[0]
-        file_base = f"{mh_name}_{instance_label}"
-    else:
-        file_base = f"{mh_name}_{domain.function_name}"
+    # Nombre base para archivos CSV y BD (polimórfico)
+    file_base = f"{mh_name}_{domain.label}"
 
     # Crear adaptador
     adapter = MetaheuristicAdapter(
         mh_name, domain.pop_size, domain.dim, domain.lb, domain.ub
     )
-    adapter.resolve_mh_name(domain_type)
+    adapter.resolve_mh_name(domain.domain_type)
 
     # Iteraciones efectivas para MH que requieren maxIter internamente
     # (para coeficientes como w en PSO, a en GWO, etc.)
@@ -113,19 +104,13 @@ def universal_solver(id, mh_name, domain, termination, extra_params=None):
     # Inicializar estado de la MH (vel, pBest, etc.)
     mh_state = adapter.initialize_state(population)
 
-    # Inicializar estado de iteración para SCP
-    if is_scp:
-        domain.set_iteration_state(np.zeros(domain.dim), population.copy())
+    # Inicializar estado de iteración del dominio
+    domain.set_iteration_state(np.zeros(domain.dim), population.copy())
 
-    # Evaluar población inicial
+    # Evaluar población inicial (polimórfico: SCP repara, BEN evalúa directo)
     fitness = np.zeros(domain.pop_size)
     for i in range(domain.pop_size):
-        if is_scp:
-            # SCP: reparar infactibles + evaluar
-            population[i], fitness[i] = domain.evaluate_and_repair(population[i])
-        else:
-            # BEN: evaluar directamente (ya está dentro de bounds)
-            fitness[i] = domain.evaluate(population[i])
+        population[i], fitness[i] = domain.evaluate_and_repair(population[i])
 
     # Inicializar pBest con evaluación inicial
     if mh_name == "PSO" and mh_state["pBestScore"] is not None:
@@ -140,9 +125,8 @@ def universal_solver(id, mh_name, domain, termination, extra_params=None):
     # Encontrar mejor solución inicial
     best, bestFitness = domain.find_best(population, fitness)
 
-    # Actualizar estado SCP con el mejor encontrado
-    if is_scp:
-        domain.set_iteration_state(best, population.copy())
+    # Actualizar estado del dominio con el mejor encontrado
+    domain.set_iteration_state(best, population.copy())
 
     initializationTime2 = time.time()
 
@@ -186,11 +170,7 @@ def universal_solver(id, mh_name, domain, termination, extra_params=None):
         lines_divj.append("0," + ",".join([f"{v:.6f}" for v in divj_vec0]) + "\n")
 
         # Logging de consola
-        label = (
-            f"{domain}"
-            if is_scp
-            else f"{domain.function_name} | dim: {domain.dim} | {mh_name}"
-        )
+        label = domain.get_console_label(mh_name)
         print_initial(label, bestFitness)
 
         # ==================== SETUP ESPECIAL POR MH ====================
@@ -206,22 +186,11 @@ def universal_solver(id, mh_name, domain, termination, extra_params=None):
                 domain.ub[0],
             )
 
-        # userData para MH que lo requieren
-        userData = {}
-        if extra_params:
-            userData.update(extra_params)
+        # userData para MH que lo requieren (polimórfico: dominio parsea si necesita)
+        userData = domain.prepare_extra_params(mh_name, extra_params)
         if mh_name == "GOAT":
             userData.setdefault("jump_prob", 0.3)
             userData.setdefault("filter_ratio", 0.5)
-
-        # GA (SCP): parsear parámetros de crossover/mutación
-        if mh_name == "GA" and is_scp and extra_params and "param_raw" in extra_params:
-            param_raw = extra_params["param_raw"]
-            partes = param_raw.split(";")
-            cross = float(partes[0])
-            muta = float(partes[1].split(":")[1])
-            userData["cross"] = cross
-            userData["muta"] = muta
 
         # ==================== BUCLE PRINCIPAL ====================
         while not termination.is_met():
@@ -261,9 +230,8 @@ def universal_solver(id, mh_name, domain, termination, extra_params=None):
                 population, fitness, best, bestFitness
             )
 
-            # --- 6. Actualizar estado SCP para la siguiente iteración ---
-            if is_scp:
-                domain.set_iteration_state(best, population.copy())
+            # --- 6. Actualizar estado del dominio para la siguiente iteración ---
+            domain.set_iteration_state(best, population.copy())
 
             # --- 7. Diversidad ---
             div_t, maxDiversity, XPL, XPT = calculate_diversity(
