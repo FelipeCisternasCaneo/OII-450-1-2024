@@ -242,15 +242,15 @@
         }
     },
     "experimentos": {
-        "modo_terminacion": "fe",
-        "max_fe": 400,
+        "modo_terminacion": "iter",
+        "max_fe": 50000,
         "BEN": {
             "iteraciones": 500,
             "poblacion": 50,
             "num_experimentos": 1
         },
         "SCP": {
-            "iteraciones": 20,
+            "iteraciones": 100,
             "poblacion": 10,
             "num_experimentos": 1
         },

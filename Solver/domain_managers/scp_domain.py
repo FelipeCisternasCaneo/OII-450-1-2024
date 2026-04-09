@@ -478,3 +478,176 @@ class ScpDomainManager(BaseDomainManager):
             f"tipo={tipo}, inst={self.instance_name}, "
             f"dim={self.dim}, ds={self.ds}, nfe={self.nfe}{chaotic_info})"
         )
+
+
+# ==================== EJECUCIÓN DE EXPERIMENTO ====================
+
+
+# Mapas caóticos válidos para detección desde DS string
+_DS_CHAOTIC_SUFFIXES = {
+    "LOG",
+    "SINE",
+    "TENT",
+    "CIRCLE",
+    "SINGER",
+    "SINU",
+    "PIECE",
+    "CHEB",
+    "GAUS",
+}
+
+
+def _detectar_mapa_caotico(ds_string):
+    """Detecta si el DS tiene sufijo de mapa caótico.
+
+    Args:
+        ds_string: String del esquema de discretización (e.g. "V3-ELIT_LOG").
+
+    Returns:
+        tuple: (ds_base, chaotic_map) donde chaotic_map es None si no hay mapa.
+    """
+    partes = ds_string.split("_")
+    if len(partes) == 2:
+        ds_base, sufijo = partes
+        if sufijo.upper() in _DS_CHAOTIC_SUFFIXES:
+            return ds_base, sufijo.upper()
+    return ds_string, None
+
+
+def _execute_scp_experiment(id, data, datosInstancia, parametros, unicost):
+    """Ejecuta un problema SCP/USCP usando el Universal Solver.
+
+    Esta función encapsula la lógica que antes vivía en
+    main.py:ejecutar_problema_scp_uscp().
+
+    Args:
+        id:               ID del experimento en la BD.
+        data:             Fila completa del experimento (data[0]).
+        datosInstancia:   Datos de la instancia desde BD.
+        parametros:       Dict de parámetros parseados.
+        unicost:          True para USCP, False para SCP.
+    """
+    from Solver.universal_solver import universal_solver
+    from Solver.termination_manager import (
+        TerminationCriteria,
+        resolve_effective_max_iter,
+    )
+
+    # Construir nombre de instancia
+    if unicost:
+        instancia = f"uscp{datosInstancia[0][2][1:]}"
+    else:
+        instancia = f"scp{datosInstancia[0][2]}"
+
+    ds = data[0][3]
+    repair = parametros["repair"]
+    parMH = parametros["cros"]
+    mh_name = parametros["mh"]
+    pop_size = int(parametros["pop"])
+
+    # Detectar si el DS tiene sufijo caótico
+    ds_base, chaotic_map = _detectar_mapa_caotico(ds)
+
+    # Construir criterios de término
+    max_iter_raw = parametros.get("iter")
+    max_iter = int(max_iter_raw) if max_iter_raw not in (None, "") else None
+    max_fe_raw = parametros.get("max_fe", parametros.get("fe"))
+    max_fe = int(max_fe_raw) if max_fe_raw not in (None, "") else None
+    termination = TerminationCriteria(max_iter=max_iter, max_fe=max_fe)
+
+    # Parámetros extra para GA
+    extra_params = None
+    if mh_name == "GA" and parMH:
+        extra_params = {"param_raw": parMH}
+
+    if chaotic_map:
+        print(
+            f"[chaotic] {ds_base} + {chaotic_map} → universal_solver via ScpDomainManager"
+        )
+        chaotic_max_iter = resolve_effective_max_iter(termination, pop_size, mh_name)
+        domain = ScpDomainManager(
+            instancia,
+            pop_size,
+            repair,
+            ds_base,
+            unicost,
+            chaotic_map_name=chaotic_map,
+            chaotic_max_iter=chaotic_max_iter,
+        )
+        universal_solver(id, mh_name, domain, termination, extra_params=extra_params)
+    else:
+        domain = ScpDomainManager(instancia, pop_size, repair, ds_base, unicost)
+        universal_solver(id, mh_name, domain, termination, extra_params=extra_params)
+
+
+def _make_scp_executor(unicost):
+    """Crea un executor con unicost fijado para el registry.
+
+    Args:
+        unicost: True para USCP, False para SCP.
+
+    Returns:
+        Callable compatible con DomainEntry.execute_experiment.
+    """
+
+    def executor(id, data, datosInstancia, parametros):
+        _execute_scp_experiment(id, data, datosInstancia, parametros, unicost=unicost)
+
+    return executor
+
+
+# ==================== REGISTRO EN EL DOMAIN REGISTRY ====================
+
+
+def _insert_scp_instances(bd):
+    """Wrapper para insertar instancias SCP en la BD."""
+    bd.insertarInstanciasSCP()
+
+
+def _insert_uscp_instances(bd):
+    """Wrapper para insertar instancias USCP en la BD."""
+    bd.insertarInstanciasUSCP()
+
+
+def _register():
+    """Registra los dominios SCP y USCP en el registry."""
+    from Solver.domain_managers.registry import register, DomainEntry
+
+    register(
+        DomainEntry(
+            domain_type="SCP",
+            config_key="scp",
+            execute_experiment=_make_scp_executor(unicost=False),
+            insert_instances=_insert_scp_instances,
+            analysis_meta={
+                "sub": "SCP",
+                "inst_key": "SCP",
+                "uses_bin": True,
+                "title_prefix": "scp",
+                "obtenerArchivos_kwargs": {},
+            },
+            instance_dir="./Problem/SCP/Instances/",
+            default_extra_params=",repair:complex,cros:0.4;mut:0.50",
+        )
+    )
+
+    register(
+        DomainEntry(
+            domain_type="USCP",
+            config_key="uscp",
+            execute_experiment=_make_scp_executor(unicost=True),
+            insert_instances=_insert_uscp_instances,
+            analysis_meta={
+                "sub": "USCP",
+                "inst_key": "USCP",
+                "uses_bin": True,
+                "title_prefix": "uscp",
+                "obtenerArchivos_kwargs": {},
+            },
+            instance_dir="./Problem/USCP/Instances/",
+            default_extra_params=",repair:complex,cros:0.4;mut:0.50",
+        )
+    )
+
+
+_register()

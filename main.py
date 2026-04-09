@@ -2,10 +2,11 @@ import time
 import shutil
 import os
 
-from Solver.universal_solver import universal_solver
-from Solver.domain_managers.ben_domain import BenDomainManager
-from Solver.domain_managers.scp_domain import ScpDomainManager
-from Solver.termination_manager import TerminationCriteria, resolve_effective_max_iter
+# Auto-registra todos los dominios al importar el paquete
+from Solver.domain_managers import ensure_registered
+
+ensure_registered()
+from Solver.domain_managers.registry import get as get_domain
 
 from BD.sqlite import BD
 
@@ -13,27 +14,7 @@ from Util.log import log_experimento, log_error, log_final, log_fecha_hora
 from Util.util import parse_parametros, verificar_y_crear_carpetas
 
 
-# ========== DETECCIÓN DE MAPAS CAÓTICOS ==========
-
-
-def detectar_mapa_caotico(ds_string):
-    mapas_validos = [
-        "LOG",
-        "SINE",
-        "TENT",
-        "CIRCLE",
-        "SINGER",
-        "SINU",
-        "PIECE",
-        "CHEB",
-        "GAUS",
-    ]
-    partes = ds_string.split("_")
-    if len(partes) == 2:
-        ds_base, sufijo = partes
-        if sufijo.upper() in mapas_validos:
-            return ds_base, sufijo.upper()
-    return ds_string, None
+# ========== VALIDACIÓN DE PARÁMETROS ==========
 
 
 def obtener_max_fe(parametros):
@@ -66,6 +47,8 @@ def obtener_max_iter(parametros):
 
 def construir_termination(parametros):
     """Construye TerminationCriteria con iteraciones, FE o ambos."""
+    from Solver.termination_manager import TerminationCriteria
+
     max_iter = obtener_max_iter(parametros)
     max_fe = obtener_max_fe(parametros)
 
@@ -77,73 +60,16 @@ def construir_termination(parametros):
     return TerminationCriteria(max_iter=max_iter, max_fe=max_fe)
 
 
-# ========== FUNCIONES DE EJECUCIÓN (USANDO UNIVERSAL SOLVER) ==========
-
-
-def ejecutar_ben(id, experimento, parametrosInstancia, parametros):
-    """Ejecuta un problema Benchmark usando el Universal Solver."""
-    dim = int(experimento.split(" ")[1])
-    lb = float(parametrosInstancia.split(",")[0].split(":")[1])
-    ub = float(parametrosInstancia.split(",")[1].split(":")[1])
-
-    mh_name = parametros["mh"]
-    pop_size = int(parametros["pop"])
-    function_name = parametros["instancia"]
-
-    domain = BenDomainManager(function_name, dim, pop_size, lb, ub)
-    termination = construir_termination(parametros)
-
-    universal_solver(id, mh_name, domain, termination)
-
-
-def ejecutar_problema_scp_uscp(id, instancia, ds, parametros, unicost):
-    """Ejecuta un problema SCP/USCP usando el Universal Solver (ruta migrada).
-
-    Para ejecuciones caóticas se instancia ScpDomainManager con chaotic_map_name y
-    chaotic_max_iter derivado de TerminationCriteria.
-    """
-    repair = parametros["repair"]
-    parMH = parametros["cros"]
-    mh_name = parametros["mh"]
-    pop_size = int(parametros["pop"])
-
-    # Detectar si el DS tiene sufijo caótico
-    ds_base, chaotic_map = detectar_mapa_caotico(ds)
-
-    # Construir criterios de término ANTES de instanciar el dominio:
-    # ScpDomainManager necesita chaotic_max_iter para pregenerar la secuencia caótica
-    # con la longitud correcta (max_iter × pop_size × dim).
-    termination = construir_termination(parametros)
-
-    # Parámetros extra para GA
-    extra_params = None
-    if mh_name == "GA" and parMH:
-        extra_params = {"param_raw": parMH}
-
-    if chaotic_map:
-        # Ruta migrada: ScpDomainManager + universal_solver
-        print(
-            f"[chaotic] {ds_base} + {chaotic_map} → universal_solver via ScpDomainManager"
-        )
-        chaotic_max_iter = resolve_effective_max_iter(termination, pop_size, mh_name)
-        domain = ScpDomainManager(
-            instancia,
-            pop_size,
-            repair,
-            ds_base,
-            unicost,
-            chaotic_map_name=chaotic_map,
-            chaotic_max_iter=chaotic_max_iter,
-        )
-        universal_solver(id, mh_name, domain, termination, extra_params=extra_params)
-    else:
-        # Universal Solver para SCP/USCP estándar (sin mapa caótico)
-        domain = ScpDomainManager(instancia, pop_size, repair, ds_base, unicost)
-        universal_solver(id, mh_name, domain, termination, extra_params=extra_params)
+# ========== PROCESAMIENTO DE EXPERIMENTOS (VÍA DOMAIN REGISTRY) ==========
 
 
 def procesar_experimento(data, bd):
-    """Procesa cada experimento según su tipo y maneja errores."""
+    """Procesa cada experimento consultando el Domain Registry.
+
+    El tipo de problema se obtiene de la BD y se despacha al executor
+    registrado para ese dominio. Si el dominio no está registrado,
+    se marca el experimento como error con un mensaje descriptivo.
+    """
     id = int(data[0][0])
     id_instancia = int(data[0][10])
     datosInstancia = bd.obtenerInstancia(id_instancia)
@@ -170,22 +96,13 @@ def procesar_experimento(data, bd):
     bd.actualizarExperimento(id, "ejecutando")
 
     try:
-        if problema == "BEN":
-            ejecutar_ben(id, data[0][1], datosInstancia[0][4], parametros)
+        # Despacho vía Domain Registry — sin if/elif hardcoded
+        entry = get_domain(problema)
+        entry.execute_experiment(id, data, datosInstancia, parametros)
 
-        elif problema == "SCP":
-            ejecutar_problema_scp_uscp(
-                id, f"scp{datosInstancia[0][2]}", data[0][3], parametros, unicost=False
-            )
-
-        elif problema == "USCP":
-            ejecutar_problema_scp_uscp(
-                id,
-                f"uscp{datosInstancia[0][2][1:]}",
-                data[0][3],
-                parametros,
-                unicost=True,
-            )
+    except KeyError as ke:
+        log_error(id, f"Dominio no registrado: {ke}")
+        bd.actualizarExperimento(id, "error")
 
     except ValueError as ve:
         log_error(id, f"Error de valor: {str(ve)}")
@@ -217,7 +134,7 @@ def main():
     print("\n" + "=" * 70)
     print(" SISTEMA DE SOLVERS (Universal Solver)")
     print("=" * 70)
-    print("    Universal Solver (BEN + SCP/USCP + Caótico via ScpDomainManager)")
+    print("    Universal Solver (despacho dinámico via Domain Registry)")
     print("=" * 70 + "\n")
 
     with bd:

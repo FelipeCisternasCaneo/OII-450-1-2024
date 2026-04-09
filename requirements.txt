@@ -10,7 +10,6 @@ kiwisolver==1.4.8
 matplotlib==3.10.1
 numba>=0.60.0
 numpy==2.2.3
-opfunu==1.0.4
 packaging==24.2
 pandas==2.2.3
 pillow==11.1.0

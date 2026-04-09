@@ -165,3 +165,79 @@ class BenDomainManager(BaseDomainManager):
             f"func={self.function_name}, dim={self.dim}, "
             f"pop={self.pop_size}, nfe={self.nfe})"
         )
+
+
+# ==================== EJECUCIÓN DE EXPERIMENTO ====================
+
+
+def _execute_ben_experiment(id, data, datosInstancia, parametros):
+    """Ejecuta un problema Benchmark usando el Universal Solver.
+
+    Esta función encapsula la lógica que antes vivía en main.py:ejecutar_ben().
+    Se registra en el Domain Registry como el execute_experiment de BEN.
+
+    Args:
+        id:               ID del experimento en la BD.
+        data:             Fila completa del experimento (data[0]).
+        datosInstancia:   Datos de la instancia desde BD.
+        parametros:       Dict de parámetros parseados.
+    """
+    from Solver.universal_solver import universal_solver
+    from Solver.termination_manager import TerminationCriteria
+
+    experimento = data[0][1]
+    parametrosInstancia = datosInstancia[0][4]
+
+    dim = int(experimento.split(" ")[1])
+    lb = float(parametrosInstancia.split(",")[0].split(":")[1])
+    ub = float(parametrosInstancia.split(",")[1].split(":")[1])
+
+    mh_name = parametros["mh"]
+    pop_size = int(parametros["pop"])
+    function_name = parametros["instancia"]
+
+    domain = BenDomainManager(function_name, dim, pop_size, lb, ub)
+
+    # Construir criterios de término
+    max_iter_raw = parametros.get("iter")
+    max_iter = int(max_iter_raw) if max_iter_raw not in (None, "") else None
+    max_fe_raw = parametros.get("max_fe", parametros.get("fe"))
+    max_fe = int(max_fe_raw) if max_fe_raw not in (None, "") else None
+    termination = TerminationCriteria(max_iter=max_iter, max_fe=max_fe)
+
+    universal_solver(id, mh_name, domain, termination)
+
+
+# ==================== REGISTRO EN EL DOMAIN REGISTRY ====================
+
+
+def _insert_ben_instances(bd):
+    """Wrapper para insertar instancias BEN + CEC2017 en la BD."""
+    bd.insertarInstanciasBEN()
+    bd.insertarInstanciasCEC2017()
+
+
+def _register():
+    """Registra el dominio BEN en el registry."""
+    from Solver.domain_managers.registry import register, DomainEntry
+
+    register(
+        DomainEntry(
+            domain_type="BEN",
+            config_key="ben",
+            execute_experiment=_execute_ben_experiment,
+            insert_instances=_insert_ben_instances,
+            analysis_meta={
+                "sub": "BEN",
+                "inst_key": "BEN",
+                "uses_bin": False,
+                "title_prefix": "",
+                "obtenerArchivos_kwargs": {"incluir_binarizacion": False},
+            },
+            instance_dir=None,
+            default_extra_params="",
+        )
+    )
+
+
+_register()
