@@ -7,13 +7,6 @@ from Solver.domain_managers.ben_domain import BenDomainManager
 from Solver.domain_managers.scp_domain import ScpDomainManager
 from Solver.termination_manager import TerminationCriteria
 
-#  Solver caótico (no migrado al universal todavía)
-try:
-    from Solver.solverSCP_Chaotic import solverSCP_Chaotic
-    CHAOTIC_AVAILABLE = True
-except Exception:
-    CHAOTIC_AVAILABLE = False
-
 from BD.sqlite import BD
 
 from Util.log import log_experimento, log_error, log_final, log_fecha_hora
@@ -22,9 +15,20 @@ from Util.util import parse_parametros, verificar_y_crear_carpetas
 
 # ========== DETECCIÓN DE MAPAS CAÓTICOS ==========
 
+
 def detectar_mapa_caotico(ds_string):
-    mapas_validos = ['LOG', 'SINE', 'TENT', 'CIRCLE', 'SINGER', 'SINU', 'PIECE', 'CHEB', 'GAUS']
-    partes = ds_string.split('_')
+    mapas_validos = [
+        "LOG",
+        "SINE",
+        "TENT",
+        "CIRCLE",
+        "SINGER",
+        "SINU",
+        "PIECE",
+        "CHEB",
+        "GAUS",
+    ]
+    partes = ds_string.split("_")
     if len(partes) == 2:
         ds_base, sufijo = partes
         if sufijo.upper() in mapas_validos:
@@ -40,7 +44,9 @@ def obtener_max_fe(parametros):
 
     max_fe = int(raw)
     if max_fe <= 0:
-        raise ValueError("El número de evaluaciones de función (max_fe) debe ser mayor a 0.")
+        raise ValueError(
+            "El número de evaluaciones de función (max_fe) debe ser mayor a 0."
+        )
     return max_fe
 
 
@@ -73,6 +79,7 @@ def construir_termination(parametros):
 
 # ========== FUNCIONES DE EJECUCIÓN (USANDO UNIVERSAL SOLVER) ==========
 
+
 def ejecutar_ben(id, experimento, parametrosInstancia, parametros):
     """Ejecuta un problema Benchmark usando el Universal Solver."""
     dim = int(experimento.split(" ")[1])
@@ -90,7 +97,11 @@ def ejecutar_ben(id, experimento, parametrosInstancia, parametros):
 
 
 def ejecutar_problema_scp_uscp(id, instancia, ds, parametros, unicost):
-    """Ejecuta un problema SCP/USCP usando el Universal Solver o el solver caótico."""
+    """Ejecuta un problema SCP/USCP usando el Universal Solver (ruta migrada).
+
+    Para ejecuciones caóticas se instancia ScpDomainManager con chaotic_map_name y
+    chaotic_max_iter derivado de TerminationCriteria.
+    """
     repair = parametros["repair"]
     parMH = parametros["cros"]
     mh_name = parametros["mh"]
@@ -99,37 +110,34 @@ def ejecutar_problema_scp_uscp(id, instancia, ds, parametros, unicost):
     # Detectar si el DS tiene sufijo caótico
     ds_base, chaotic_map = detectar_mapa_caotico(ds)
 
-    if chaotic_map and CHAOTIC_AVAILABLE:
-        # Solver caótico (todavía usa el legacy — migración pendiente)
-        print(f"[] Usando solver caótico: {ds_base} + {chaotic_map}")
-        solverSCP_Chaotic(
-            id=id,
-            mh=mh_name,
-            maxIter=obtener_max_iter(parametros) or 100,
-            pop=pop_size,
-            instances=instancia,
-            DS=ds_base,
-            repairType=repair,
-            param=parMH,
-            unicost=unicost,
-            chaotic_map_name=chaotic_map
+    # Construir criterios de término ANTES de instanciar el dominio:
+    # ScpDomainManager necesita chaotic_max_iter para pregenerar la secuencia caótica
+    # con la longitud correcta (max_iter × pop_size × dim).
+    termination = construir_termination(parametros)
+
+    # Parámetros extra para GA
+    extra_params = None
+    if mh_name == "GA" and parMH:
+        extra_params = {"param_raw": parMH}
+
+    if chaotic_map:
+        # Ruta migrada: ScpDomainManager + universal_solver
+        print(
+            f"[chaotic] {ds_base} + {chaotic_map} → universal_solver via ScpDomainManager"
         )
+        domain = ScpDomainManager(
+            instancia,
+            pop_size,
+            repair,
+            ds_base,
+            unicost,
+            chaotic_map_name=chaotic_map,
+            chaotic_max_iter=termination.max_iter,
+        )
+        universal_solver(id, mh_name, domain, termination, extra_params=extra_params)
     else:
-        if chaotic_map and not CHAOTIC_AVAILABLE:
-            print(
-                f"[WARN] Solver caótico no disponible. "
-                f"Ignorando mapa '{chaotic_map}' y usando estándar."
-            )
-
-        # Universal Solver para SCP/USCP estándar
+        # Universal Solver para SCP/USCP estándar (sin mapa caótico)
         domain = ScpDomainManager(instancia, pop_size, repair, ds_base, unicost)
-        termination = construir_termination(parametros)
-
-        # Parámetros extra para GA
-        extra_params = None
-        if mh_name == 'GA' and parMH:
-            extra_params = {'param_raw': parMH}
-
         universal_solver(id, mh_name, domain, termination, extra_params=extra_params)
 
 
@@ -141,10 +149,12 @@ def procesar_experimento(data, bd):
 
     parametros = parse_parametros(data[0][4])
 
-    parametros.update({
-        "mh": data[0][2],
-        "instancia": datosInstancia[0][2],
-    })
+    parametros.update(
+        {
+            "mh": data[0][2],
+            "instancia": datosInstancia[0][2],
+        }
+    )
 
     problema = datosInstancia[0][1]
 
@@ -164,16 +174,16 @@ def procesar_experimento(data, bd):
 
         elif problema == "SCP":
             ejecutar_problema_scp_uscp(
-                id, f"scp{datosInstancia[0][2]}",
-                data[0][3],
-                parametros, unicost=False
+                id, f"scp{datosInstancia[0][2]}", data[0][3], parametros, unicost=False
             )
 
         elif problema == "USCP":
             ejecutar_problema_scp_uscp(
-                id, f"uscp{datosInstancia[0][2][1:]}",
+                id,
+                f"uscp{datosInstancia[0][2][1:]}",
                 data[0][3],
-                parametros, unicost=True
+                parametros,
+                unicost=True,
             )
 
     except ValueError as ve:
@@ -185,7 +195,9 @@ def procesar_experimento(data, bd):
         bd.actualizarExperimento(id, "error")
 
     except (KeyboardInterrupt, SystemExit):
-        print(f"\n[!] Ejecución interrumpida manualmente (Ctrl+C). Devolviendo experimento {id} a estado 'pendiente'...")
+        print(
+            f"\n[!] Ejecución interrumpida manualmente (Ctrl+C). Devolviendo experimento {id} a estado 'pendiente'..."
+        )
         bd.actualizarExperimento(id, "pendiente")
         raise
 
@@ -201,15 +213,11 @@ def main():
 
     log_fecha_hora("Inicio de la ejecución")
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print(" SISTEMA DE SOLVERS (Universal Solver)")
-    print("="*70)
-    print("    Universal Solver (BEN + SCP/USCP)")
-    if CHAOTIC_AVAILABLE:
-        print("    solverSCP_Chaotic (Mapas Caóticos)")
-    else:
-        print("   ⬚  solverSCP_Chaotic (No disponible)")
-    print("="*70 + "\n")
+    print("=" * 70)
+    print("    Universal Solver (BEN + SCP/USCP + Caótico via ScpDomainManager)")
+    print("=" * 70 + "\n")
 
     with bd:
         data = bd.obtenerExperimento()
@@ -226,6 +234,7 @@ def main():
     log_final(total_time)
 
     shutil.rmtree(os.path.join("Resultados", "transitorio"), ignore_errors=True)
+
 
 if __name__ == "__main__":
     main()
