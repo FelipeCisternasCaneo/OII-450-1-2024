@@ -19,4 +19,5 @@ data/database/resultados.db
 
 # Generados por el usuario
 Graficos_Benchmark/
-Graficos_CEC2017/
+Graficos_Benchmark/CEC2017
+Graficos_Benchmark/Classical
