@@ -16,3 +16,6 @@ outputs/
 data/database/shards/
 data/database/resultados.db
 *.log
+
+# Generados por el usuario
+Graficos_Benchmark/
