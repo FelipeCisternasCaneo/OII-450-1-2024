@@ -23,10 +23,10 @@ import pytest
 # que a su vez importan dependencias pesadas.
 
 _REGISTRY_PATH = os.path.join(
-    os.path.dirname(__file__), "..", "Solver", "domain_managers", "registry.py"
+    os.path.dirname(__file__), "..", "src", "solver", "domain_managers", "registry.py"
 )
 _spec = importlib.util.spec_from_file_location(
-    "Solver.domain_managers.registry", os.path.abspath(_REGISTRY_PATH)
+    "solver.domain_managers.registry", os.path.abspath(_REGISTRY_PATH)
 )
 _registry_mod = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_registry_mod)
@@ -45,7 +45,7 @@ _REGISTRY = _registry_mod._REGISTRY
 def _can_import_domain_managers():
     """Verifica si el auto-registro de dominios funciona."""
     try:
-        from Solver.domain_managers import ensure_registered
+        from solver.domain_managers import ensure_registered
 
         ensure_registered()
         return True
@@ -205,7 +205,7 @@ class TestAutoRegistration:
     """Al importar Solver.domain_managers se registran BEN, SCP, USCP."""
 
     def test_all_domains_registered(self):
-        from Solver.domain_managers.registry import get_all as real_get_all
+        from solver.domain_managers.registry import get_all as real_get_all
 
         all_domains = real_get_all()
         assert "BEN" in all_domains, "BEN debería estar registrado"
@@ -213,21 +213,21 @@ class TestAutoRegistration:
         assert "USCP" in all_domains, "USCP debería estar registrado"
 
     def test_get_ben(self):
-        from Solver.domain_managers.registry import get as real_get
+        from solver.domain_managers.registry import get as real_get
 
         entry = real_get("BEN")
         assert entry.domain_type == "BEN"
         assert entry.config_key == "ben"
 
     def test_get_scp(self):
-        from Solver.domain_managers.registry import get as real_get
+        from solver.domain_managers.registry import get as real_get
 
         entry = real_get("SCP")
         assert entry.domain_type == "SCP"
         assert entry.config_key == "scp"
 
     def test_get_uscp(self):
-        from Solver.domain_managers.registry import get as real_get
+        from solver.domain_managers.registry import get as real_get
 
         entry = real_get("USCP")
         assert entry.domain_type == "USCP"
@@ -235,7 +235,7 @@ class TestAutoRegistration:
 
     def test_exactly_three_domains_minimum(self):
         """Al menos BEN, SCP, USCP deben estar registrados."""
-        from Solver.domain_managers.registry import get_all as real_get_all
+        from solver.domain_managers.registry import get_all as real_get_all
 
         all_domains = real_get_all()
         expected = {"BEN", "SCP", "USCP"}
@@ -256,7 +256,7 @@ class TestAnalysisMetadata:
 
     @pytest.fixture(params=["BEN", "SCP", "USCP"])
     def entry(self, request):
-        from Solver.domain_managers.registry import get as real_get
+        from solver.domain_managers.registry import get as real_get
 
         return real_get(request.param)
 
@@ -279,7 +279,7 @@ class TestBenSpecificMeta:
     """BEN DEBE tener uses_bin=False y obtenerArchivos_kwargs sin binarización."""
 
     def test_ben_no_binarization(self):
-        from Solver.domain_managers.registry import get as real_get
+        from solver.domain_managers.registry import get as real_get
 
         entry = real_get("BEN")
         assert entry.analysis_meta["uses_bin"] is False
@@ -294,7 +294,7 @@ class TestScpBinarization:
 
     @pytest.fixture(params=["SCP", "USCP"])
     def entry(self, request):
-        from Solver.domain_managers.registry import get as real_get
+        from solver.domain_managers.registry import get as real_get
 
         return real_get(request.param)
 
@@ -308,7 +308,7 @@ class TestExecuteExperiment:
 
     @pytest.fixture(params=["BEN", "SCP", "USCP"])
     def entry(self, request):
-        from Solver.domain_managers.registry import get as real_get
+        from solver.domain_managers.registry import get as real_get
 
         return real_get(request.param)
 
@@ -329,7 +329,7 @@ class TestAnalisisProblemsFromRegistry:
     """analisis.py DEBE construir PROBLEMS consultando el registry."""
 
     def test_problems_matches_registry(self):
-        from Solver.domain_managers.registry import get_all as real_get_all
+        from solver.domain_managers.registry import get_all as real_get_all
 
         problems = {
             dtype: entry.analysis_meta for dtype, entry in real_get_all().items()
@@ -337,7 +337,7 @@ class TestAnalisisProblemsFromRegistry:
         assert set(problems.keys()) == set(real_get_all().keys())
 
     def test_problems_ben_meta_correct(self):
-        from Solver.domain_managers.registry import get_all as real_get_all
+        from solver.domain_managers.registry import get_all as real_get_all
 
         problems = {
             dtype: entry.analysis_meta for dtype, entry in real_get_all().items()
@@ -350,7 +350,7 @@ class TestAnalisisProblemsFromRegistry:
         assert ben["obtenerArchivos_kwargs"] == {"incluir_binarizacion": False}
 
     def test_problems_scp_meta_correct(self):
-        from Solver.domain_managers.registry import get_all as real_get_all
+        from solver.domain_managers.registry import get_all as real_get_all
 
         problems = {
             dtype: entry.analysis_meta for dtype, entry in real_get_all().items()
@@ -363,7 +363,7 @@ class TestAnalisisProblemsFromRegistry:
         assert scp["obtenerArchivos_kwargs"] == {}
 
     def test_problems_uscp_meta_correct(self):
-        from Solver.domain_managers.registry import get_all as real_get_all
+        from solver.domain_managers.registry import get_all as real_get_all
 
         problems = {
             dtype: entry.analysis_meta for dtype, entry in real_get_all().items()

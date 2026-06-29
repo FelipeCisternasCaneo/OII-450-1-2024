@@ -140,10 +140,10 @@ def main() -> int:
             "Hace backup antes de modificar."
         )
     )
-    p.add_argument("--base-db", default="./BD/resultados.db", help="Ruta a resultados.db")
-    p.add_argument("--shards-dir", default="./BD/shards", help="Carpeta con resultados_*.db")
+    p.add_argument("--base-db", default="./data/database/resultados.db", help="Ruta a resultados.db")
+    p.add_argument("--shards-dir", default="./data/database/shards", help="Carpeta con resultados_*.db")
     p.add_argument("--pattern", default="resultados_*.db", help="Patrón de shards")
-    p.add_argument("--backup-dir", default="./BD/backups", help="Dónde guardar backup de la BD base")
+    p.add_argument("--backup-dir", default="./data/database/backups", help="Dónde guardar backup de la BD base")
     p.add_argument("--dry-run", action="store_true", help="No escribe, solo reporta conteos")
     args = p.parse_args()
 

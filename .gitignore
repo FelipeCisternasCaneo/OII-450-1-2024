@@ -8,6 +8,11 @@ __pycache__/
 Miniconda3-latest-Linux-x86_64.sh
 *Miniconda*.sh
 *Anaconda*.sh
-BD/backups/
-BD/shards/
+
+# Directorios de salida de ejecución
+outputs/
+
+# Shards de base de datos y archivos locales temporales
+data/database/shards/
+data/database/resultados.db
 *.log

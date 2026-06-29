@@ -1,3 +1,6 @@
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
 import argparse
 import os
 import shutil
@@ -5,12 +8,12 @@ import time
 
 from joblib import Parallel, delayed
 
-from BD.sqlite import BD
-from Util.log import log_fecha_hora, log_final
-from Util.util import verificar_y_crear_carpetas
+from bd.sqlite import BD
+from util.log import log_fecha_hora, log_final
+from util.util import verificar_y_crear_carpetas
 
 # Reutilizamos la lógica actual sin duplicar código
-from main import procesar_experimento  # noqa: E402
+from solver.runner import procesar_experimento  # noqa: E402
 
 
 def _default_n_jobs() -> int:
@@ -67,7 +70,7 @@ def main() -> int:
     log_fecha_hora("Fin de la ejecución (joblib)")
     log_final(total_time)
 
-    shutil.rmtree(os.path.join(os.path.dirname(__file__), "Resultados", "transitorio"), ignore_errors=True)
+    shutil.rmtree(os.path.join(os.path.dirname(__file__), "outputs", "results", "transitorio"), ignore_errors=True)
 
     print(f"[JOBLIB] Experimentos procesados: {total_processed}")
     return 0

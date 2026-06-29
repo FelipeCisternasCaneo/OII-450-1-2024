@@ -14,13 +14,14 @@ import sys
 import os
 
 # Asegurar que el path del proyecto esté en sys.path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 
 def _reset_ccmgo_globals():
     """CCMGO usa variables globales que contaminan entre ejecuciones."""
     try:
-        import Metaheuristics.Codes.CCMGO as ccmgo_mod
+        import metaheuristics.Codes.CCMGO as ccmgo_mod
         ccmgo_mod._initialized = False
         ccmgo_mod._FEs = 0
         ccmgo_mod._rec = 1
@@ -47,8 +48,8 @@ def run_legacy_ben(seed, mh_name, function, dim, lb, ub, pop_size, max_iter):
     np.random.seed(seed)
     _random.seed(seed)
 
-    from Problem.Benchmark.Problem import fitness as f
-    from Solver.population.population_BEN import (
+    from problem.Benchmark.Problem import fitness as f
+    from solver.population.population_BEN import (
         initialize_population, evaluate_population,
         update_population, iterate_population
     )
@@ -96,9 +97,9 @@ def run_universal_ben(seed, mh_name, function, dim, lb, ub, pop_size, max_iter):
     np.random.seed(seed)
     _random.seed(seed)
 
-    from Solver.domain_managers.ben_domain import BenDomainManager
-    from Solver.metaheuristic_adapter import MetaheuristicAdapter
-    from Solver.termination_manager import TerminationCriteria
+    from solver.domain_managers.ben_domain import BenDomainManager
+    from solver.metaheuristic_adapter import MetaheuristicAdapter
+    from solver.termination_manager import TerminationCriteria
 
     domain = BenDomainManager(function, dim, pop_size, lb, ub)
     adapter = MetaheuristicAdapter(mh_name, pop_size, dim, domain.lb, domain.ub)
@@ -150,7 +151,7 @@ def run_universal_ben(seed, mh_name, function, dim, lb, ub, pop_size, max_iter):
     return np.array(convergence), np.array(nfe_history)
 
 
-def test_mh(mh_name, function='F1', dim=10, lb=-100, ub=100, pop=10, iters=30, seed=42):
+def compare_mh(mh_name, function='F1', dim=10, lb=-100, ub=100, pop=10, iters=30, seed=42):
     """Compara legacy vs universal para una MH específica."""
     print(f"\n{'='*60}")
     print(f"  TEST A/B: {mh_name} | {function} | dim={dim} | seed={seed}")
@@ -193,7 +194,7 @@ if __name__ == '__main__':
     results = {}
     for mh in ALL_MHS:
         try:
-            results[mh] = test_mh(mh, function='F1', dim=10, pop=10, iters=30, seed=42)
+            results[mh] = compare_mh(mh, function='F1', dim=10, pop=10, iters=30, seed=42)
         except Exception as e:
             print(f"    ERROR en {mh}: {type(e).__name__}: {e}")
             results[mh] = False

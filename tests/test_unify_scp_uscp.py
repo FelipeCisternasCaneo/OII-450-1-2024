@@ -18,14 +18,14 @@ Estrategia:
 import numpy as np
 import pytest
 
-from Problem.SCP.problem import (
+from problem.SCP.problem import (
     SetCoveringProblem,
     SCP,
     obtenerOptimo,
     _OPTIMA_SCP,
     _OPTIMA_USCP,
 )
-from Problem.USCP.problem import USCP, obtenerOptimoUSCP
+from problem.USCP.problem import USCP, obtenerOptimoUSCP
 
 
 # ── Datos de referencia (block_size esperado por familia) ─────────────────────

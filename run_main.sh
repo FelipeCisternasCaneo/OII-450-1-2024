@@ -7,7 +7,7 @@
 #SBATCH --cpus-per-task=27           # Pides 27 núcleos por cada Job
 #SBATCH --mem=10G                     # Subimos un poco la RAM para los 27 procesos
 #SBATCH --time=24:00:00              # Límite normal [cite: 76]
-#SBATCH --output=/work/jose.lara/OII-450-1-2024/Logs/SSH/Log_%A_%a.out
+#SBATCH --output=/work/jose.lara/OII-450-1-2024/outputs/logs/SSH/Log_%A_%a.out
 
 set -euo pipefail
 
@@ -18,7 +18,7 @@ cd /work/jose.lara/OII-450-1-2024
 
 # Nota: Slurm NO crea carpetas para --output. Este mkdir ayuda para el resto de logs,
 # pero la carpeta debe existir ANTES de ejecutar `sbatch run_main.sh`.
-mkdir -p /work/jose.lara/OII-450-1-2024/Logs/SSH
+mkdir -p /work/jose.lara/OII-450-1-2024/outputs/logs/SSH
 
 # Etiquetar este lote para poder resumir tiempos desde la BD sin polling
 export OII_BATCH_ID="${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
@@ -27,6 +27,6 @@ export OII_BATCH_ID="${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
 seq 27 | xargs -I{} -P 27 python -u /work/jose.lara/OII-450-1-2024/main.py
 
 # Resumen final (sin monitor): makespan = max(ts_fin) - min(ts_inicio)
-python -u /work/jose.lara/OII-450-1-2024/Scripts/resumen_tiempos.py \
+python -u /work/jose.lara/OII-450-1-2024/scripts/resumen_tiempos.py \
 	--batch-id "$OII_BATCH_ID" \
-	--out "/work/jose.lara/OII-450-1-2024/Logs/resumen_${OII_BATCH_ID}.log"
+	--out "/work/jose.lara/OII-450-1-2024/outputs/logs/resumen_${OII_BATCH_ID}.log"

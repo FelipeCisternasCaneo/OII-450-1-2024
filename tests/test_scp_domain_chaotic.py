@@ -22,8 +22,9 @@ import pytest
 
 # Asegurar que el proyecto raíz esté en path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 
-from Solver.domain_managers.scp_domain import ScpDomainManager
+from solver.domain_managers.scp_domain import ScpDomainManager
 
 
 # ──────────────────────────────────────────────────────────────────────────────

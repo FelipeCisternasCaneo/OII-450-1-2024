@@ -322,7 +322,7 @@ class ResultCaptor:
 
     def __enter__(self):
         # Patch the BD class methods used by both solvers
-        bd_module = "BD.sqlite.BD"
+        bd_module = "bd.sqlite.BD"
         p1 = patch(
             f"{bd_module}.insertarIteraciones",
             self._make_insertar_iteraciones(),

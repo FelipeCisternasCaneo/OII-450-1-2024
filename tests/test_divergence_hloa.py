@@ -4,10 +4,11 @@ import random
 import warnings
 
 warnings.filterwarnings('ignore')
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 
-from Solver.domain_managers.scp_domain import ScpDomainManager
-from Metaheuristics.Codes.HLOA import iterarHLOAScp as vectorizadoHLOA
+from solver.domain_managers.scp_domain import ScpDomainManager
+from metaheuristics.Codes.HLOA import iterarHLOAScp as vectorizadoHLOA
 from tests.legacy_mh.HLOA_legacy import iterarHLOAScp as legacyHLOA
 
 def run_test(version_func, msg):

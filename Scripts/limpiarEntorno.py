@@ -5,14 +5,14 @@ import shutil
 # Permite ejecutar este script directamente (python Scripts/limpiarEntorno.py)
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if PROJECT_ROOT not in sys.path:
-    sys.path.insert(0, PROJECT_ROOT)
+    sys.path.insert(0, os.path.join(PROJECT_ROOT, "src"))
 
 def limpiarEntorno():
     """
     Elimina todo el contenido (archivos y subcarpetas) dentro de la carpeta './resultados/'
     y luego la vuelve a crear vacía.
     """
-    directorio_resultados = './Resultados/' # Definir la ruta
+    directorio_resultados = './outputs/' # Definir la ruta
 
     # Verificar si el directorio existe antes de intentar borrarlo
     if os.path.exists(directorio_resultados):

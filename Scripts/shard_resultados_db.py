@@ -48,8 +48,8 @@ def main() -> int:
             "Copia la tabla instancias completa, y reparte la tabla experimentos (sin resultados)."
         )
     )
-    p.add_argument("--db", default="./BD/resultados.db", help="BD fuente")
-    p.add_argument("--out-dir", default="./BD/shards", help="Carpeta destino para shards")
+    p.add_argument("--db", default="./data/database/resultados.db", help="BD fuente")
+    p.add_argument("--out-dir", default="./data/database/shards", help="Carpeta destino para shards")
     p.add_argument("--shards", type=int, default=3, help="Cantidad de shards")
     p.add_argument(
         "--only-pendiente",

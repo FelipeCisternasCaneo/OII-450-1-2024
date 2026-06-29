@@ -11,7 +11,7 @@ import seaborn as sns
 from scipy import stats
 
 # --- CONFIGURACIÓN ---
-RESUMEN_DIR = 'Resultados/resumen/KP/'
+RESUMEN_DIR = 'outputs/results/resumen/KP/'
 OUTPUT_EXCEL = 'Reporte_Final_Visual_KP_v2.xlsx'
 PARAM_POBLACION = 10
 PARAM_ITERACIONES = 100

@@ -33,6 +33,7 @@ import pytest
 
 # Ensure project root is importable
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 
 from tests.chaotic_ab_common import (
     validate_comparable_config,
@@ -310,7 +311,7 @@ class TestResultCaptor:
 
     def test_captor_intercepts_iteraciones(self):
         """insertarIteraciones must be intercepted and stored."""
-        from BD.sqlite import BD
+        from bd.sqlite import BD
 
         captured_data = {}
 
@@ -333,7 +334,7 @@ class TestResultCaptor:
         fake_db_path = str(tmp_path / "test_sentinel.db")
         monkeypatch.setenv("OII_DB_PATH", fake_db_path)
 
-        from BD.sqlite import BD
+        from bd.sqlite import BD
 
         captor = ResultCaptor()
         with captor:

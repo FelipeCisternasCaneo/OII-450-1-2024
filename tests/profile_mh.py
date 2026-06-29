@@ -8,11 +8,12 @@ import time
 import sys
 import os
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from Solver.domain_managers.ben_domain import BenDomainManager
-from Solver.metaheuristic_adapter import MetaheuristicAdapter
-from Solver.termination_manager import TerminationCriteria
+from solver.domain_managers.ben_domain import BenDomainManager
+from solver.metaheuristic_adapter import MetaheuristicAdapter
+from solver.termination_manager import TerminationCriteria
 
 
 def profile_mh(mh_name, dim=100, pop=50, iters=30):

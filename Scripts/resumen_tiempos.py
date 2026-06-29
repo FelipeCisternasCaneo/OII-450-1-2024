@@ -116,7 +116,7 @@ def main() -> int:
     p = argparse.ArgumentParser(description="Genera resumen de tiempos del lote desde la BD (sin monitor/polling).")
     p.add_argument(
         "--db",
-        default="./BD/resultados.db",
+        default="./data/database/resultados.db",
         help="Ruta a resultados.db (si es relativa, se intenta resolver desde el CWD y desde la raíz del proyecto)",
     )
     p.add_argument("--batch-id", default=None, help="Filtrar por batch_id")

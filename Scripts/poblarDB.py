@@ -18,11 +18,12 @@ import sys
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
+    sys.path.insert(0, os.path.join(PROJECT_ROOT, "src"))
 
-from BD.sqlite import BD
-from Util.log import resumen_experimentos
-from Util.util import cargar_configuracion
-from Scripts.crearBD import crear_BD
+from bd.sqlite import BD
+from util.log import resumen_experimentos
+from util.util import cargar_configuracion
+from scripts.crearBD import crear_BD
 
 # Cargar configuración desde JSON
 config = cargar_configuracion("util/json/experiments_config.json")
@@ -52,7 +53,7 @@ def obtener_dimensiones(instance, problema):
         return dimensiones_cache[(instance, problema)]
 
     # Construir directorios desde el Domain Registry
-    from Solver.domain_managers.registry import get_all as get_all_domains
+    from solver.domain_managers.registry import get_all as get_all_domains
 
     directorios = {
         dtype: entry.instance_dir
@@ -100,9 +101,6 @@ def generar_binarizaciones_desde_json(problema):
     usar_caoticos_global = config.get("usar_mapas_caoticos", False)
 
     if not usar_caoticos_global:
-        print(
-            f"[INFO] Mapas caóticos deshabilitados globalmente. Usando solo estándar para {problema}."
-        )
         return config["DS_actions"]  # Solo binarizaciones estándar
 
     # Obtener configuración del problema específico
@@ -113,28 +111,19 @@ def generar_binarizaciones_desde_json(problema):
     usar_caoticos_problema = config_problema.get("usar_caoticos", False)
 
     if not usar_caoticos_problema:
-        print(
-            f"[INFO] Mapas caóticos deshabilitados para {problema}. Usando solo estándar."
-        )
         return config["DS_actions"]
 
     # Obtener modo
     modo = config_problema.get("modo", "solo_estandar")
 
-    print(f"\n[] {problema}: Modo '{modo}'")
-
     # ========== MODO: SOLO ESTÁNDAR ==========
     if modo == "solo_estandar":
-        binarizaciones = config["DS_actions"]
-        print(f"  → Binarizaciones estándar: {binarizaciones}")
-        return binarizaciones
+        return config["DS_actions"]
 
     # ========== MODO: MANUAL ==========
     elif modo == "manual":
         binarizaciones_manuales = config_caoticos.get("binarizaciones_manuales", {})
-        binarizaciones = binarizaciones_manuales.get(problema, config["DS_actions"])
-        print(f"   Binarizaciones manuales: {binarizaciones}")
-        return binarizaciones
+        return binarizaciones_manuales.get(problema, config["DS_actions"])
 
     # ========== MODO: SOLO CAÓTICOS ==========
     elif modo == "solo_caoticos":
@@ -142,17 +131,12 @@ def generar_binarizaciones_desde_json(problema):
         mapas = config_problema.get("mapas", [])
 
         if not mapas:
-            print(f"  [WARN] No hay mapas especificados. Usando estándar.")
             return bases
 
         binarizaciones = []
         for base in bases:
             for mapa in mapas:
                 binarizaciones.append(f"{base}_{mapa}")
-
-        print(f"   Bases: {bases}")
-        print(f"   Mapas: {mapas}")
-        print(f"   Generadas {len(binarizaciones)} binarizaciones caóticas")
         return binarizaciones
 
     # ========== MODO: COMPARACIÓN ==========
@@ -168,17 +152,64 @@ def generar_binarizaciones_desde_json(problema):
             for base in bases:
                 for mapa in mapas:
                     binarizaciones.append(f"{base}_{mapa}")
-
-        print(f"   Bases estándar: {bases}")
-        print(f"   Mapas caóticos: {mapas}")
-        print(
-            f"   Total: {len(binarizaciones)} binarizaciones ({len(bases)} std + {len(bases) * len(mapas)} caóticos)"
-        )
         return binarizaciones
 
     else:
-        print(f"  [ERROR] Modo '{modo}' no reconocido. Usando estándar.")
         return config["DS_actions"]
+
+
+def imprimir_tabla_configuracion_problemas(problemas_activos):
+    """Muestra la configuración de binarizaciones de cada problema activo como una tabla de ancho 100."""
+    if not problemas_activos:
+        print("No hay problemas activos.")
+        return
+
+    SEP = "-" * 100
+    print(SEP)
+    print(f"{'Problema':<10} {'Modo':<15} {'Bases Estándar':<25} {'Mapas Caóticos':<22} {'Total Binarizaciones':<28}")
+    print(SEP)
+
+    usar_caoticos_global = config.get("usar_mapas_caoticos", False)
+    bases = config.get("DS_actions", [])
+
+    for problema in problemas_activos:
+        if not usar_caoticos_global:
+            modo = "solo_estandar"
+            mapas_str = "N/A"
+            totales_str = str(len(bases))
+        else:
+            config_caoticos = config.get("mapas_caoticos", {})
+            config_problema = config_caoticos.get(problema, {})
+            usar_caoticos_problema = config_problema.get("usar_caoticos", False)
+
+            if not usar_caoticos_problema:
+                modo = "solo_estandar"
+                mapas_str = "N/A"
+                totales_str = str(len(bases))
+            else:
+                modo = config_problema.get("modo", "solo_estandar")
+                if modo == "solo_estandar":
+                    mapas_str = "N/A"
+                    totales_str = str(len(bases))
+                elif modo == "manual":
+                    mapas_str = "N/A"
+                    binarizaciones_manuales = config_caoticos.get("binarizaciones_manuales", {})
+                    binarizaciones = binarizaciones_manuales.get(problema, bases)
+                    totales_str = str(len(binarizaciones))
+                elif modo == "solo_caoticos":
+                    mapas = config_problema.get("mapas", [])
+                    mapas_str = str(mapas)
+                    totales_str = f"{len(bases) * len(mapas)} (solo caot)"
+                elif modo == "comparacion":
+                    mapas = config_problema.get("mapas", [])
+                    mapas_str = str(mapas)
+                    totales_str = f"{len(bases) + len(bases) * len(mapas)} ({len(bases)} std + {len(bases) * len(mapas)} caot)"
+                else:
+                    mapas_str = "N/A"
+                    totales_str = str(len(bases))
+
+        print(f"{problema:<10} {modo:<15} {str(bases):<25} {mapas_str:<22} {totales_str:<28}")
+    print(SEP)
 
 
 # ========== FUNCIONES DE INSERCIÓN ==========
@@ -329,7 +360,7 @@ def agregar_experimentos():
     Itera los dominios registrados en el Domain Registry en vez de
     hardcodear listas de problemas.
     """
-    from Solver.domain_managers.registry import get_all as get_all_domains
+    from solver.domain_managers.registry import get_all as get_all_domains
 
     # Configuración global de terminación (aplica a todos los problemas)
     exp_cfg = config.get("experimentos", {})
@@ -405,53 +436,41 @@ def agregar_experimentos():
 
 if __name__ == "__main__":
     # Auto-registrar dominios
-    from Solver.domain_managers import ensure_registered
+    from solver.domain_managers import ensure_registered
 
     ensure_registered()
-    from Solver.domain_managers.registry import get_all as get_all_domains
+    from solver.domain_managers.registry import get_all as get_all_domains
 
     log_resumen = []
     cantidad = 0
     _batch_valores = []  # Buffer de filas para inserción batch
 
-    print("\n" + "=" * 70)
-    print(" SISTEMA DE EXPERIMENTOS CON MAPAS CAÓTICOS")
-    print("=" * 70)
+    W = 100
+    SEP = "-" * W
 
-    # Mostrar configuración global
+    print(f"\n{'SISTEMA DE EXPERIMENTOS - POBLAR BASE DE DATOS':^{W}}")
+    print(SEP)
+
+    # ── Configuración Global ──
     usar_caoticos = config.get("usar_mapas_caoticos", False)
-    print(
-        f"  Mapas caóticos globalmente: {' ACTIVADOS' if usar_caoticos else ' DESACTIVADOS'}"
-    )
-
-    # Mostrar problemas activos (desde el registry)
     problemas_activos = [
         dtype
         for dtype, entry in get_all_domains().items()
         if config.get(entry.config_key, False)
     ]
 
-    print(
-        f"  Problemas activos: {', '.join(problemas_activos) if problemas_activos else 'Ninguno'}"
-    )
-    print(f"  Metaheurísticas: {config['mhs']}")
+    print(f"{'Parámetro':<30} {'Valor':<70}")
+    print(SEP)
+    print(f"{'Mapas caóticos':<30} {'ACTIVADOS' if usar_caoticos else 'DESACTIVADOS':<70}")
+    print(f"{'Problemas activos':<30} {', '.join(problemas_activos) if problemas_activos else 'Ninguno':<70}")
+    print(f"{'Metaheurísticas':<30} {str(config['mhs']):<70}")
+    print(SEP)
 
-    # Mostrar configuración de cada problema
-    if usar_caoticos and "mapas_caoticos" in config:
-        print("\n  Configuración por problema:")
-        for problema in problemas_activos:
-            if problema in config["mapas_caoticos"]:
-                cfg = config["mapas_caoticos"][problema]
-                usar = cfg.get("usar_caoticos", False)
-                modo = cfg.get("modo", "solo_estandar")
-                mapas = cfg.get("mapas", [])
-                print(
-                    f"    {problema}: {'SI' if usar else 'NO'} | Modo: {modo} | Mapas: {mapas if usar else 'N/A'}"
-                )
+    # ── Configuración por Problema ──
+    print(f"\n{'CONFIGURACIÓN POR PROBLEMA':^{W}}")
+    imprimir_tabla_configuracion_problemas(problemas_activos)
 
-    print("=" * 70 + "\n")
-
-    # Connection pooling: una sola conexión para todo
+    # ── Inserción ──
     import time
 
     t0 = time.perf_counter()
@@ -472,9 +491,13 @@ if __name__ == "__main__":
 
     t1 = time.perf_counter()
 
-    print("\n" + "=" * 70)
-    print(f" Total de experimentos insertados: {cantidad}")
-    print(f" Tiempo de inserción: {t1 - t0:.3f}s")
-    print("=" * 70 + "\n")
+    print(f"\n{'INSERCIÓN EN BASE DE DATOS':^{W}}")
+    print(SEP)
+    print(f"{'Experimentos insertados':<30} {cantidad:<70}")
+    print(f"{'Tiempo de inserción':<30} {f'{t1 - t0:.3f}s':<70}")
+    print(SEP)
 
+    # ── Resumen Detallado ──
+    print(f"\n{'RESUMEN DETALLADO DE EXPERIMENTOS':^{W}}")
     resumen_experimentos(log_resumen, cantidad)
+

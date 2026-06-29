@@ -1,0 +1,16 @@
+{
+    "dirs": {
+        "BD": "./data/database/",
+        "base": "./outputs/",
+        "transitorio": "./outputs/results/transitorio/",
+        "fitness": "./outputs/results/fitness/",
+        "resumen": "./outputs/results/resumen/",
+        "graficos": "./outputs/results/graficos/",
+        "best": "./outputs/results/best/",
+        "boxplot": "./outputs/results/boxplot/",
+        "violinplot": "./outputs/results/violinplot/",
+        "scp_instances": "./src/problem/SCP/Instances/",
+        "uscp_instances": "./src/problem/USCP/Instances/",
+        "graficos_benchmark": "./outputs/results/graficos_benchmark/"
+    }
+}

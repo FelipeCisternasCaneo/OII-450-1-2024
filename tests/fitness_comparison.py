@@ -4,12 +4,13 @@ import random
 import time
 import pandas as pd
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 
-from Solver.domain_managers.scp_domain import ScpDomainManager
-from Metaheuristics.Codes.EBWOA import iterarEBWOA as vec_ebwoa
-from Metaheuristics.Codes.HLOA import iterarHLOAScp as vec_hloa
-from Metaheuristics.Codes.EHO import iterarEHO as vec_eho
+from solver.domain_managers.scp_domain import ScpDomainManager
+from metaheuristics.Codes.EBWOA import iterarEBWOA as vec_ebwoa
+from metaheuristics.Codes.HLOA import iterarHLOAScp as vec_hloa
+from metaheuristics.Codes.EHO import iterarEHO as vec_eho
 
 from tests.legacy_mh.EBWOA_legacy import iterarEBWOA as leg_ebwoa
 from tests.legacy_mh.HLOA_legacy import iterarHLOAScp as leg_hloa

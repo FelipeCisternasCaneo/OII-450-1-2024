@@ -19,8 +19,9 @@ import os
 import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 
-from Solver.termination_manager import TerminationCriteria, resolve_effective_max_iter
+from solver.termination_manager import TerminationCriteria, resolve_effective_max_iter
 
 
 # ─────────────────────────────────────────────────────────────────────────────

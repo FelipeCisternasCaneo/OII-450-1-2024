@@ -2,13 +2,13 @@ import sys
 import os
 
 # Agregar el directorio raíz al path para imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
 
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from joblib import Parallel, delayed
-from Problem.Benchmark.CEC.cec2017.functions import all_functions
+from problem.Benchmark.CEC.cec2017.functions import all_functions
 
 # Directorio de salida
 OUTPUT_DIR = './Graficos_Benchmark/CEC2017/'

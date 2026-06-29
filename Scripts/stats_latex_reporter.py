@@ -135,7 +135,7 @@ def procesar_archivos_fitness(directorio, pattern="fitness_*_*.csv"):
 if __name__ == "__main__":
     # Apunta al directorio donde `analisis.py` deposita fitness por corrida
     # (Por ej: Resultados/fitness/BEN/)
-    directorio_fitness = os.path.join("Resultados", "fitness")
+    directorio_fitness = os.path.join("outputs", "results", "fitness")
     if os.path.exists(directorio_fitness):
         procesar_archivos_fitness(directorio_fitness)
     else:
