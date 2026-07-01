@@ -53,17 +53,13 @@ def iterarDHOA(
     denominador_ps = 1 + np.exp(-0.5 * (pmn - 25))
     ps = (1.0 / denominador_ps) * 1.0
 
-    # --- LLAMADA CORREGIDA A 'fo' ---
-    # Basado en el ejemplo de SSO, fo(vector) devuelve una tupla
-    # y el valor de fitness (float) está en el índice [1].
-    try:
-        fitness_presa_objetivo = fo(presa_objetivo)[1]
-    except (IndexError, TypeError) as e:
-        # Captura por si fo() no devuelve una tupla o es None
-        print(f"Error en DOA al llamar a fo(presa_objetivo): {e}")
-        print(f"Valor devuelto por fo: {fo(presa_objetivo)}")
-        # Asumimos el peor caso para S
-        fitness_presa_objetivo = float('inf')
+    # --- LLAMADA OPTIMIZADA A 'fo' ---
+    # Asume la convención del framework donde fo(vector) devuelve (solución, fitness)
+    out_presa = fo(presa_objetivo)
+    if isinstance(out_presa, tuple) and len(out_presa) >= 2:
+        fitness_presa_objetivo = float(out_presa[1])
+    else:
+        fitness_presa_objetivo = float(out_presa)
 
     epsilon = 1e-20 # Para evitar divisiones por cero
 

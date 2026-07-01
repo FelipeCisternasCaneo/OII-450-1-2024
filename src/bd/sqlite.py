@@ -3,6 +3,7 @@ import os
 import time
 from bd.connection import SQLiteConnectionManager, _current_batch_id
 from bd import schema
+from problem.optima import OPTIMA_CLASSICAL, OPTIMA_CEC2017
 
 
 class BD(SQLiteConnectionManager):
@@ -15,61 +16,9 @@ class BD(SQLiteConnectionManager):
         super().__init__()
         self._experimentos_cols_aseguradas = False
 
-    # Datos estáticos de funciones para compatibilidad / inicialización
-    data = [
-        "F1",
-        "F2",
-        "F3",
-        "F4",
-        "F5",
-        "F6",
-        "F7",
-        "F8",
-        "F9",
-        "F10",
-        "F11",
-        "F12",
-        "F13",
-        "F14",
-        "F15",
-        "F16",
-        "F17",
-        "F18",
-        "F19",
-        "F20",
-        "F21",
-        "F22",
-        "F23",
-        "F1CEC2017",
-        "F2CEC2017",
-        "F3CEC2017",
-        "F4CEC2017",
-        "F5CEC2017",
-        "F6CEC2017",
-        "F7CEC2017",
-        "F8CEC2017",
-        "F9CEC2017",
-        "F10CEC2017",
-        "F11CEC2017",
-        "F12CEC2017",
-        "F13CEC2017",
-        "F14CEC2017",
-        "F15CEC2017",
-        "F16CEC2017",
-        "F17CEC2017",
-        "F18CEC2017",
-        "F19CEC2017",
-        "F20CEC2017",
-        "F21CEC2017",
-        "F22CEC2017",
-        "F23CEC2017",
-        "F24CEC2017",
-        "F25CEC2017",
-        "F26CEC2017",
-        "F27CEC2017",
-        "F28CEC2017",
-        "F29CEC2017",
-        "F30CEC2017",
+    # Carga dinámica de funciones para compatibilidad / inicialización
+    data = list(OPTIMA_CLASSICAL.keys()) + [
+        k for k in OPTIMA_CEC2017.keys() if k.endswith("CEC2017")
     ]
 
     def construirTablas(self):

@@ -29,53 +29,23 @@ def _levy_step(dim, beta=1.5, rng=np.random):
 
 def _safe_eval(fo, x):
     """
-    Evalúa fo(x) y devuelve un float.
-    - Soporta retornos tipo: f, (f, x), (x, f), (algo, ..., f), numpy escalares, etc.
-    - Si no encuentra un escalar numérico, devuelve +inf.
-    - Sanea NaN/Inf devolviendo +inf.
+    Evalúa fo(x) y devuelve el fitness (float) de forma optimizada y directa.
+    Asume la convención del framework donde fo(x) retorna (solución, fitness).
+    Si retorna un solo valor numérico, lo maneja como fallback.
     """
     out = fo(x)
+    if isinstance(out, tuple) and len(out) >= 2:
+        val = out[1]
+    else:
+        val = out
 
-    def _extract_numeric(obj):
-        # Numéricos nativos / numpy escalares
-        if isinstance(obj, (int, float, np.integer, np.floating)):
-            return float(obj)
-        # Arrays: solo si son escalares de tamaño 1
-        if isinstance(obj, np.ndarray):
-            if obj.size == 1:
-                return float(obj.reshape(-1)[0])
-            return None
-        # Tuplas / listas: busca algún escalar numérico adentro (preferimos el ÚLTIMO, como muchos benchmarks)
-        if isinstance(obj, (tuple, list)):
-            # primero intenta el segundo elemento (convención común (x, f))
-            if len(obj) >= 2:
-                val = _extract_numeric(obj[1])
-                if val is not None:
-                    return val
-            # si no, intenta el primero
-            if len(obj) >= 1:
-                val = _extract_numeric(obj[0])
-                if val is not None:
-                    return val
-            # y por si acaso, recorre de derecha a izquierda
-            for elem in reversed(obj):
-                val = _extract_numeric(elem)
-                if val is not None:
-                    return val
-            return None
-        # Último intento: castear directo 
-        try:
-            arr = np.array(obj, dtype=float).ravel()
-            if arr.size:
-                return float(arr[-1])
-        except Exception:
-            pass
-        return None
-
-    val = _extract_numeric(out)
-    if val is None or not np.isfinite(val):
-        return float('inf')
-    return float(val)
+    try:
+        val = float(val)
+        if np.isfinite(val):
+            return val
+    except Exception:
+        pass
+    return float('inf')
 
 
 

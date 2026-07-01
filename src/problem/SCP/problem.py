@@ -266,15 +266,10 @@ class SetCoveringProblem:
     # ── Factibilidad ──────────────────────────────────────────────────────
 
     def factibilityTest(self, solution):
-        check = True
-        if isinstance(self.getCoverange(), csr_matrix):
-            validation = self.getCoverange() @ solution
-        else:
-            validation = matrix_dot_1(self.getCoverange(), solution, self.__block_size)
-
-        if 0 in validation:
-            check = False
-
+        # Utiliza la multiplicación nativa de matrices de NumPy/SciPy (@),
+        # que es mucho más eficiente que los bucles por bloques en Python.
+        validation = self.getCoverange() @ solution
+        check = np.all(validation != 0)
         return check, validation
 
     # ── Reparación ────────────────────────────────────────────────────────
@@ -329,7 +324,8 @@ class SetCoveringProblem:
     # ── Fitness ───────────────────────────────────────────────────────────
 
     def fitness(self, solution):
-        return matrix_dot_2(solution, self.getCost(), self.__block_size)
+        # Producto punto nativo vectorizado en C/Fortran (BLAS), retornado como float para compatibilidad de tipos
+        return float(np.dot(solution, self.getCost()))
 
 
 # ── Backward-compatibility aliases ────────────────────────────────────────────
