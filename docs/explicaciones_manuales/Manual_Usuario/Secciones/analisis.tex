@@ -1,0 +1,81 @@
+\section{Análisis de resultados}
+\label{sec:analisis}
+
+Tras ejecutar los experimentos y almacenar los resultados en la base de datos SQLite, el siguiente paso es procesar esta información para obtener gráficos y estadísticas comparativas. El proyecto proporciona un sistema modular y automatizado de análisis post-ejecución.
+
+\subsection{Estructura del script de análisis}
+
+El análisis de resultados está completamente centralizado a través del script:
+\begin{verbatim}
+scripts/analisis.py
+\end{verbatim}
+Este script actúa como punto de entrada de la biblioteca modular del análisis (\texttt{scripts/analisis\_pkg/}), la cual está compuesta por:
+\begin{itemize}
+    \item \texttt{cache.py}: Gestión de la memoria caché al consultar datos de SQLite para acelerar el procesamiento.
+    \item \texttt{config.py}: Carga las configuraciones de directorios, experimentos y el propio análisis.
+    \item \texttt{parser.py}: Filtra y valida los nombres de archivos CSV y datos de rendimiento.
+    \item \texttt{plotting.py}: Lógica gráfica para boxplots, violinplots y curvas de convergencia.
+    \item \texttt{processing.py}: Motor principal que organiza el procesamiento en lotes paralelos usando Joblib para evitar el desbordamiento de memoria RAM.
+\end{itemize}
+
+El análisis consulta los experimentos finalizados directamente desde la base de datos de SQLite, procesando las iteraciones (contenidas en formato CSV como BLOBs) de forma asíncrona y robusta.
+
+\subsection{Configuración del análisis}
+\label{subsec:config_analisis_v2}
+
+El proceso de análisis se configura mediante archivos JSON ubicados en \texttt{src/util/json/}:
+
+\begin{itemize}
+    \item \texttt{dir.json}: Especifica las rutas relativas donde se guardan los resultados finales, incluyendo resúmenes de rendimiento (\texttt{"resumen"}), gráficos de convergencia (\texttt{"graficos"}), boxplots (\texttt{"boxplot"}), violinplots (\texttt{"violinplot"}), entre otros.
+    
+    \item \texttt{analysis.json}: Este archivo actúa como panel de control para el rendimiento del procesamiento y la visualización gráfica. Su estructura es la siguiente:
+    \begin{quote}
+    \begin{verbatim}
+{
+    "performance": {
+        "batch_size": 200,      // Tamaño del lote a procesar
+        "gc_interval": 500,     // Frecuencia del Garbage Collector
+        "ram_warning": 85,      // % de uso de RAM para advertencia
+        "cache_max_size": 256   // Tamaño máximo de caché en base de datos
+    },
+    "graficos": {
+        "graficos_por_corrida": false, // Evita generar miles de gráficos individuales
+        "modo_logaritmico": "auto",    // Escala ('log_scale', 'log_transform', 'none', 'auto')
+        "dpi": 300                     // Resolución de gráficos generados
+    }
+}
+    \end{verbatim}
+    \end{quote}
+    
+    \item \texttt{experiments\_config.json}: El script de análisis consulta este archivo para obtener la lista de metaheurísticas activas (\texttt{"mhs"}) e instancias seleccionadas a incluir en las tablas estadísticas comparativas.
+\end{itemize}
+
+\subsection{Ejecución del análisis}
+
+Para procesar y analizar los resultados obtenidos de la base de datos local:
+
+1. Asegúrese de haber completado y finalizado ejecuciones de experimentos.
+2. Desde la terminal en el directorio raíz del proyecto, ejecute:
+    \begin{verbatim}
+    python scripts/analisis.py
+    \end{verbatim}
+
+El script procesará los datos pendientes de la base de datos en lotes, optimizando la memoria RAM, e informando el progreso en tiempo real.
+
+\subsection{Salidas generadas}
+
+Los resultados procesados se escriben en el directorio \texttt{outputs/results/}, organizados en:
+\begin{itemize}
+    \item \textbf{Tablas estadísticas (\texttt{resumen/})}:
+    \begin{itemize}
+        \item Archivos CSV con métricas detalladas por metaheurística (mejor fitness, promedio de fitness, desviación estándar, tiempo promedio de ejecución).
+        \item Estadísticas de exploración y explotación promedio (\%XPL y \%XPT) a lo largo de las iteraciones.
+    \end{itemize}
+    
+    \item \textbf{Visualizaciones gráficas}:
+    \begin{itemize}
+        \item \textbf{\texttt{graficos/}}: Historial de búsqueda de mejores soluciones (fitness vs iteraciones), y gráficos representativos de balance \%XPL y \%XPT por algoritmo.
+        \item \textbf{\texttt{boxplot/}} y \textbf{\texttt{violinplot/}}: Distribución de calidad final de las corridas para cada algoritmo, permitiendo comparar visualmente la consistencia y robustez de los optimizadores.
+    \end{itemize}
+\end{itemize}
+% --- Fin de la Sección ---

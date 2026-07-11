@@ -1,0 +1,67 @@
+\section{Resultados y Base de Datos}
+\label{sec:resultados}
+
+El solver utiliza un esquema unificado de base de datos relacional basado en \textbf{SQLite} para coordinar la ejecución distribuida de los experimentos y almacenar de forma persistente los resultados detallados de cada corrida.
+
+La base de datos local se genera de manera automática al inicializar el solver y se almacena en el directorio \texttt{data/database/resultados.db}.
+
+\subsection{Estructura de la Base de Datos}
+
+El diseño relacional consta de cuatro tablas principales que se describen a continuación:
+
+\begin{enumerate}
+    \item \textbf{Tabla \texttt{instancias}}:
+    Almacena las especificaciones de las funciones matemáticas o instancias de problemas que el solver optimizará.
+    \begin{itemize}
+        \item \texttt{id\_instancia} (INTEGER, PK): Identificador único de la instancia.
+        \item \texttt{tipo\_problema} (TEXT): Dominio del problema (ej. \texttt{"BEN"}, \texttt{"SCP"}, \texttt{"USCP"}, \texttt{"KP"}).
+        \item \texttt{nombre} (TEXT): Nombre específico (ej. \texttt{"F1CEC2017"}, \texttt{"41"}, \texttt{"u41"}).
+        \item \texttt{optimo} (REAL): Valor óptimo global conocido (utilizado para calcular brechas de calidad o GAPs).
+        \item \texttt{param} (TEXT): Parámetros de frontera de búsqueda (como límites \texttt{lb} y \texttt{ub}).
+    \end{itemize}
+
+    \item \textbf{Tabla \texttt{experimentos}}:
+    Actúa como cola de trabajos para los workers paralelos. Representa cada combinación única de algoritmo, problema, binarización y parámetros.
+    \begin{itemize}
+        \item \texttt{id\_experimento} (INTEGER, PK): Identificador único del experimento.
+        \item \texttt{experimento} (TEXT): Nombre representativo de la configuración.
+        \item \texttt{MH} (TEXT): Sigla de la metaheurística a ejecutar (ej. \texttt{"SBOA"}, \texttt{"PSO"}).
+        \item \texttt{binarizacion} (TEXT): Nombre de la función de transferencia y binarización (ej. \texttt{"V3-ELIT"}), o nombre del mapa caótico acoplado (ej. \texttt{"V3-ELIT\_LOG"}).
+        \item \texttt{estado} (TEXT): Estado actual de ejecución (\texttt{"pendiente"}, \texttt{"ejecutando"}, \texttt{"finalizado"}). Esto evita la concurrencia entre workers paralelos.
+        \item \texttt{fk\_id\_instancia} (INTEGER, FK): Relación con la tabla \texttt{instancias}.
+        \item \texttt{ts\_inicio} / \texttt{ts\_fin} (TEXT): Registros de marca de tiempo (timestamp) de inicio y fin.
+    \end{itemize}
+
+    \item \textbf{Tabla \texttt{resultados}}:
+    Almacena el resumen del rendimiento final obtenido tras finalizar las iteraciones del experimento.
+    \begin{itemize}
+        \item \texttt{id\_resultado} (INTEGER, PK): Identificador único del resultado.
+        \item \texttt{fitness} (REAL): El mejor valor de fitness final encontrado.
+        \item \texttt{tiempoEjecucion} (REAL): El tiempo total de procesamiento en segundos.
+        \item \texttt{solucion} (TEXT): Vector de la mejor solución codificado como cadena de texto.
+        \item \texttt{fk\_id\_experimento} (INTEGER, FK): Relación con la tabla \texttt{experimentos}.
+    \end{itemize}
+
+    \item \textbf{Tabla \texttt{iteraciones}}:
+    Almacena la evolución detallada paso a paso de la corrida para realizar análisis de convergencia y exploración/explotación.
+    \begin{itemize}
+        \item \texttt{id\_archivo} (INTEGER, PK): Identificador único de la iteración.
+        \item \texttt{nombre} (TEXT): Nombre del archivo lógico CSV asociado.
+        \item \texttt{archivo} (BLOB): Contenido comprimido en formato CSV con los registros históricos de cada iteración (incluye columnas de \texttt{iter}, \texttt{best\_fitness}, \texttt{time}, \texttt{XPL}, \texttt{XPT}, \texttt{ENT}, etc.).
+        \item \texttt{fk\_id\_experimento} (INTEGER, FK): Relación con la tabla \texttt{experimentos}.
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Estructura de Directorios de Salida}
+
+Además del almacenamiento persistente en SQLite, la ejecución genera archivos de salida organizados en el directorio \texttt{outputs/}:
+\begin{itemize}
+    \item \textbf{\texttt{outputs/logs/}}: Logs históricos detallados de la consola y errores en tiempo de ejecución.
+    \item \textbf{\texttt{outputs/results/}}:
+    \begin{itemize}
+        \item \texttt{transitorio/}: Almacenamiento temporal de archivos CSV durante el procesamiento distribuido en Joblib.
+        \item \texttt{resumen/}: Tablas estadísticas resumidas generadas por el script de análisis.
+        \item \texttt{graficos/}: Curvas de evolución de fitness, porcentajes de exploración/explotación (\%XPL e \%XPT) y tiempo por iteración.
+        \item \texttt{boxplot/} / \texttt{violinplot/}: Gráficos de distribución estadística comparativa del rendimiento de las metaheurísticas para cada instancia analizada.
+    \end{itemize}
+\end{itemize}

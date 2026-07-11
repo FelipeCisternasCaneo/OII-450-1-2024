@@ -1,0 +1,33 @@
+\section{Estructura interna del solver}
+
+El solver está organizado de manera limpia y modular bajo el directorio \texttt{src/} y otros directorios auxiliares con el objetivo de facilitar su expansión. A continuación, se describen los componentes clave:
+
+\begin{itemize}
+    \item \textbf{src/bd}: Módulo encargado de la gestión de la base de datos SQLite (\texttt{sqlite.py}) y la definición del esquema de experimentos.
+    \item \textbf{src/chaotic\_maps}: Implementa mapas caóticos optimizados con Numba JIT para perturbar las soluciones en optimización.
+    \item \textbf{src/discretization}: Contiene las funciones de transferencia y los métodos de binarización de soluciones.
+    \item \textbf{src/diversity}: Contiene funciones para evaluar la diversidad de la población y el balance entre exploración y explotación.
+    \item \textbf{src/metaheuristics}: Contiene los archivos Python individuales de cada algoritmo bajo \texttt{Codes/}, centralizados mediante \texttt{imports.py}.
+    \item \textbf{src/problem}: Define las estructuras y métodos de evaluación para los problemas de Benchmark (CEC2017), SCP, USCP y KP.
+    \item \textbf{src/solver}: Contiene el \texttt{universal\_solver.py}, adaptadores de firma y el despachador de experimentos.
+    \item \textbf{src/util}: Utilidades globales de configuración JSON (\texttt{src/util/json/}), logging y utilidades gráficas.
+    \item \textbf{data}: Directorio de datos que almacena la base de datos local (\texttt{data/database/resultados.db}) y las instancias de entrada de los problemas (\texttt{data/instances/}).
+    \item \textbf{outputs}: Almacena logs de ejecución, resúmenes CSV y gráficos generados de forma automática (ignorado por Git).
+    \item \textbf{tests}: Suite de pruebas unitarias implementadas con \texttt{pytest}.
+\end{itemize}
+
+\subsection{Archivos y Scripts principales}
+
+El framework divide los puntos de entrada para la ejecución de experimentos de aquellos dedicados a la administración y análisis:
+
+\begin{itemize}
+    \item \textbf{main.py}: El ejecutable principal que coordina el flujo secuencial del solucionador.
+    \item \textbf{main\_joblib.py}: Script ejecutable para correr experimentos en paralelo en la máquina local usando el framework Joblib, optimizando el uso de núcleos de CPU de forma concurrente.
+    \item \textbf{levantarCMD.py}: Permite la creación y ejecución de múltiples instancias del solver en paralelo levantando consolas CMD individuales (ideal para Windows).
+    \item \textbf{scripts/analisis.py}: Script orquestador del análisis de resultados. Carga el módulo de procesamiento modular de \texttt{analisis\_pkg} para generar tablas comparativas, boxplots y gráficos de convergencia a partir de los datos en SQLite.
+    \item \textbf{scripts/crearBD.py}: Inicializa el esquema de la base de datos SQLite si esta no existe.
+    \item \textbf{scripts/poblarDB.py}: Lee la configuración del archivo \texttt{experiments\_config.json} e inserta los experimentos a ejecutar en la base de datos local.
+    \item \textbf{scripts/reiniciarDB.py}: Reinicia la base de datos eliminando los experimentos e insertando la configuración por defecto.
+    \item \textbf{scripts/limpiarEntorno.py}: Elimina los logs y resultados generados en ejecuciones anteriores en el directorio \texttt{outputs/}.
+    \item \textbf{scripts/reiniciarSolver.py}: Restablece el solver por completo a su estado inicial, ejecutando tanto \texttt{limpiarEntorno.py} como \texttt{reiniciarDB.py}.
+\end{itemize}

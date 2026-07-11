@@ -1,0 +1,165 @@
+% --- Asegúrate de tener esto en tu preámbulo ---
+
+
+% --- Definir colores (opcional, pero mejora la legibilidad) ---
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.98,0.98,0.98} % Un fondo ligeramente gris
+
+% --- Configuración global para lstlisting (puedes ajustarla) ---
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize, % Fuente más pequeña
+    breakatwhitespace=false,
+    breaklines=true, % Permitir saltos de línea automáticos
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2,
+    frame=single, % Mantener el marco
+    framerule=0.4pt,
+    rulecolor=\color{black!30}, % Color del marco más suave
+    xleftmargin=15pt, % Margen izquierdo
+    framexleftmargin=15pt
+}
+\lstset{style=mystyle} % Aplicar el estilo globalmente
+
+% --- Inicio de la Sección ---
+
+\section{Agregar una nueva metaheurística}
+\label{sec:agregar_mh}
+
+El diseño modular del solver facilita la incorporación de nuevas metaheurísticas bio-inspiradas o de otro tipo. Para añadir un nuevo algoritmo, sigue estos pasos:
+
+\subsection{Paso 1: Implementación de la lógica del algoritmo}
+
+\begin{enumerate}
+    \item \textbf{Crear el archivo Python:} \\
+    Navega hasta el directorio \texttt{src/metaheuristics/Codes/}. Crea un nuevo archivo Python para tu metaheurística (ej. \texttt{NAE.py}).
+
+    \item \textbf{Definir la función de iteración:} \\
+    Dentro de tu nuevo archivo, define la función principal que ejecutará una iteración del algoritmo (ej. \texttt{iterarNAE(...)}).
+
+    \item \textbf{Establecer la firma estándar de la función:} \\
+    Es \textbf{crucial} que tu función utilice los nombres de parámetros estandarizados que espera la función \texttt{iterate\_population}. La firma general podría ser:
+
+    % --- Bloque de código Python mejor formateado ---
+    \begin{lstlisting}[language=Python, caption={Ejemplo firma estándar (NAE) Mejorada}, label={lst:firma_nae_mejorada}]
+import numpy as np
+# otras importaciones...
+
+def iterarNAE(maxIter, iter, dim, population, fitness, best, fo=None, lb=None, ub=None, lb0=None, ub0=None, vel=None, pBest=None, objective_type='MIN')
+
+    """
+    Realiza una iteracion del Nuevo Algoritmo de Ejemplo (NAE).
+
+    Args:
+        maxIter (int): Maximo de iteraciones.
+        iter (int): Iteracion actual.
+        dim (int): Dimension del problema.
+        population (np.ndarray): Poblacion actual.
+        fitness (np.ndarray): Fitness de la poblacion actual.
+        best (np.ndarray): Mejor solucion global hasta ahora.
+        fo (callable, optional): Funcion objetivo. Defaults to None.
+        lb0 (float, optional): Limite inferior escalar. Defaults to None.
+        ub0 (float, optional): Limite inferior escalar. Defaults to None.
+        ...
+
+    Puede tener mas argumentos segun la metaheuristica a implementar.
+
+    Returns:
+        np.ndarray or tuple: Nueva poblacion, o tupla (pob, vel/mejoras).
+    """
+    N = population.shape[0]
+    new_population = population.copy()
+
+    # -----------------------------------
+    #    LOGICA DE TU METAHEURISTICA NAE
+    # -----------------------------------
+
+    # Ejemplo placeholder:
+    # for i in range(N):
+    #     r = np.random.rand(dim)
+    #     new_population[i] = population[i] + r * (best - population[i])
+
+    # --- Valor de Retorno ---
+    return new_population
+    # O: return new_population, new_vel
+    # O: return new_population, posibles_mejoras
+    \end{lstlisting}
+    
+    % --- Fin bloque de código ---
+
+    \textbf{Importante:}
+    \begin{itemize}
+        \item No todos los parámetros son necesarios para cada algoritmo.
+        \item Usa los nombres estándar exactos (\texttt{iter}, \texttt{best}, \texttt{fo}, etc.).
+        \item Devuelve la nueva población (y opcionalmente velocidad o mejoras).
+        \item Para SCP/USCP, la función opera en continuo; la binarización/reparación es posterior.
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Paso 2: Registro en el sistema}
+
+Registra la nueva función:
+
+\begin{enumerate}
+    \item \textbf{Editar \texttt{src/metaheuristics/imports.py}:}
+    \item \textbf{Añadir importación:}
+        \begin{lstlisting}[language=Python]
+from .Codes.NAE import iterarNAE # Ajusta NAE
+        \end{lstlisting}
+    \item \textbf{Añadir a \texttt{metaheuristics}:}
+        \begin{lstlisting}[language=Python]
+metaheuristics = {
+    # ...
+    "NAE": iterarNAE, # Nueva entrada
+    # ...
+}
+        \end{lstlisting}
+    \item \textbf{Añadir a \texttt{MH\_ARG\_MAP}:}
+        \begin{lstlisting}[language=Python]
+MH_ARG_MAP = {
+    # ...
+    # Lista los strings de params que tu func necesita:
+    'NAE': ('maxIter', 'iter', 'dim', 'population', 'best'),
+    # ...
+}
+        \end{lstlisting}
+        ¡Asegúrate de que los nombres en la tupla coincidan \textbf{exactamente} con los parámetros que tu función \texttt{iterarNAE} usa!
+\end{enumerate}
+
+\subsection{Paso 3: Habilitar en experimentos}
+
+Para usar la nueva MH:
+
+\begin{enumerate}
+    \item \textbf{Editar \texttt{src/util/json/experiments\_config.json}:}
+    \item \textbf{Añadir a \texttt{"mhs"}:}
+        \begin{lstlisting}
+  // ...
+  "mhs": ["SBOA", "PSO", "NAE"], // <--- Agrega aqui
+  // ...
+}
+        \end{lstlisting}
+\end{enumerate}
+
+\subsection{Paso 4: Consideraciones adicionales (opcional)}
+
+\begin{itemize}
+    \item \textbf{Versiones específicas (BEN vs SCP/USCP):} Si necesitas lógica muy diferente, crea funciones separadas (ej. \texttt{iterarNAE\_Ben}, \texttt{iterarNAE\_Scp}) y regístralas con claves distintas ("NAE\_BEN", "NAE\_SCP"). Tengan en cuenta que idealmente debe solo haber una lógica para todos los problemas.
+    \item \textbf{Algoritmos binarios (GA):} Pueden requerir manejo especial si no siguen el flujo estándar continuo + binarización.
+    \item \textbf{Pruebas}: Verifica tu nueva MH ejecutándola en problemas de prueba.
+\end{itemize}
+Siguiendo estos pasos, podrás integrar nuevas metaheurísticas de manera organizada.
+
+% --- Fin de la Sección ---

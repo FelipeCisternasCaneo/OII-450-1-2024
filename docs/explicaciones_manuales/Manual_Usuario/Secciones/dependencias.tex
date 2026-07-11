@@ -1,0 +1,73 @@
+\section{Dependencias}
+
+Para el correcto funcionamiento del solver, es necesario contar con los siguientes requisitos:
+
+\begin{itemize}
+    \item \textbf{Versión de Python}: Python 3.8 o superior (se recomienda Python 3.11+ por rendimiento). El framework es totalmente compatible con cualquier versión moderna de Python (incluyendo Python 3.12 y superiores) sin restricciones de compatibilidad.
+    \item \textbf{IDEs recomendados}: Visual Studio Code, PyCharm.
+    \item \textbf{Gestión de dependencias}: Se utiliza el módulo \texttt{venv}, incluido en la biblioteca estándar de Python (desde la versión 3.3), para crear entornos virtuales de forma aislada.
+\end{itemize}
+
+\textbf{Nota}: La creación de un entorno virtual es opcional. Si no desea aislar las dependencias del proyecto y prefiere instalar los paquetes de Python directamente en el entorno global del sistema, puede omitir los pasos de creación y activación del entorno virtual y proceder directamente a la sección \ref{sec:instalar_dependencias}. Sin embargo, se recomienda encarecidamente el uso de un entorno virtual para evitar conflictos entre versiones de librerías en diferentes proyectos.
+
+\subsection{Crear y Activar el entorno virtual con venv}
+
+El módulo \texttt{venv} permite crear entornos virtuales aislados para gestionar paquetes sin afectar otras configuraciones del sistema. Para ello:
+
+1.  Navegue hasta el directorio de su proyecto en la terminal o línea de comandos.
+2.  Cree un entorno virtual llamado \texttt{env} (puede elegir otro nombre si lo prefiere) con el siguiente comando:
+
+    \begin{verbatim}
+    python -m venv env 
+    \end{verbatim}
+    % O en algunos sistemas podría ser necesario usar python3:
+    % python3 -m venv env
+
+3.  Una vez creado, active el entorno virtual. El comando varía según su sistema operativo y terminal:
+    \begin{itemize}
+        \item \textbf{Windows (cmd.exe)}:
+        \begin{verbatim}
+env\Scripts\activate.bat
+        \end{verbatim}
+        \item \textbf{Windows (PowerShell)}:
+        \begin{verbatim}
+.\env\Scripts\Activate.ps1 
+        \end{verbatim}
+        (Nota: Es posible que necesite ajustar la política de ejecución de scripts en PowerShell con \texttt{Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process}).
+        \item \textbf{Unix o MacOS (bash/zsh)}:
+        \begin{verbatim}
+source env/bin/activate
+        \end{verbatim}
+    \end{itemize}
+
+Al activarse correctamente, la línea de comandos debería mostrar el nombre del entorno virtual entre paréntesis al inicio, similar a:
+
+\begin{verbatim}
+(env) C:\Users\Usuario\Proyecto>
+\end{verbatim}
+o
+\begin{verbatim}
+(env) usuario@computador:~/Proyecto$ 
+\end{verbatim}
+
+
+\subsection{Configurar Visual Studio Code}
+
+Para asegurarse de que Visual Studio Code use el intérprete de Python correcto dentro del entorno virtual:
+
+1.  Abra la \textbf{Command Palette} (Paleta de Comandos) con:
+    \begin{verbatim}
+    Ctrl + Shift + P 
+    \end{verbatim}
+    (o \texttt{Cmd + Shift + P} en macOS).
+2.  Escriba \texttt{>Python: Select Interpreter} (o \texttt{>Python: Seleccionar Intérprete}) y presione Enter.
+3.  Seleccione la opción que apunta al ejecutable de Python dentro de su entorno virtual. Usualmente contendrá la ruta \texttt{./env/bin/python} (Unix/macOS) o \texttt{.\env\Scripts\python.exe} (Windows). VS Code a menudo detecta y sugiere automáticamente los entornos \texttt{venv}.
+
+\subsection{Instalar dependencias}
+\label{sec:instalar_dependencias}
+
+Para instalar las dependencias del proyecto, asegúrese de que el entorno virtual (\texttt{env}) esté activado (verá \texttt{(env)} al inicio de la línea de comandos) y ejecute en la consola:
+
+\begin{verbatim}
+pip install -r requirements.txt
+\end{verbatim}

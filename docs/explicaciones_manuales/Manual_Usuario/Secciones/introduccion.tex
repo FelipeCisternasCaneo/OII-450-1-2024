@@ -1,0 +1,53 @@
+\section{Introducción al solver}
+
+El solver que presentamos en este manual está diseñado para resolver problemas de optimización utilizando técnicas de metaheurísticas. Estas técnicas son métodos de búsqueda de soluciones aproximadas para problemas complejos donde los algoritmos exactos resultan computacionalmente inviables. En particular, el framework implementa las siguientes 37 metaheurísticas hasta la fecha:
+
+\begin{itemize}
+    \item \textbf{ALA}: Artificial Lemming Algorithm
+    \item \textbf{AOA}: Arithmetic Optimization Algorithm
+    \item \textbf{APO}: Artificial Protozoa Optimization
+    \item \textbf{CCMGO}: Criss-Cross Mountain Gazelle Optimizer
+    \item \textbf{CLO}: Cape Lynx Optimizer
+    \item \textbf{DHOA}: Dhole Optimization Algorithm
+    \item \textbf{DLO}: Draco Lizard Optimizer
+    \item \textbf{DOA}: Dream Optimization Algorithm
+    \item \textbf{DRA}: Divine Religion Algorithm
+    \item \textbf{EBWOA}: Enhanced Beluga Whale Optimization Algorithm
+    \item \textbf{EHO}: Elk Herd Optimizer
+    \item \textbf{EOO}: Eurasian Oystercatcher Optimizer
+    \item \textbf{FLO}: Frilled Lizard Optimization
+    \item \textbf{FOX}: Fox-inspired Optimization Algorithm
+    \item \textbf{GA}: Genetic Algorithm
+    \item \textbf{GOA}: Gannet Optimization Algorithm
+    \item \textbf{GOAT}: Goat Optimization Algorithm
+    \item \textbf{GWO}: Grey Wolf Optimizer
+    \item \textbf{HBA}: Honey Badger Algorithm
+    \item \textbf{HLOA}: Horned Lizard Optimization Algorithm (con variantes BEN y SCP)
+    \item \textbf{LOA}: Lyrebird Optimization Algorithm
+    \item \textbf{NO}: Narwhal Optimization
+    \item \textbf{PGA}: Phototropic Growth Algorithm
+    \item \textbf{POA}: Pufferfish Optimization Algorithm
+    \item \textbf{PSA}: Pendulum Search Algorithm
+    \item \textbf{PSO}: Particle Swarm Optimization
+    \item \textbf{QSO}: Quokka Optimization Algorithm
+    \item \textbf{RSA}: Reptile Search Algorithm
+    \item \textbf{SBOA}: Secretary Bird Optimization Algorithm
+    \item \textbf{SCA}: Sine Cosine Algorithm
+    \item \textbf{SHO}: Sea-Horse Optimizer
+    \item \textbf{SSO}: Salmon Salar Optimization
+    \item \textbf{TDO}: Tasmanian Devil Optimization
+    \item \textbf{TJO}: Traffic Jam Optimization
+    \item \textbf{WO}: Walrus Optimizer
+    \item \textbf{WOA}: Whale Optimization Algorithm
+    \item \textbf{WOM}: Wombat Optimization Algorithm
+\end{itemize}
+
+El solver es altamente flexible y modular, permitiendo optimizar diferentes funciones objetivo y problemas. Actualmente, cuenta con soporte integrado para los siguientes tipos de problemas:
+\begin{itemize}
+    \item \textbf{Benchmark (BEN)}: Funciones matemáticas continuas, incluyendo el benchmark estándar CEC2017.
+    \item \textbf{Set Covering Problem (SCP)}: Problema de cobertura de conjuntos clásico (discreto/binario).
+    \item \textbf{Unicost Set Covering Problem (USCP)}: Problema de cobertura de conjuntos con costos unitarios (discreto/binario).
+    \item \textbf{Knapsack Problem (KP)}: Problema de la mochila (discreto/binario), el cual ha sido incorporado recientemente al framework.
+\end{itemize}
+
+Las configuraciones específicas de los experimentos se definen de manera centralizada a través de archivos de configuración JSON.

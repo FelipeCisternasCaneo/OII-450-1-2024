@@ -1,0 +1,132 @@
+\section{Ejemplo de uso y explicación}
+
+A continuación, se presenta un ejemplo detallado de cómo utilizar el solver para la optimización de funciones matemáticas o problemas binarios utilizando el archivo de configuración centralizado.
+
+\subsection{Optimización de funciones matemáticas (Benchmark) y Problemas Binarios}
+
+Para comenzar con la optimización, lo primero que deben hacer es configurar las instancias, algoritmos y parámetros en el archivo de configuración.
+
+\subsubsection{Paso 1: Configuración del archivo \texttt{experiments\_config.json}}
+
+Diríjanse al directorio \texttt{src/util/json/} y abran el archivo \texttt{experiments\_config.json}. Dentro de este archivo encontrarán la estructura que controla la ejecución. A continuación, se detallan las secciones clave:
+
+\begin{itemize}
+
+\item \textbf{Selección del tipo de problema}
+\\
+Para habilitar o deshabilitar problemas específicos, se utilizan llaves booleanas. Por ejemplo, para ejecutar optimización en Benchmark (BEN) y desactivar SCP, USCP y KP:
+\begin{quote}
+\begin{verbatim}
+"ben": true, 
+"scp": false, 
+"uscp": false,
+"kp": false,
+\end{verbatim}
+\end{quote}
+
+\item \textbf{Selección de metaheurísticas}
+\\
+En la lista \texttt{"mhs"} se declaran las siglas de los algoritmos a ejecutar (por ejemplo, SBOA, PSO, GWO):
+\begin{quote}
+\begin{verbatim}
+"mhs": ["SBOA"],
+\end{verbatim}
+\end{quote}
+
+\item \textbf{Configuración de acciones de discretización}
+\\
+La lista \texttt{"DS\_actions"} define las binarizaciones para problemas discretos (como SCP, USCP o KP). Esto no influye en las funciones continuas (BEN), pero es crucial para los problemas discretos:
+\begin{quote}
+\begin{verbatim}
+"DS_actions": ["V3-ELIT"],
+\end{verbatim}
+\end{quote}
+
+\item \textbf{Configuración de Mapas Caóticos (Novedad)}
+\\
+El framework permite ejecutar experimentos usando mapas caóticos en las ecuaciones de perturbación. Se puede activar globalmente y definir modos como \texttt{"comparacion"} (ejecuta tanto el método estándar como el caótico para comparar resultados):
+\begin{quote}
+\begin{verbatim}
+"usar_mapas_caoticos": true,
+"mapas_caoticos": {
+    "modo": "comparacion",
+    "mapas_activos": ["LOG", "SINE"],
+    "SCP": {
+        "usar_caoticos": true,
+        "modo": "comparacion",
+        "mapas": ["LOG"]
+    }
+}
+\end{verbatim}
+\end{quote}
+
+\item \textbf{Criterios de Parada y Parámetros de Ejecución}
+\\
+En la sección \texttt{"experimentos"} se especifica el criterio de parada global (\texttt{modo\_terminacion}: \texttt{"iter"} para iteraciones, \texttt{"fe"} para evaluaciones de función, o \texttt{"both"} para ambas), el límite global de evaluaciones (\texttt{"max\_fe"}) y los parámetros específicos para cada dominio:
+\begin{quote}
+\begin{verbatim}
+"experimentos": {
+    "modo_terminacion": "iter",
+    "max_fe": 50000,
+    "BEN": {
+        "iteraciones": 500,
+        "poblacion": 50,
+        "num_experimentos": 1
+    },
+    "SCP": {
+        "iteraciones": 100,
+        "poblacion": 10,
+        "num_experimentos": 31
+    }
+}
+\end{verbatim}
+\end{quote}
+
+\item \textbf{Selección de instancias a optimizar}
+\\
+En la sección \texttt{"instancias"} se indica la lista exacta de instancias o funciones por cada tipo de problema. Por ejemplo, para Benchmark y SCP:
+\begin{quote}
+\begin{verbatim}
+"instancias": {
+    "BEN": ["F1CEC2017", "F2CEC2017", "F3CEC2017"],
+    "SCP": ["41"],
+    "USCP": ["u41"],
+    "KP": []
+}
+\end{verbatim}
+\end{quote}
+
+\end{itemize}
+
+\subsubsection{Paso 2: Poblar la base de datos de experimentos}
+
+Una vez configurado el archivo \texttt{experiments\_config.json}, es necesario inyectar los experimentos parametrizados en la base de datos de SQLite antes de poder ejecutarlos. Para ello, ejecuten en la consola:
+\begin{verbatim}
+python scripts/crearBD.py
+python scripts/poblarDB.py
+\end{verbatim}
+El script \texttt{poblarDB.py} se encargará de crear los registros de cada corrida para cada metaheurística e instancia seleccionada en la base de datos.
+
+\subsubsection{Paso 3: Ejecutar el solucionador}
+
+Una vez poblada la base de datos, tienen tres alternativas para ejecutar el solver según la conveniencia de su máquina:
+
+\begin{enumerate}
+    \item \textbf{Ejecución secuencial}:
+    \begin{verbatim}
+    python main.py
+    \end{verbatim}
+    Ejecuta un experimento a la vez secuencialmente mostrando el progreso por consola.
+    
+    \item \textbf{Ejecución paralela local (Joblib)}:
+    \begin{verbatim}
+    python main_joblib.py --n-jobs 4
+    \end{verbatim}
+    Utiliza el framework de paralelismo Joblib para competir de forma segura por los experimentos en la base de datos, acelerando drásticamente el proceso.
+    
+    \item \textbf{Ejecución distribuida en consolas (Windows)}:
+    \begin{verbatim}
+    python levantarCMD.py
+    \end{verbatim}
+    Este script abre múltiples terminales CMD ejecutando \texttt{main.py} de manera concurrente para paralelizar el consumo de la base de datos.
+\end{enumerate}

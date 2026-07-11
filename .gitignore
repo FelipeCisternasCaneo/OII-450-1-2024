@@ -4,7 +4,6 @@ __pycache__/
 .venv
 .atl/
 .opencode/
-/docs/explicaciones_manuales/manual_usuario
 
 # Instaladores/paquetes locales
 Miniconda3-latest-Linux-x86_64.sh
